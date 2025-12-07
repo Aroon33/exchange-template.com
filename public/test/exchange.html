@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - 取引画面</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #1f2933;
+      --text-muted: #7b8794;
+      --border-soft: #e4e7eb;
+      --danger: #e02424;
+      --success: #1ca36a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-soft);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .logo-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    nav {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .nav-link.active {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 14px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-outline {
+      border-color: var(--border-soft);
+      color: var(--text-main);
+      background: #fff;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    /* Layout */
+    .page {
+      padding: 16px 24px 24px;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1.7fr) minmax(0, 1.1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 1100px) {
+      .page {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-soft);
+      border-radius: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    /* 左：マーケット */
+    .market-list {
+      max-height: calc(100vh - 120px);
+      overflow: auto;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      margin-bottom: 8px;
+      background: #f9fafb;
+    }
+
+    .search-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 12px;
+      background: transparent;
+    }
+
+    .market-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .market-table th,
+    .market-table td {
+      padding: 6px 4px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .market-table th:first-child,
+    .market-table td:first-child {
+      text-align: left;
+    }
+
+    .market-row {
+      cursor: pointer;
+    }
+
+    .market-row:hover {
+      background: #f3f4ff;
+    }
+
+    .price-up {
+      color: var(--success);
+    }
+
+    .price-down {
+      color: var(--danger);
+    }
+
+    /* 中央：チャート */
+    .chart-area {
+      height: 320px;
+      border-radius: 10px;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 6px;
+      margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .chart-symbol {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .chart-symbol-main {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .chart-symbol-sub {
+      color: #9ca3af;
+      font-size: 11px;
+    }
+
+    .chart-ohlc {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .chart-placeholder {
+      position: absolute;
+      inset: 24px 8px 4px;
+      border-radius: 8px;
+      border: 1px dashed rgba(148, 163, 184, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: center;
+      padding: 0 10px;
+    }
+
+    .chart-placeholder strong {
+      color: #e5e7eb;
+    }
+
+    .depth-and-trades {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 1100px) {
+      .depth-and-trades {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .orderbook-table,
+    .trades-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .orderbook-table th,
+    .orderbook-table td,
+    .trades-table th,
+    .trades-table td {
+      padding: 3px 2px;
+      text-align: right;
+    }
+
+    .orderbook-row-bid {
+      color: var(--success);
+    }
+    .orderbook-row-ask {
+      color: var(--danger);
+    }
+
+    /* 右：注文パネル */
+    .order-side-toggle {
+      display: inline-flex;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      overflow: hidden;
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+
+    .order-side-toggle button {
+      padding: 4px 10px;
+      border: none;
+      cursor: pointer;
+      background: #f9fafb;
+      color: var(--text-muted);
+    }
+
+    .order-side-toggle button.active-buy {
+      background: var(--success);
+      color: #fff;
+    }
+
+    .order-side-toggle button.active-sell {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .form-row {
+      margin-bottom: 6px;
+    }
+
+    .form-row label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+
+    .form-row input,
+    .form-row select {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      padding: 6px 8px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    .form-row input:focus {
+      border-color: var(--primary);
+    }
+
+    .range-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .range-pill {
+      flex: 1;
+      font-size: 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      text-align: center;
+      padding: 3px 0;
+      cursor: pointer;
+      background: #f9fafb;
+      color: var(--text-muted);
+    }
+
+    .range-pill:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-buy {
+      width: 100%;
+      padding: 8px 0;
+      border-radius: 8px;
+      border: none;
+      background: var(--success);
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    .btn-sell {
+      width: 100%;
+      padding: 8px 0;
+      border-radius: 8px;
+      border: none;
+      background: var(--danger);
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    .note {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: #111827;
+      color: #f9fafb;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 30;
+    }
+
+    .toast.show {
+      display: inline-flex;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+<nav>
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link active">取引履歴</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm">ログイン</button>
+      <button class="btn btn-primary btn-sm">口座開設</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <!-- 左：マーケット -->
+    <section class="card market-list">
+      <div class="card-header">
+        <div class="card-title">マーケット</div>
+        <span class="badge">10 通貨ペア</span>
+      </div>
+      <div class="search-box">
+        <span style="font-size:12px; color:#9ca3af;">🔍</span>
+        <input type="text" id="market-search" placeholder="通貨ペアを検索 (例: BTC, DOGE)" />
+      </div>
+      <table class="market-table">
+        <thead>
+          <tr>
+            <th>ペア</th>
+            <th>価格 (USD)</th>
+            <th>24h</th>
+          </tr>
+        </thead>
+        <tbody id="market-body"></tbody>
+      </table>
+    </section>
+
+    <!-- 中央：チャート & 板 & 約定 -->
+    <section>
+      <div class="card">
+        <div class="chart-area">
+          <div class="chart-header">
+            <div class="chart-symbol">
+              <span class="chart-symbol-main" id="chart-symbol-main">BTC / USD</span>
+              <span class="chart-symbol-sub" id="chart-symbol-sub">Bitcoin · 現物</span>
+            </div>
+            <div class="chart-ohlc" id="chart-ohlc">
+              <span>24h 高値: 0.00</span>
+              <span>24h 安値: 0.00</span>
+              <span>出来高: 0.00 BTC</span>
+            </div>
+          </div>
+          <div class="chart-placeholder">
+            <div>
+              <strong>TradingView チャート</strong> をここに埋め込めます。<br />
+              デモ環境のため、チャートはダミー表示ですが、実装時は <code>tv.js</code> で
+              <strong>リアルタイムチャート</strong> を表示可能です。
+            </div>
+          </div>
+        </div>
+
+        <div class="depth-and-trades">
+          <!-- 板 -->
+          <div>
+            <div class="card-header" style="margin-bottom:4px;">
+              <div class="card-title">板 (Orderbook)</div>
+              <span style="font-size:11px; color:var(--text-muted);">10 行表示</span>
+            </div>
+            <table class="orderbook-table">
+              <thead>
+                <tr>
+                  <th>価格</th>
+                  <th>数量</th>
+                  <th>合計</th>
+                </tr>
+              </thead>
+              <tbody id="orderbook-body"></tbody>
+            </table>
+          </div>
+
+          <!-- 約定 -->
+          <div>
+            <div class="card-header" style="margin-bottom:4px;">
+              <div class="card-title">最近の約定</div>
+              <span style="font-size:11px; color:var(--text-muted);">最新 20 件</span>
+            </div>
+            <table class="trades-table">
+              <thead>
+                <tr>
+                  <th>時間</th>
+                  <th>価格</th>
+                  <th>数量</th>
+                </tr>
+              </thead>
+              <tbody id="trades-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右：注文パネル -->
+    <section class="card">
+      <div class="order-side-toggle">
+        <button id="btn-side-buy" class="active-buy">買い</button>
+        <button id="btn-side-sell">売り</button>
+      </div>
+
+      <div class="form-row">
+        <label><span>注文タイプ</span></label>
+        <select id="order-type">
+          <option value="limit">指値注文</option>
+          <option value="market">成行注文</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>
+          <span>価格 (USD)</span>
+          <span id="order-price-hint" style="color:var(--text-muted);">市場価格</span>
+        </label>
+        <input type="number" id="order-price" step="0.1" />
+      </div>
+
+      <div class="form-row">
+        <label>
+          <span>数量</span>
+          <span>残高: 1.2345 BTC</span>
+        </label>
+        <input type="number" id="order-size" step="0.0001" />
+        <div class="range-row">
+          <div class="range-pill" data-size="0.25">25%</div>
+          <div class="range-pill" data-size="0.5">50%</div>
+          <div class="range-pill" data-size="0.75">75%</div>
+          <div class="range-pill" data-size="1">100%</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label><span>推定約定金額</span></label>
+        <input type="text" id="order-estimate" disabled value="0.00 USD" />
+      </div>
+
+      <button class="btn-buy" id="btn-submit-order">買い注文を発注</button>
+      <div class="note">
+        ※ この画面はデモUIです。実際の注文・約定・入出金は行われません。
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">
+    <span id="toast-text">デモメッセージ</span>
+  </div>
+
+  <script>
+    const markets = [
+      { symbol: "BTC/USD", name: "Bitcoin", price: 67000, change: +1.25 },
+      { symbol: "ETH/USD", name: "Ethereum", price: 3200, change: -0.8 },
+      { symbol: "SOL/USD", name: "Solana", price: 180, change: +3.4 },
+      { symbol: "XRP/USD", name: "XRP", price: 0.62, change: +0.5 },
+      { symbol: "ADA/USD", name: "Cardano", price: 0.45, change: -1.2 },
+      { symbol: "DOGE/USD", name: "Dogecoin", price: 0.17, change: +6.8 },
+      { symbol: "SHIB/USD", name: "Shiba Inu", price: 0.000028, change: +12.3 },
+      { symbol: "PEPE/USD", name: "PEPE", price: 0.0000021, change: -4.2 },
+      { symbol: "BONK/USD", name: "BONK", price: 0.000019, change: +7.4 },
+      { symbol: "WIF/USD", name: "dogwifhat", price: 3.2, change: +2.1 },
+    ];
+
+    const marketBody = document.getElementById("market-body");
+    const marketSearch = document.getElementById("market-search");
+    const chartSymbolMain = document.getElementById("chart-symbol-main");
+    const chartSymbolSub = document.getElementById("chart-symbol-sub");
+    const chartOhlc = document.getElementById("chart-ohlc");
+    const orderbookBody = document.getElementById("orderbook-body");
+    const tradesBody = document.getElementById("trades-body");
+    const orderTypeSelect = document.getElementById("order-type");
+    const orderPriceInput = document.getElementById("order-price");
+    const orderPriceHint = document.getElementById("order-price-hint");
+    const orderSizeInput = document.getElementById("order-size");
+    const orderEstimateInput = document.getElementById("order-estimate");
+    const rangePills = document.querySelectorAll(".range-pill");
+    const btnSubmitOrder = document.getElementById("btn-submit-order");
+    const btnSideBuy = document.getElementById("btn-side-buy");
+    const btnSideSell = document.getElementById("btn-side-sell");
+    const toastEl = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
+
+    let currentSymbol = markets[0];
+
+    function renderMarkets(filterText = "") {
+      marketBody.innerHTML = "";
+      const ft = filterText.toLowerCase();
+      markets
+        .filter((m) => {
+          if (!ft) return true;
+          return (
+            m.symbol.toLowerCase().includes(ft) ||
+            m.name.toLowerCase().includes(ft)
+          );
+        })
+        .forEach((m) => {
+          const tr = document.createElement("tr");
+          tr.className = "market-row";
+          const priceClass = m.change >= 0 ? "price-up" : "price-down";
+          tr.innerHTML = `
+            <td>${m.symbol}</td>
+            <td class="${priceClass}">${formatNumber(m.price)}</td>
+            <td class="${priceClass}">${m.change.toFixed(2)}%</td>
+          `;
+          tr.addEventListener("click", () => selectMarket(m));
+          marketBody.appendChild(tr);
+        });
+    }
+
+    marketSearch.addEventListener("input", (e) => {
+      renderMarkets(e.target.value);
+    });
+
+    function selectMarket(market) {
+      currentSymbol = market;
+      chartSymbolMain.textContent = market.symbol.replace("/", " / ");
+      chartSymbolSub.textContent = `${market.name} · 現物`;
+      chartOhlc.innerHTML = `
+        <span>24h 高値: ${formatNumber(market.price * 1.03)}</span>
+        <span>24h 安値: ${formatNumber(market.price * 0.97)}</span>
+        <span>出来高: ${(Math.random() * 1200).toFixed(2)} ${
+          market.symbol.split("/")[0]
+        }</span>
+      `;
+      orderPriceInput.value = market.price.toFixed(
+        market.price < 1 ? 6 : market.price < 100 ? 3 : 2
+      );
+      updateEstimate();
+      renderOrderbook();
+      renderTrades();
+    }
+
+    function renderOrderbook() {
+      orderbookBody.innerHTML = "";
+      const basePrice = currentSymbol.price;
+      const rows = [];
+      for (let i = 5; i >= 1; i--) {
+        const price = basePrice * (1 + i * 0.0008);
+        const size = Math.random() * 0.5;
+        rows.push({ side: "ask", price, size });
+      }
+      for (let i = 1; i <= 5; i++) {
+        const price = basePrice * (1 - i * 0.0008);
+        const size = Math.random() * 0.7;
+        rows.push({ side: "bid", price, size });
+      }
+      rows.sort((a, b) => b.price - a.price);
+      let cumulative = 0;
+      rows.forEach((row) => {
+        cumulative += row.size;
+        const tr = document.createElement("tr");
+        tr.className =
+          row.side === "bid" ? "orderbook-row-bid" : "orderbook-row-ask";
+        tr.innerHTML = `
+          <td>${formatNumber(row.price)}</td>
+          <td>${row.size.toFixed(4)}</td>
+          <td>${cumulative.toFixed(4)}</td>
+        `;
+        orderbookBody.appendChild(tr);
+      });
+    }
+
+    function renderTrades() {
+      tradesBody.innerHTML = "";
+      const basePrice = currentSymbol.price;
+      for (let i = 0; i < 20; i++) {
+        const side = Math.random() > 0.5 ? "buy" : "sell";
+        const price = basePrice * (1 + (Math.random() - 0.5) * 0.003);
+        const size = Math.random() * 0.3;
+        const tr = document.createElement("tr");
+        const color = side === "buy" ? "var(--success)" : "var(--danger)";
+        tr.innerHTML = `
+          <td>${formatTimeAgo(i)}</td>
+          <td style="color:${color};">${formatNumber(price)}</td>
+          <td>${size.toFixed(4)}</td>
+        `;
+        tradesBody.appendChild(tr);
+      }
+    }
+
+    orderTypeSelect.addEventListener("change", () => {
+      if (orderTypeSelect.value === "market") {
+        orderPriceInput.disabled = true;
+        orderPriceHint.textContent = "成行（市場価格で約定）";
+      } else {
+        orderPriceInput.disabled = false;
+        orderPriceHint.textContent = "任意の価格を入力";
+      }
+      updateEstimate();
+    });
+
+    orderPriceInput.addEventListener("input", updateEstimate);
+    orderSizeInput.addEventListener("input", updateEstimate);
+
+    function updateEstimate() {
+      const price =
+        orderTypeSelect.value === "market"
+          ? currentSymbol.price
+          : parseFloat(orderPriceInput.value || "0");
+      const size = parseFloat(orderSizeInput.value || "0");
+      const est = price * size;
+      orderEstimateInput.value =
+        !isNaN(est) ? est.toFixed(2) + " USD" : "0.00 USD";
+    }
+
+    rangePills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        const ratio = parseFloat(pill.dataset.size || "0");
+        const balance = 1.2345;
+        const newSize = balance * ratio;
+        orderSizeInput.value = newSize.toFixed(4);
+        updateEstimate();
+      });
+    });
+
+    btnSideBuy.addEventListener("click", () => {
+      btnSideBuy.classList.add("active-buy");
+      btnSideSell.classList.remove("active-sell");
+      btnSubmitOrder.className = "btn-buy";
+      btnSubmitOrder.textContent = "買い注文を発注";
+    });
+
+    btnSideSell.addEventListener("click", () => {
+      btnSideSell.classList.add("active-sell");
+      btnSideBuy.classList.remove("active-buy");
+      btnSubmitOrder.className = "btn-sell";
+      btnSubmitOrder.textContent = "売り注文を発注";
+    });
+
+    btnSubmitOrder.addEventListener("click", () => {
+      const side = btnSubmitOrder.classList.contains("btn-buy") ? "買い" : "売り";
+      showToast(
+        `デモ: ${side}注文を送信しました（実際の約定は行われません）`
+      );
+    });
+
+    function showToast(message, duration = 2500) {
+      toastText.textContent = message;
+      toastEl.classList.add("show");
+      setTimeout(() => {
+        toastEl.classList.remove("show");
+      }, duration);
+    }
+
+    function formatNumber(num) {
+      if (num < 0.0001) return num.toExponential(2);
+      if (num < 1) return num.toFixed(6);
+      if (num < 100) return num.toFixed(3);
+      return num.toFixed(2);
+    }
+
+    function formatTimeAgo(index) {
+      const minutesAgo = index * 2;
+      if (minutesAgo === 0) return "今";
+      return `${minutesAgo}分前`;
+    }
+
+    function init() {
+      renderMarkets();
+      selectMarket(currentSymbol);
+    }
+
+    init();
+  </script>
+</body>
+</html>

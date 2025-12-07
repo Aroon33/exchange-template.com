@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - グループ管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+
+  <style>
+    .group-table th, .group-table td {
+      padding: 8px 6px;
+      font-size: 13px;
+    }
+    .copy-btn {
+      cursor: pointer;
+      color: #1652f0;
+      font-size: 11px;
+      margin-left: 4px;
+    }
+
+    /* モーダル */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.48);
+      justify-content:center;
+      align-items:center;
+      z-index:999;
+    }
+    .modal {
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+      width:400px;
+    }
+    .modal-row { margin-bottom:10px; }
+    .modal-row label { font-size:12px; }
+    .modal-row input {
+      width:100%; padding:7px 8px;
+      border:1px solid #ccc;
+      border-radius:6px;
+    }
+    .modal-actions { text-align:right;margin-top:12px; }
+  </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-title">メニュー</div>
+  <ul class="nav-list">
+    <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
+    <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
+    <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
+    <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
+    <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
+    <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
+    <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
+    <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
+    <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
+    <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
+    <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
+  </ul>
+</aside>
+
+<!-- MAIN -->
+<main class="admin-main">
+  <div class="admin-main-inner">
+
+    <div class="page-title">グループ管理</div>
+
+    <!-- ▼ 新規作成 -->
+    <section class="card" style="margin-bottom:20px;">
+      <h2 class="card-title-small">グループ新規作成</h2>
+
+      <div class="form-row">
+        <label>グループ名</label>
+        <input type="text" id="new-group-name" placeholder="例：vip-team" />
+      </div>
+
+      <button class="btn-xs btn-xs-primary" id="btn-create">作成</button>
+
+      <p id="msg-create" class="muted" style="margin-top:6px;"></p>
+    </section>
+
+    <!-- ▼ グループ一覧 -->
+    <section class="table-card">
+      <div class="table-header-row">
+        <div>
+          <div class="table-title">グループ一覧</div>
+          <div class="table-sub" id="group-count">0件</div>
+        </div>
+      </div>
+
+      <table class="table group-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>グループ名</th>
+            <th>コード</th>
+            <th>招待リンク</th>
+            <th>人数</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="group-body">
+          <tr><td colspan="6" style="text-align:center;">読み込み中...</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ▼ グループ移動 UI -->
+<section class="card" style="margin-top:25px;">
+  <h2 class="card-title-small">ユーザーをグループへ移動</h2>
+
+  <div class="form-row">
+    <label>ユーザー検索（ID / メール / 名前）</label>
+    <input id="move-search" type="text" placeholder="例：8 / test@example.com / 山田" />
+  </div>
+
+  <button class="btn-xs" id="btn-search-user">検索</button>
+
+  <div id="move-user-result" class="muted" style="margin-top:10px;">
+    検索結果がここに表示されます
+  </div>
+
+  <div class="form-row" style="margin-top:14px;">
+    <label>移動先グループ</label>
+    <select id="move-group-select">
+      <option value="">選択してください</option>
+    </select>
+  </div>
+
+  <button class="btn-xs btn-xs-primary" id="btn-move-group" style="margin-top:10px;">
+    グループへ移動
+  </button>
+
+  <p id="move-message" style="margin-top:8px;" class="muted"></p>
+</section>
+
+
+  </div>
+</main>
+
+<!-- ▼ 編集モーダル -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">グループ編集</div>
+
+    <div class="modal-row">
+      <label>グループ名</label>
+      <input id="m-name" />
+    </div>
+
+    <div class="modal-row">
+      <label>コード（英数字のみ）</label>
+      <input id="m-code" />
+    </div>
+
+    <div class="modal-actions">
+      <button id="m-cancel">閉じる</button>
+      <button class="btn-xs btn-xs-primary" id="m-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "https://api.exchange-template.com";
+
+const tbody = document.getElementById("group-body");
+const countEl = document.getElementById("group-count");
+
+let editId = null;
+
+/* API 基本 */
+async function apiGet(p){
+  const r = await fetch(API + p, { credentials:"include" });
+  const t = await r.text();
+  if(!r.ok) throw new Error(t);
+  return JSON.parse(t);
+}
+async function apiPost(p, body){
+  const r = await fetch(API + p, {
+    method:"POST",
+    credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body),
+  });
+  const t = await r.text();
+  if(!r.ok) throw new Error(t);
+  return JSON.parse(t);
+}
+async function apiPatch(p, body){
+  const r = await fetch(API + p, {
+    method:"PATCH",
+    credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body),
+  });
+  const t = await r.text();
+  if(!r.ok) throw new Error(t);
+  return JSON.parse(t);
+}
+async function apiDelete(p){
+  const r = await fetch(API + p, {
+    method:"DELETE",
+    credentials:"include",
+  });
+  const t = await r.text();
+  if(!r.ok) throw new Error(t);
+  return JSON.parse(t);
+}
+
+/* ------ 一覧ロード ------ */
+async function loadGroups(){
+  const groups = await apiGet("/admin/groups");
+
+  tbody.innerHTML="";
+  groups.forEach(g=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${g.id}</td>
+      <td>${g.name}</td>
+      <td>${g.code}</td>
+      <td>
+        <span>${g.inviteLink}</span>
+        <span class="copy-btn" data-copy="${g.inviteLink}">コピー</span>
+      </td>
+      <td>${g.userCount}</td>
+      <td>
+        <button class="btn-xs" data-edit="${g.id}" data-name="${g.name}" data-code="${g.code}">編集</button>
+        <button class="btn-xs btn-danger" data-del="${g.id}">削除</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  countEl.textContent = groups.length + "件";
+
+  /* コピー */
+  document.querySelectorAll("[data-copy]").forEach(btn=>{
+    btn.onclick =()=>{
+      navigator.clipboard.writeText(btn.dataset.copy);
+      alert("コピーしました！");
+    };
+  });
+
+  /* 編集 */
+  document.querySelectorAll("[data-edit]").forEach(btn=>{
+    btn.onclick=()=>{
+      editId = btn.dataset.edit;
+      document.getElementById("m-name").value = btn.dataset.name;
+      document.getElementById("m-code").value = btn.dataset.code;
+
+      document.getElementById("modal").style.display="flex";
+    };
+  });
+
+  /* 削除 */
+  document.querySelectorAll("[data-del]").forEach(btn=>{
+    btn.onclick=async()=>{
+      if(!confirm("削除しますか？\n所属ユーザーは未所属に移動します。")) return;
+      await apiDelete(`/admin/groups/${btn.dataset.del}`);
+      loadGroups();
+    };
+  });
+}
+
+/* ------ 新規作成 ------ */
+document.getElementById("btn-create").onclick = async ()=>{
+  const name = document.getElementById("new-group-name").value.trim();
+  const msg  = document.getElementById("msg-create");
+  if(!name){
+    msg.textContent="名前を入力してください";
+    msg.style.color="red";
+    return;
+  }
+  const res = await apiPost("/admin/groups/create", { name });
+  msg.textContent="作成しました: " + res.group.name;
+  msg.style.color="green";
+
+  document.getElementById("new-group-name").value="";
+  loadGroups();
+};
+
+/* ------ 編集保存 ------ */
+document.getElementById("m-save").onclick = async ()=>{
+  const name = document.getElementById("m-name").value.trim();
+  const code = document.getElementById("m-code").value.trim();
+
+  await apiPatch(`/admin/groups/${editId}`,{
+    name, code
+  });
+
+  document.getElementById("modal").style.display="none";
+  loadGroups();
+};
+
+document.getElementById("m-cancel").onclick = ()=>{
+  document.getElementById("modal").style.display="none";
+};
+
+
+/* ▼ 1. グループ選択にグループ一覧を流し込む */
+async function loadGroupOptions() {
+  const groups = await apiGet("/admin/groups");
+  const sel = document.getElementById("move-group-select");
+  sel.innerHTML = '<option value="">選択してください</option>';
+
+  groups.forEach(g => {
+    sel.innerHTML += `<option value="${g.id}">${g.name}（${g.code}）</option>`;
+  });
+}
+
+/* ▼ 2. ユーザー検索 */
+document.getElementById("btn-search-user").onclick = async () => {
+  const q = document.getElementById("move-search").value.trim();
+  const result = document.getElementById("move-user-result");
+
+  if (!q) {
+    result.textContent = "検索ワードを入力してください";
+    result.style.color = "red";
+    return;
+  }
+
+  try {
+    const users = await apiGet("/admin/users");
+
+    const user = users.find(u =>
+      String(u.id) === q ||
+      u.email.includes(q) ||
+      u.name.includes(q)
+    );
+
+    if (!user) {
+      result.textContent = "該当ユーザーが見つかりません";
+      result.style.color = "red";
+      return;
+    }
+
+    result.innerHTML = `
+      <b>検索結果:</b><br>
+      ユーザーID: ${user.id}<br>
+      名前: ${user.name}<br>
+      メール: ${user.email}<br>
+      現在のグループ: ${user.groupId ?? "なし"}
+    `;
+    result.style.color = "#333";
+
+    // 保存
+    result.dataset.userId = user.id;
+
+  } catch (e) {
+    result.textContent = "APIエラー：" + e;
+    result.style.color = "red";
+  }
+};
+
+/* ▼ 3. グループ移動処理 */
+document.getElementById("btn-move-group").onclick = async () => {
+  const msg = document.getElementById("move-message");
+  const userId = document.getElementById("move-user-result").dataset.userId;
+  const groupId = document.getElementById("move-group-select").value;
+
+  if (!userId) {
+    msg.textContent = "先にユーザー検索してください。";
+    msg.style.color = "red";
+    return;
+  }
+
+  if (!groupId) {
+    msg.textContent = "移動先グループを選択してください。";
+    msg.style.color = "red";
+    return;
+  }
+
+  try {
+    await apiPost(`/admin/users/${userId}/group`, {
+      groupId: Number(groupId)
+    });
+
+    msg.textContent = "グループを移動しました。";
+    msg.style.color = "green";
+
+    // グループ一覧を更新
+    loadGroups();
+
+  } catch (e) {
+    msg.textContent = "移動エラー：" + e;
+    msg.style.color = "red";
+  }
+};
+
+/* ▼ 初期ロードで呼ぶ */
+loadGroupOptions();
+</script>
+
+
+</body>
+</html>

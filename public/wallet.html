@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - ウォレット</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+    /* ---------------------------
+       共通レイアウト改善
+    ----------------------------*/
+    .section-card {
+      background: #fff;
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      margin-top: 20px;
+    }
+    h2.card-sub {
+      margin-top: 24px;
+      margin-bottom: 12px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* ---------------------------
+       残高エリア（info-grid強化）
+    ----------------------------*/
+    .balance-boxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .balance-item {
+      flex: 1;
+      min-width: 110px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+    }
+    .balance-label {
+      font-size: 12px;
+      color: #777;
+    }
+    .balance-value {
+      margin-top: 4px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    /* ---------------------------
+       タブ
+    ----------------------------*/
+    .tab-buttons {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* ---------------------------
+       入金/出金フォーム
+    ----------------------------*/
+    .form-section {
+      padding: 18px;
+      border-radius: 10px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 10px;
+    }
+    .form-row {
+      margin-bottom: 14px;
+    }
+    .form-row label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #555;
+    }
+    .form-row input,
+    .form-row select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 15px;
+    }
+
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 14px;
+      border-radius: 6px;
+    }
+
+    /* ---------------------------
+       履歴テーブル
+    ----------------------------*/
+    .table-wrapper {
+      overflow-x: auto;
+    }
+    table.table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    table.table th {
+      background: #f1f5f9;
+      padding: 10px;
+      text-align: left;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    table.table td {
+      padding: 10px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    tr:hover {
+      background: #f9fafb;
+    }
+
+    .status-pending {
+      color: #d97706; /* orange */
+      font-weight: bold;
+    }
+    .status-completed {
+      color: #059669; /* green */
+      font-weight: bold;
+    }
+    .status-canceled {
+      color: #dc2626; /* red */
+      font-weight: bold;
+    }
+
+    /* ---------------------------
+       スマホ最適化
+    ----------------------------*/
+    @media (max-width: 600px) {
+      h1.card-title {
+        font-size: 20px;
+      }
+      .balance-value {
+        font-size: 17px;
+      }
+      table.table th, table.table td {
+        padding: 8px;
+        font-size: 13px;
+      }
+      .tab-btn {
+        font-size: 13px;
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ============================
+       HEADER
+  ============================ -->
+  <header class="site-header">
+
+    <!-- Logo -->
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+
+    <!-- Navigation -->
+    <nav class="site-nav">
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link active">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link">取引履歴</a>
+    </nav>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+
+  </header>
+
+  <main>
+
+
+  <section class="section-card" style="max-width:760px; margin:auto;">
+
+    <h1 class="card-title">ウォレット</h1>
+    <p id="wallet-message" class="muted"></p>
+
+    <!-- ------------------------
+        残高表示
+    ------------------------- -->
+    <h2 class="card-sub">残高</h2>
+    <div class="balance-boxes">
+      <div class="balance-item">
+        <div class="balance-label">総残高</div>
+        <div class="balance-value" id="wallet-total">0</div>
+      </div>
+      <div class="balance-item">
+        <div class="balance-label">利用可能残高</div>
+        <div class="balance-value" id="wallet-available">0</div>
+      </div>
+      <div class="balance-item">
+        <div class="balance-label">ロック残高</div>
+        <div class="balance-value" id="wallet-locked">0</div>
+      </div>
+    </div>
+
+    <!-- ------------------------
+        入金（Deposit）
+    ------------------------- -->
+    <h2 class="card-sub">入金（Deposit）</h2>
+
+    <div class="tab-buttons">
+      <button class="tab-btn active" id="tab-jpy">日本円で入金</button>
+      <button class="tab-btn" id="tab-crypto">暗号通貨で入金</button>
+    </div>
+
+    <!-- ▼ 日本円入金 -->
+    <div id="jpy-form" class="form-section">
+      <div class="form-row">
+        <label>入金金額（JPY）</label>
+        <input type="number" id="jpy-amount" placeholder="15000" />
+      </div>
+      <button class="btn btn-primary btn-sm" id="jpy-submit">入金申請する</button>
+      <div id="bank-info" class="bank-info">銀行振込先情報…</div>
+      <p id="jpy-message" class="muted"></p>
+    </div>
+
+    <!-- ▼ Crypto 入金 -->
+    <div id="crypto-form" class="form-section" style="display:none;">
+      <div class="form-row">
+        <label>入金金額（JPY）</label>
+        <input type="number" id="crypto-jpy" placeholder="100000" />
+      </div>
+
+      <div class="form-row">
+        <label>送金通貨</label>
+        <select id="crypto-currency">
+          <option value="BTC">BTC</option>
+          <option value="ETH">ETH</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>暗号通貨の枚数</label>
+        <input type="text" id="crypto-amount" readonly />
+      </div>
+
+      <p id="rate-info" class="muted" style="font-size:12px;"></p>
+
+      <button class="btn btn-primary btn-sm" id="crypto-submit">暗号通貨で入金申請する</button>
+      <p id="crypto-message" class="muted"></p>
+    </div>
+
+    <!-- ------------------------
+        出金（Withdraw）
+    ------------------------- -->
+    <h2 class="card-sub">出金（Withdraw）</h2>
+
+    <div class="form-section">
+      <div class="form-row">
+        <label>出金金額（JPY）</label>
+        <input type="number" id="withdraw-amount" placeholder="10000" />
+      </div>
+      <button class="btn btn-primary btn-sm" id="withdraw-submit">出金申請する</button>
+      <p id="withdraw-message" class="muted"></p>
+    </div>
+
+    <!-- ------------------------
+        入出金履歴
+    ------------------------- -->
+    <h2 class="card-sub">入出金履歴</h2>
+
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>種別</th>
+            <th>金額</th>
+            <th>ステータス</th>
+            <th>日時</th>
+          </tr>
+        </thead>
+        <tbody id="wallet-history">
+          <tr>
+            <td colspan="5" style="text-align:center; color:#888; padding:12px;">
+              入出金履歴はありません。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+</main>
+
+  <script>
+    const API_BASE_URL = "https://api.exchange-template.com";
+
+    const elBalTotal = document.getElementById("wallet-total");
+    const elBalAvail = document.getElementById("wallet-available");
+    const elBalLock  = document.getElementById("wallet-locked");
+    const elHistBody = document.getElementById("wallet-history");
+    const elMsg      = document.getElementById("wallet-message");
+
+    // --- 入金方法切り替え
+    const tabJPY = document.getElementById("tab-jpy");
+    const tabCRYPTO = document.getElementById("tab-crypto");
+
+    const formJPY = document.getElementById("jpy-form");
+    const formCRYPTO = document.getElementById("crypto-form");
+
+    tabJPY.onclick = () => {
+      tabJPY.classList.add("active");
+      tabCRYPTO.classList.remove("active");
+      formJPY.style.display = "block";
+      formCRYPTO.style.display = "none";
+    };
+
+    tabCRYPTO.onclick = () => {
+      tabCRYPTO.classList.add("active");
+      tabJPY.classList.remove("active");
+      formCRYPTO.style.display = "block";
+      formJPY.style.display = "none";
+    };
+
+    async function apiGet(path) {
+      const res = await fetch(API_BASE_URL + path, { credentials: "include" });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    }
+
+    async function apiPost(path, body) {
+      const res = await fetch(API_BASE_URL + path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+      const txt = await res.text();
+      if (!res.ok) throw new Error(txt);
+      return txt ? JSON.parse(txt) : {};
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return "-";
+      return new Date(iso).toLocaleString("ja-JP", { hour12: false });
+    }
+
+    function fmtAmount(a) {
+      if (a == null) return "-";
+      const n = Number(a);
+      return n.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 8,
+      });
+    }
+
+    // --- ウォレット読込 ---
+    async function loadWalletPage() {
+      const data = await apiGet("/wallet");
+
+      const w   = data.wallet || {};
+      const trs = data.transfers || [];
+
+      elBalTotal.textContent = fmtAmount(w.balanceTotal ?? 0);
+      elBalAvail.textContent = fmtAmount(w.balanceAvailable ?? 0);
+      elBalLock.textContent  = fmtAmount(w.balanceLocked ?? 0);
+
+      elHistBody.innerHTML = "";
+      if (!trs.length) {
+        elHistBody.innerHTML =
+          '<tr><td colspan="5" style="text-align:center; font-size:12px; color:var(--text-muted);">入出金履歴はありません。</td></tr>';
+      } else {
+        trs.forEach((t) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${t.id}</td>
+            <td>${t.type}</td>
+            <td>${fmtAmount(t.amount)}</td>
+            <td>${t.status}</td>
+            <td>${fmtDate(t.createdAt)}</td>
+          `;
+          elHistBody.appendChild(tr);
+        });
+      }
+
+      elMsg.textContent = "ウォレット情報を更新しました。";
+      elMsg.style.color = "green";
+    }
+
+    // --- 日本円入金 ---
+    const jpyInput = document.getElementById("jpy-amount");
+    const jpySubmit = document.getElementById("jpy-submit");
+    const jpyMsg = document.getElementById("jpy-message");
+    const bankInfo = document.getElementById("bank-info");
+
+    jpySubmit.onclick = async () => {
+      const amount = Number(jpyInput.value);
+      if (!amount || amount <= 0) {
+        jpyMsg.textContent = "金額を入力してください。";
+        jpyMsg.style.color = "red";
+        return;
+      }
+
+      try {
+        await apiPost("/deposit/request", {
+          method: "JPY",
+          amount,
+          currency: "JPY",
+        });
+
+        jpyMsg.textContent = "入金申請を受け付けました。銀行振込でご入金ください。";
+        jpyMsg.style.color = "green";
+
+        bankInfo.style.display = "block";
+
+        loadWalletPage();
+      } catch (e) {
+        jpyMsg.textContent = "入金申請に失敗しました。";
+        jpyMsg.style.color = "red";
+      }
+    };
+
+    // --- Crypto 入金 ---
+    const cryptoJPY = document.getElementById("crypto-jpy");
+    const cryptoCurrency = document.getElementById("crypto-currency");
+    const cryptoAmountEl = document.getElementById("crypto-amount");
+    const cryptoSubmit = document.getElementById("crypto-submit");
+    const cryptoMsg = document.getElementById("crypto-message");
+    const rateInfo = document.getElementById("rate-info");
+
+    async function updateRate() {
+      const jpy = Number(cryptoJPY.value);
+      if (!jpy || jpy <= 0) {
+        cryptoAmountEl.value = "";
+        return;
+      }
+
+      const cur = cryptoCurrency.value;
+
+      try {
+        const r = await fetch(
+          "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=jpy"
+        ).then((r) => r.json());
+
+        const price =
+          cur === "BTC" ? r.bitcoin.jpy :
+          cur === "ETH" ? r.ethereum.jpy : null;
+
+        if (!price) return;
+
+        const crypto = jpy / price;
+        cryptoAmountEl.value = crypto.toFixed(8);
+
+        rateInfo.textContent = `${cur} 価格: ${price.toLocaleString()} JPY`;
+      } catch (e) {
+        rateInfo.textContent = "レート取得に失敗しました。";
+      }
+    }
+
+    cryptoJPY.oninput = updateRate;
+    cryptoCurrency.onchange = updateRate;
+
+    cryptoSubmit.onclick = async () => {
+      const jpy = Number(cryptoJPY.value);
+      const cur = cryptoCurrency.value;
+      const cryptoAmt = Number(cryptoAmountEl.value);
+
+      if (!jpy || jpy <= 0 || !cryptoAmt || cryptoAmt <= 0) {
+        cryptoMsg.textContent = "金額が正しく入力されていません。";
+        cryptoMsg.style.color = "red";
+        return;
+      }
+
+      try {
+        await apiPost("/deposit/request", {
+          method: "CRYPTO",
+          amount: jpy,
+          currency: cur,
+          cryptoAmount: cryptoAmt,
+        });
+
+        cryptoMsg.textContent = "暗号通貨入金申請を受け付けました。詳しい送金アドレスは後ほどメールでご案内します。";
+        cryptoMsg.style.color = "green";
+
+        loadWalletPage();
+      } catch (e) {
+        cryptoMsg.textContent = "暗号通貨入金に失敗しました。";
+        cryptoMsg.style.color = "red";
+      }
+    };
+
+    // --- 日本円出金 ---
+    const withdrawInput = document.getElementById("withdraw-amount");
+    const withdrawSubmit = document.getElementById("withdraw-submit");
+    const withdrawMsg = document.getElementById("withdraw-message");
+
+    withdrawSubmit.onclick = async () => {
+      const amount = Number(withdrawInput.value);
+      if (!amount || amount <= 0) {
+        withdrawMsg.textContent = "出金額を入力してください。";
+        withdrawMsg.style.color = "red";
+        return;
+      }
+
+      try {
+        await apiPost("/withdraw/request", { amount });
+
+        withdrawMsg.textContent = "出金申請を受け付けました。";
+        withdrawMsg.style.color = "green";
+
+        loadWalletPage();
+      } catch (e) {
+        withdrawMsg.textContent = 
+          e.message.includes("KYC")
+          ? "KYCを完了してください。"
+          : "出金申請に失敗しました。";
+
+        withdrawMsg.style.color = "red";
+      }
+    };
+
+    (function initWallet() {
+      loadWalletPage().catch((e) => {
+        elMsg.textContent = "ウォレット情報の取得に失敗しました。";
+        elMsg.style.color = "red";
+      });
+    })();
+
+    const API_BASE = "https://api.exchange-template.com";
+
+async function updateHeaderUserState() {
+  const loginBtn = document.querySelector(".header-actions a[href='login.html']");
+  const signupBtn = document.querySelector(".header-actions a[href='signup.html']");
+
+  if (!loginBtn || !signupBtn) return;
+
+  try {
+    const res = await fetch(API_BASE + "/auth/me", { credentials: "include" });
+    if (!res.ok) return; // 未ログインなら何もしない
+
+    const data = await res.json();
+    const user = data.user || data;
+
+    // 既存ボタンをクリア
+    const headerActions = document.querySelector(".header-actions");
+    headerActions.innerHTML = "";
+
+    // マイページボタン
+    const mp = document.createElement("a");
+    mp.href = "mypage.html";
+    mp.className = "btn btn-outline btn-sm";
+    mp.textContent = user.name + " さん";
+    headerActions.appendChild(mp);
+
+    // ログアウトボタン
+    const lo = document.createElement("a");
+    lo.href = "#";
+    lo.className = "btn btn-primary btn-sm";
+    lo.textContent = "ログアウト";
+    lo.addEventListener("click", async () => {
+      await fetch(API_BASE + "/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+      location.href = "login.html";
+    });
+    headerActions.appendChild(lo);
+
+  } catch (e) {
+    console.warn("Not logged in");
+  }
+}
+
+// ページ読込後に実行
+document.addEventListener("DOMContentLoaded", updateHeaderUserState);
+  </script>
+
+</body>
+</html>

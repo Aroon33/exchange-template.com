@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - システム取引</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #1f2933;
+      --text-muted: #7b8794;
+      --border-soft: #e4e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    header {
+      background: var(--bg-soft);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .logo-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    nav {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .nav-link.active {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 14px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-outline {
+      border-color: var(--border-soft);
+      color: var(--text-main);
+      background: #fff;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    .page {
+      padding: 20px 24px 32px;
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .page {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-soft);
+      border-radius: 12px;
+      padding: 16px 18px;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .form-row {
+      margin-bottom: 8px;
+    }
+
+    .form-row label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .form-row input,
+    .form-row select {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      padding: 7px 8px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .form-row input:focus {
+      border-color: var(--primary);
+    }
+
+    .note {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .switch-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .switch {
+      width: 34px;
+      height: 18px;
+      border-radius: 999px;
+      background: #d1d5db;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .switch-knob {
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: #fff;
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+
+    .switch.on {
+      background: var(--primary);
+    }
+
+    .switch.on .switch-knob {
+      left: 17px;
+    }
+
+    .strategy-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 720px) {
+      .strategy-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .strategy-card {
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      padding: 10px 10px 8px;
+      font-size: 11px;
+      background: #f9fafb;
+      cursor: pointer;
+    }
+
+    .strategy-card.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary-soft);
+      background: #eef3ff;
+    }
+
+    .strategy-name {
+      font-weight: 600;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .system-log {
+      max-height: 260px;
+      overflow: auto;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      padding: 6px 8px;
+      background: #f9fafb;
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+      font-size: 10px;
+      color: #4b5563;
+    }
+
+    .system-log-line {
+      margin-bottom: 2px;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .pill-strong {
+      border-color: var(--primary-soft);
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: #111827;
+      color: #f9fafb;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 30;
+    }
+
+    .toast.show {
+      display: inline-flex;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+<nav>
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link active">取引履歴</a>
+    </nav>
+
+
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm">ログイン</button>
+      <button class="btn btn-primary btn-sm">口座開設</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <!-- 左：システム取引設定 -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">システム取引設定</div>
+        <span class="badge">Demo</span>
+      </div>
+
+      <div class="switch-row">
+        <span style="font-size:13px;">システム取引（自動売買）</span>
+        <div class="switch" id="system-switch">
+          <div class="switch-knob"></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>対象シンボル</label>
+        <select id="system-symbol">
+          <option value="BTC/USD">BTC / USD</option>
+          <option value="ETH/USD">ETH / USD</option>
+          <option value="SOL/USD">SOL / USD</option>
+          <option value="DOGE/USD">DOGE / USD</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>戦略テンプレート</label>
+        <select id="system-strategy">
+          <option value="rsi">RSI 30 以下で買い / 70 以上で売り</option>
+          <option value="ma">短期MAが長期MAを上抜けで買い</option>
+          <option value="grid">グリッドトレード（レンジ内で逆張り）</option>
+          <option value="break">ブレイクアウト（高値更新でエントリー）</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>最大ポジションサイズ</label>
+        <input type="number" id="system-max-position" placeholder="例: 0.5 BTC" />
+      </div>
+
+      <div class="form-row">
+        <label>損切り (%) ・利確 (%)</label>
+        <div style="display:flex; gap:8px;">
+          <input type="number" id="system-stop" placeholder="-5" style="flex:1;" />
+          <input type="number" id="system-take" placeholder="10" style="flex:1;" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>注文上限（1日あたり）</label>
+        <input type="number" id="system-max-orders" placeholder="例: 50" />
+      </div>
+
+      <button class="btn-primary btn-sm" id="system-apply" style="width:100%; margin-top:8px;">
+        設定を保存（デモ）
+      </button>
+
+      <div class="note">
+        ※ 実運用時は、この設定情報をバックエンド側で保持し、マーケットデータと連動して自動売買を実行します。
+      </div>
+
+      <div class="pill-row" style="margin-top:10px;">
+        <span class="pill pill-strong">バックテスト対応可</span>
+        <span class="pill">ウォークフォワード</span>
+        <span class="pill">複数シンボル同時運用</span>
+      </div>
+    </section>
+
+    <!-- 右：シグナルログ -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">システム取引ログ（シグナル）</div>
+      </div>
+      <div class="system-log" id="system-log"></div>
+      <div class="note">
+        デモ環境のため、ランダムな売買シグナルを生成して表示しています。本番環境では、実際の価格データに基づいたシグナルを出力します。
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">
+    <span id="toast-text">デモメッセージ</span>
+  </div>
+
+  <script>
+    const systemSwitch = document.getElementById("system-switch");
+    const systemLog = document.getElementById("system-log");
+    const systemSymbol = document.getElementById("system-symbol");
+    const systemStrategy = document.getElementById("system-strategy");
+    const systemMaxPosition = document.getElementById("system-max-position");
+    const systemStop = document.getElementById("system-stop");
+    const systemTake = document.getElementById("system-take");
+    const systemMaxOrders = document.getElementById("system-max-orders");
+    const systemApply = document.getElementById("system-apply");
+    const toastEl = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
+
+    let systemOn = false;
+    let signalTimer = null;
+
+    function logSystem(message) {
+      const line = document.createElement("div");
+      line.className = "system-log-line";
+      const time = new Date().toLocaleTimeString("ja-JP", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      line.textContent = `[${time}] ${message}`;
+      systemLog.prepend(line);
+    }
+
+    function showToast(message, duration = 2600) {
+      toastText.textContent = message;
+      toastEl.classList.add("show");
+      setTimeout(() => {
+        toastEl.classList.remove("show");
+      }, duration);
+    }
+
+    systemSwitch.addEventListener("click", () => {
+      systemOn = !systemOn;
+      systemSwitch.classList.toggle("on", systemOn);
+      if (systemOn) {
+        startSignals();
+        logSystem("システム取引: 有効化");
+        showToast("システム取引を有効化しました（デモ）");
+      } else {
+        stopSignals();
+        logSystem("システム取引: 停止");
+        showToast("システム取引を停止しました（デモ）");
+      }
+    });
+
+    systemApply.addEventListener("click", () => {
+      logSystem(
+        `設定更新: ${systemSymbol.value}, 戦略=${systemStrategy.value}, MaxPos=${systemMaxPosition.value}, SL=${systemStop.value}%, TP=${systemTake.value}%, MaxOrders=${systemMaxOrders.value}/日`
+      );
+      showToast("システム取引設定を保存しました（デモ）");
+    });
+
+    function startSignals() {
+      if (signalTimer) clearInterval(signalTimer);
+      signalTimer = setInterval(() => {
+        if (!systemOn) return;
+        generateFakeSignal();
+      }, 5000);
+    }
+
+    function stopSignals() {
+      if (signalTimer) clearInterval(signalTimer);
+      signalTimer = null;
+    }
+
+    function generateFakeSignal() {
+      const side = Math.random() > 0.5 ? "BUY" : "SELL";
+      const price = 65000 + (Math.random() - 0.5) * 2000;
+      const size = (Math.random() * 0.05 + 0.01).toFixed(4);
+      const symbol = systemSymbol.value;
+      logSystem(
+        `Signal: ${side} ${size} ${symbol.split("/")[0]} @ ${price.toFixed(
+          2
+        )} (${systemStrategy.value})`
+      );
+    }
+
+    function init() {
+      logSystem("システム取引画面を開きました（デモモード）");
+    }
+
+    init();
+  </script>
+</body>
+</html>

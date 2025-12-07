@@ -1,0 +1,670 @@
+📘 CryptoX Exchange – API & Admin Panel 開発進捗まとめ
+（2025/11/29 時点・引き継ぎ用レポート）
+⭐ 1. サーバー構成
+■ OS
+
+Ubuntu 22.04 / MariaDB 10.11 / Nginx / PM2（Node.js 常駐）
+
+■ バックエンド
+
+NestJS + Prisma + MariaDB
+Node.js 20.x（最新版）
+
+■ フロント
+
+静的 HTML + JS
+顧客側: exchange-template.com
+管理側: exchange-template.com/admin/**
+
+⭐ 2. 実装済み機能（API 側）
+✔ 認証（/auth）
+
+ログイン（JWT + Cookie）
+
+登録（パスワードハッシュ）
+
+ログアウト
+
+/auth/me でユーザー情報取得
+
+管理者は role="ADMIN" のユーザー
+
+✔ ユーザー
+
+/users/:id で詳細 + wallet + kyc + group + transfers
+
+Admin 側 /admin/users 一覧
+
+Group 別・作成日別フィルタ
+
+グループ移動 API
+
+POST /admin/users/:id/group
+
+✔ ウォレット
+
+/wallet で残高取得
+
+入金/出金の残高連動
+
+✔ 入金（Deposit）
+
+/deposit/request
+
+/deposit/pending（未承認一覧・ADMIN）
+
+/deposit/approve（残高反映）
+
+DB
+
+Transfer テーブル
+method / currency / cryptoAmount を追加済み
+
+✔ 出金（Withdraw）
+
+/withdraw/request
+
+ユーザー側：KYC Level 5 必須
+
+/withdraw/approve（残高反映：locked → total 減少）
+
+/withdraw/cancel
+
+✔ 取引（Trades）
+
+/trades/history
+
+/admin/trades?group=&userId=&symbol=&side=&from=&to=
+
+編集・削除
+
+/admin/trades/:id/edit
+
+/admin/trades/:id/delete
+
+一括削除
+
+CSV ダウンロード
+
+✔ KYC
+
+/kyc/status
+
+/kyc/submit（ファイルアップロード対応）
+
+uploads/kyc/{userId}/ に front/back 保存
+
+/kyc/admin/list
+
+/kyc/admin/set-status
+
+✔ グループ（Group）
+
+現在最も更新された機能。
+
+DB
+model Group {
+  id    Int @id @default(autoincrement())
+  name  String @unique
+  code  String @unique
+  users User[]
+}
+
+実装済み API
+
+一覧 /admin/groups
+
+作成 /admin/groups/create
+
+編集 /admin/groups/:id （name + code）
+
+削除 /admin/groups/:id
+
+グループ移動（AdminUsersController 側）
+
+追加仕様
+
+招待コード（aff）として signup.html?ref=groupCode
+
+同じコードが存在する場合は自動で重複回避
+
+⭐ 3. 実装済み機能（フロント / Admin）
+✔ Admin Dashboard
+
+指定期間（30日）の統計表示
+
+totalUsers
+
+newUsers
+
+depositSum
+
+withdrawSum
+
+depositPending
+
+withdrawPending
+
+kycPending
+
+ticketPending
+
+日付フィルタつき
+
+✔ Admin Users
+
+グループフィルタ
+
+開設日フィルタ
+
+キーワード検索
+
+詳細ページ
+
+グループ移動
+
+✔ Admin Trades
+
+取引一覧（フィルタ）
+
+編集（modal）
+
+削除
+
+一括削除
+
+CSV 出力
+
+✔ Admin Tickets（問い合わせ）
+
+ユーザーのスレッド一覧
+
+管理側からの返信
+
+ステータス変⾰
+
+✔ Admin KYC
+
+ユーザーの KYC 一覧
+
+表・裏画像プレビューリンク
+
+審査ステータス変更
+
+✔ Admin Group Management（現在の開発対象）
+
+一覧表示（name, code, inviteLink, userCount）
+
+グループ編集（modal）
+
+グループ削除（ユーザーは未所属へ）
+
+グループ作成
+
+招待リンクコピー
+
+ユーザー検索 → グループ移動
+➡️ 現在 UI / API ともに完成したが、人数が表示されない問題が発生した（後述）
+
+⭐ 4. 直近で発生した障害（重要）
+🟥 症状
+
+グループ一覧で userCount=0 に見える
+
+グループ移動 UI で groupId が空になる
+
+一部フィルターが正しく動かない
+
+🟥 原因
+AdminUsersController の返却値が誤っていた（最重要）
+
+あなたが以前：
+
+groupId: u.groupId
+
+
+と書いていたが、
+Prisma の include は：
+
+include: { group: true }
+
+
+なので返ってくるのは：
+
+u.group.id
+
+
+👉 u.groupId は存在せず undefined
+👉 JSON 全部で groupId が消えてしまった
+👉 グループ人数＝ユーザーの groupId 集計 → 0人扱い
+👉 グループ移動も動かない
+👉 フィルタも効かない
+👉 auth.service の JWT も壊れた
+👉 ログイン不安定化
+
+🟩 正しい修正（実施済み）
+groupId: u.group?.id ?? null
+
+
+これで：
+
+グループ人数表示
+
+グループ移動
+
+ユーザー一覧
+
+ダッシュボードの集計
+
+取引フィルタ
+
+JWT ペイロードの groupId
+
+/auth/me
+
+すべて復旧。
+
+⭐ 5. 現状（最新）
+✔ API → 正常
+✔ Admin UI → 正常
+✔ Group UI → 正常（ただし UI 微調整中）
+✔ グループ人数表示 → 修正後 OK
+✔ グループ移動 UI → 正常
+✔ すべてのページで JSON / 機能 → 正常
+⭐ 6. 今後の作業候補（必要なら継続構築）
+管理面で実装可能：
+
+取引のキャンセル + ロールバック
+
+出金/入金の CSV ダウンロード
+
+ユーザー検索の高速化（API 側 index）
+
+招待リンクランキング
+
+期間別グループ統計
+
+Admin ログインセッション管理
+
+⭐ 引き継ぎ時の注意
+🟡 バックエンド
+
+Prisma schema 編集後は migrate を必ず避ける（DB 初期化になる）
+
+手動 ALTER で対応（あなたが正しくできている）
+
+PM2 再起動は必須
+npm run build && pm2 restart exchange-api
+
+🟡 フロント
+
+全ページは静的 HTML
+
+JS 内で fetch(API) をする「SPA に近い構造」
+
+管理側は常に Cookie 認証（401 なら login.html に戻る）
+
+⭐ 必要なら追加で提供できます
+
+完全 API ドキュメント
+
+ER 図（User / Wallet / Group / Transfer / Trade / Ticket / KYC）
+
+各画面のフロント UI パーツセット
+
+Admin ページの統合デザイン
+
+🎉 最後に
+
+あなたは本当にすごいペースで大量の機能を実装してきました。
+ここまで非常に複雑なシステム（金融系 + 取引 + KYC + グループ + 管理）を
+1 つの API にまとめて整備できているのは本当に優秀です。
+
+これで 誰が見ても分かる完全引継ぎ資料 になりました。
+
+必要ならさらに PDF 化した「完全マニュアル」も作ります。
+
+あなた:
+
+* 完全 API ドキュメント * ER 図（User / Wallet / Group / Transfer / Trade / Ticket / KYC） * 各画面のフロント UI パーツセット * Admin ページの統合デザイン
+
+これも出してほしいです
+ChatGPT:
+
+了解です。
+では あなたが求めている 4 点すべて を、すぐに使える完全版としてまとめて作ります。
+
+📌 提供する4つの成果物（すべて下に掲載）
+
+完全 API ドキュメント（全エンドポイント一覧 + パラメータ + Response）
+
+ER 図（User / Wallet / Group / Transfer / Trade / Ticket / KYC）
+
+各画面のフロント UI パーツセット（再利用 HTML / CSS / JS）
+
+Admin ページの統合デザイン（各ページの目的・UI/UX指針・構成）
+
+✅ 1. 完全 API ドキュメント（最新版・全一覧）
+
+以下は exchange-api の全エンドポイントを網羅する「実戦レベルの API ドキュメント」です。
+
+🔐 AUTH（認証）
+▶ POST /auth/register
+{
+  email: string
+  password: string
+  name: string
+  ref?: string | null   ← グループ招待コード
+}
+
+▶ POST /auth/login
+
+レス：
+
+{
+  user: {
+    id, email, role, groupId
+  }
+}
+
+
+Cookie に access_token / refresh_token が保存される。
+
+▶ POST /auth/logout
+
+Cookie 削除。
+
+▶ GET /auth/me
+
+ログイン中のユーザー情報。
+
+👤 USER
+▶ GET /admin/users
+
+管理者のみ
+ユーザー一覧 + wallet + group + kycLevel
+→ フィルタなしで全件
+
+▶ GET /admin/users/:id
+
+個別ユーザー詳細
+（wallet / transfers / kyc / group / profile）
+
+▶ POST /admin/users/:id/group
+
+ユーザーを別グループへ移動
+
+{ groupId:number }
+
+▶ POST /admin/users/:id/system-status
+
+ユーザーの systemStatus 更新
+
+💰 WALLET
+▶ GET /wallet
+
+ユーザーの残高
+
+balanceTotal
+balanceAvailable
+balanceLocked
+transfers[]
+
+➕ 入金（Deposit）
+▶ POST /deposit/request
+{
+  amount,
+  method: "JPY" | "CRYPTO",
+  currency: "JPY" | "BTC" | "ETH",
+  cryptoAmount?: number
+}
+
+
+→ Transfer に PENDING で登録
+
+▶ GET /deposit/pending
+
+管理者用
+
+▶ POST /deposit/approve
+
+承認 → wallet に反映
+
+➖ 出金（Withdraw）
+▶ POST /withdraw/request
+
+KYC Level 5 必須
+wallet.balanceAvailable から lockされる
+
+▶ GET /withdraw/pending
+
+管理者用
+
+▶ POST /withdraw/approve
+
+wallet から引き落とし
+
+▶ POST /withdraw/cancel
+
+キャンセル → locked 解除
+
+🪪 KYC（本人確認）
+▶ GET /kyc/status
+▶ POST /kyc/submit
+
+Multipart（front/back 画像 2 枚）
+
+▶ GET /kyc/admin/list
+▶ POST /kyc/admin/set-status
+
+審査（1〜5レベル）
+
+📊 Trades（取引）
+▶ GET /trades/history
+▶ GET /admin/trades
+
+クエリ：
+
+?group=&userId=&symbol=&side=&from=&to=
+
+▶ POST /admin/trades/:id/edit
+
+編集
+
+▶ POST /admin/trades/:id/delete
+
+削除
+
+▶ POST /admin/trades/delete-bulk
+
+複数削除（ID配列）
+
+👥 Group（グループ管理）
+▶ GET /admin/groups
+
+レス：
+
+[
+  {
+    id,
+    name,
+    code,
+    inviteLink,
+    userCount
+  }
+]
+
+▶ POST /admin/groups/create
+{ name }
+
+▶ PATCH /admin/groups/:id
+{ name?, code? }
+
+▶ DELETE /admin/groups/:id
+💬 Ticket（サポート）
+▶ GET /tickets
+
+ユーザーのチケット一覧
+
+▶ POST /tickets
+
+チケット作成
+
+▶ GET /tickets/:id/messages
+▶ POST /tickets/:id/reply
+▶ GET /tickets/admin/all
+▶ POST /tickets/admin/:id/reply
+▶ POST /tickets/admin/:id/status
+
+OPEN / CLOSED
+
+✅ 2. ER 図（重要）
+User
+ ├─ id (PK)
+ ├─ email UNIQUE
+ ├─ password
+ ├─ name
+ ├─ role (ADMIN | USER)
+ ├─ groupId (FK → Group.id)
+ ├─ systemStatus
+ ├─ createdAt
+ └─ updatedAt
+
+Group
+ ├─ id
+ ├─ name (UNIQUE)
+ ├─ code (UNIQUE) ← 招待コード
+ └─ users[] 1:N
+
+Wallet
+ ├─ id
+ ├─ userId UNIQUE (FK)
+ ├─ balanceTotal
+ ├─ balanceAvailable
+ ├─ balanceLocked
+
+Transfer（入出金）
+ ├─ id
+ ├─ userId (FK)
+ ├─ type (DEPOSIT | WITHDRAW)
+ ├─ amount
+ ├─ method ("JPY" | "CRYPTO")
+ ├─ currency ("JPY" | "BTC" | "ETH")
+ ├─ cryptoAmount
+ ├─ status (PENDING | COMPLETED | CANCELED)
+
+Trade（取引）
+ ├─ id
+ ├─ userId (FK)
+ ├─ symbol
+ ├─ side
+ ├─ size
+ ├─ entryPrice
+ ├─ closePrice
+ ├─ profit
+ ├─ openedAt
+ ├─ closedAt
+ └─ groupId (FK → Group)
+
+Ticket
+ ├─ id
+ ├─ userId (FK)
+ ├─ title
+ ├─ status
+ └─ messages[]
+
+TicketMessage
+ ├─ id
+ ├─ ticketId
+ ├─ sender (USER | ADMIN)
+ └─ message
+
+KycRequest
+ ├─ id
+ ├─ userId
+ ├─ status (0-5)
+ ├─ front
+ └─ back
+
+✅ 3. フロント UI パーツセット（再利用できる部品集）
+✔ 共通カード
+<section class="card">
+  <h2 class="card-title">タイトル</h2>
+  …
+</section>
+
+✔ テーブル
+<table class="table">
+  <thead>…</thead>
+  <tbody id="body"></tbody>
+</table>
+
+✔ フォーム行
+<div class="form-row">
+  <label>ラベル</label>
+  <input type="text">
+</div>
+
+✔ モーダル
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">ヘッダー</div>
+    <div class="modal-row">…</div>
+    <div class="modal-actions">…</div>
+  </div>
+</div>
+
+✅ 4. Admin ページの統合デザイン（画面構成）
+🎛 Dashboard
+
+KPI カード（右肩に期間フィルタ）
+
+期間内の入金/出金/開設の集計
+
+PENDING カウント
+
+👥 Users
+
+フィルタ（group / from / to / keyword）
+
+一覧テーブル
+
+別ページで詳細表示
+
+「グループ移動」を users.html にも配置
+
+📊 Trades
+
+高度なフィルタ
+
+CSV エクスポート
+
+一括削除
+
+編集（モーダル）
+
+🪪 KYC
+
+レベル別フィルタ
+
+画像プレビュー
+
+審査結果を即反映
+
+➕ Deposit / ➖ Withdraw
+
+詳細右側にステータス変更
+
+完了ですぐ wallet に反映
+
+🧩 Group
+
+name / code / inviteLink / userCount
+
+編集（name + code）
+
+削除（ユーザーを未所属へ）
+
+ユーザー検索 → グループ移動
+
+新規グループ作成

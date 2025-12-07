@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - 新規口座開設キャンペーン（デモ）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #1f2933;
+      --text-muted: #7b8794;
+      --border-soft: #e4e7eb;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      background: #f5f7fb;
+      color: var(--text-main);
+    }
+    a { text-decoration: none; color: inherit; }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-soft);
+      padding: 10px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 20px;
+    }
+    .logo-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+    }
+    nav {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .nav-link.active {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn {
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 13px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-outline {
+      border-color: var(--border-soft);
+      color: var(--text-main);
+      background: #fff;
+    }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 24px 20px 32px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #1652f0, #1d8ff0);
+      border-radius: 16px;
+      color: #fff;
+      padding: 18px 18px 16px;
+      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 16px;
+      align-items: center;
+    }
+    @media (max-width: 780px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+    .hero-eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+    .hero-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .hero-sub {
+      font-size: 12px;
+      opacity: 0.95;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .hero-meta {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+    .hero-right {
+      background: rgba(15,23,42,0.24);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    .hero-right h3 {
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .hero-list {
+      list-style: none;
+      margin-top: 4px;
+      padding-left: 0;
+    }
+    .hero-list li::before {
+      content: "• ";
+    }
+
+    .section {
+      margin-bottom: 20px;
+      background: #ffffff;
+      border-radius: 14px;
+      border: 1px solid var(--border-soft);
+      padding: 14px 16px 12px;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .section-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    table th,
+    table td {
+      padding: 6px 4px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: top;
+    }
+    table th {
+      width: 26%;
+      font-weight: 600;
+      background: #f9fafb;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      font-size: 12px;
+    }
+    @media (max-width: 780px) {
+      .steps {
+        grid-template-columns: 1fr;
+      }
+    }
+    .step-card {
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      padding: 10px 10px 9px;
+    }
+    .step-label {
+      font-size: 11px;
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .step-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .faq-item {
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .faq-q {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .faq-a {
+      color: var(--text-muted);
+    }
+
+    .btn-row {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge-outline {
+      display: inline-block;
+      border-radius: 999px;
+      border: 1px solid var(--primary-soft);
+      color: var(--primary);
+      padding: 2px 8px;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    footer {
+      padding: 16px 20px 24px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+<nav>
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link active">取引履歴</a>
+    </nav>
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div>
+        <div class="hero-eyebrow">CAMPAIGN (DEMO)</div>
+        <h1 class="hero-title">新規口座開設 & 初回入金キャンペーン</h1>
+        <p class="hero-sub">
+          期間中に CryptoX Exchange で新規口座開設＋一定額以上の初回入金を行うと、<br />
+          取引手数料キャッシュバックやボーナス付与などの特典を受け取れるキャンペーンの「イメージ」を確認できます。
+        </p>
+        <p class="hero-meta">
+          ※ 本ページはキャンペーンUIのデモであり、実際のキャンペーンは行っていません。
+        </p>
+      </div>
+      <div class="hero-right">
+        <h3>キャンペーン概要（サンプル）</h3>
+        <ul class="hero-list">
+          <li>新規口座開設で 2,000 円相当のボーナス（例）</li>
+          <li>初回入金 100,000 円以上で取引手数料 30 日間 0 円（例）</li>
+          <li>システム取引設定で追加特典を付与する設計も可能</li>
+        </ul>
+        <div class="btn-row" style="margin-top:8px;">
+          <a href="signup.html" class="btn btn-primary btn-sm" style="border:none;">今すぐ口座開設（デモ）</a>
+          <a href="exchange.html" class="btn btn-outline btn-sm">取引画面を見る</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Details -->
+    <section class="section">
+      <h2 class="section-title">キャンペーン詳細（デザイン用ダミー）</h2>
+      <p class="section-sub">
+        実際の案件では、このテーブルの文言だけ差し替えれば、そのままキャンペーンページとして利用できる構成です。
+      </p>
+      <table>
+        <tr>
+          <th>名称</th>
+          <td>CryptoX 新規口座開設 & 初回入金キャンペーン</td>
+        </tr>
+        <tr>
+          <th>対象者</th>
+          <td>
+            ・キャンペーン期間中に新規口座開設が完了したお客様<br />
+            ・口座開設後、一定金額以上の初回入金を行ったお客様
+          </td>
+        </tr>
+        <tr>
+          <th>キャンペーン期間</th>
+          <td>2025年 ○月○日 ～ 2025年 ○月○日（サンプル）</td>
+        </tr>
+        <tr>
+          <th>条件（例）</th>
+          <td>
+            ・口座開設完了<br />
+            ・初回入金 100,000 円以上（JPY または相当額の仮想通貨）<br />
+            ・期間中に合計 5 回以上のトレード（現物またはシステム取引）
+          </td>
+        </tr>
+        <tr>
+          <th>特典内容（例）</th>
+          <td>
+            ・口座開設ボーナス：2,000 円相当の取引クーポン<br />
+            ・取引手数料：30 日間 0 円（上限手数料 ○○円まで）<br />
+            ・システム取引設定完了で、追加ボーナス付与 など
+          </td>
+        </tr>
+        <tr>
+          <th>付与タイミング</th>
+          <td>条件達成月の翌月 ○営業日以内（など）</td>
+        </tr>
+        <tr>
+          <th>注意事項</th>
+          <td>
+            ・本キャンペーンは予告なく変更・終了する場合があります。<br />
+            ・同一人物による複数アカウント開設など不正が確認された場合、特典付与対象外となります。<br />
+            ・その他の細則は、別途「キャンペーン規約」にて定めます。
+          </td>
+        </tr>
+      </table>
+    </section>
+
+    <!-- Steps -->
+    <section class="section">
+      <h2 class="section-title">キャンペーン参加の流れ</h2>
+      <div class="section-sub">
+        ユーザーが迷わないよう、3ステップでわかりやすく説明するためのブロックです。
+      </div>
+      <div class="steps">
+        <div class="step-card">
+          <div class="step-label">STEP 1</div>
+          <div class="step-title">口座開設</div>
+          <p>
+            <a href="signup.html" style="color:var(--primary);">口座開設フォーム</a> から、
+            メールアドレス・パスワード・基本情報を入力し、口座開設を完了させます。
+          </p>
+        </div>
+        <div class="step-card">
+          <div class="step-label">STEP 2</div>
+          <div class="step-title">初回入金</div>
+          <p>
+            <a href="wallet.html" style="color:var(--primary);">ウォレット画面</a> に進み、
+            JPY または仮想通貨で一定金額以上の初回入金を行います。
+          </p>
+        </div>
+        <div class="step-card">
+          <div class="step-label">STEP 3</div>
+          <div class="step-title">トレード & システム取引</div>
+          <p>
+            <a href="exchange.html" style="color:var(--primary);">トレード</a> や
+            <a href="system-trade.html" style="color:var(--primary);">システム取引</a> を行い、
+            所定の取引条件を満たすと特典付与対象となります。
+          </p>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <a href="signup.html" class="btn btn-primary btn-sm">今すぐ口座開設（デモ）</a>
+        <a href="index.html" class="btn btn-outline btn-sm">TOPに戻る</a>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section">
+      <div class="badge-outline">FAQ（よくあるご質問イメージ）</div>
+      <div class="faq-item">
+        <div class="faq-q">Q. 実際にこのキャンペーンは実施されていますか？</div>
+        <div class="faq-a">A. いいえ。本ページは UI・レイアウト確認用のデモです。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Q. 特典内容や条件は自由に変更できますか？</div>
+        <div class="faq-a">
+          A. はい。テーブルの文言と金額・日付を差し替えるだけで、別キャンペーンにも転用できます。
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Q. 規約ページやPDFリンクを追加することは可能ですか？</div>
+        <div class="faq-a">
+          A. 可能です。ページ下部やテーブル内に「キャンペーン規約」「PDFダウンロード」などのリンクを追加する設計想定です。
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    CryptoX Exchange UI Demo &copy; 2025 — キャンペーンページのデザインサンプルです。
+  </footer>
+</body>
+</html>

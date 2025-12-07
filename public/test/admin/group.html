@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - グループ管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-soft: #e5e7eb;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --pending: #f97316;
+    }
+    * { box-sizing:border-box; margin:0; padding:0;
+        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    body { background:var(--bg); color:var(--text-main); }
+    a { text-decoration:none; color:inherit; }
+
+    /* Header */
+    .admin-header {
+      position:fixed; top:0; left:0; right:0;
+      height:52px; background:#fff;
+      border-bottom:1px solid var(--border-soft);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 18px 0 60px; z-index:30;
+    }
+    .admin-header-left { display:flex; align-items:center; gap:10px; }
+    .logo-badge{
+      width:26px; height:26px; border-radius:8px;
+      background:var(--primary); color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:14px; font-weight:700;
+    }
+    .logo-text{ font-weight:700; font-size:16px; }
+    .logo-sub{ font-size:11px; color:var(--text-muted); }
+    .admin-header-right{ display:flex; align-items:center; gap:10px;
+      font-size:11px; color:var(--text-muted); }
+    .btn{
+      border-radius:999px; padding:6px 12px;
+      font-size:11px; border:1px solid transparent;
+      background:transparent; cursor:pointer;
+    }
+    .btn-outline{ border-color:var(--border-soft); background:#fff; color:var(--text-main); }
+    .btn-sm{ padding:4px 10px; font-size:11px; }
+
+    /* Sidebar */
+    .sidebar{
+      position:fixed; top:0; left:0; bottom:0;
+      width:200px; background:#0f172a; color:#e5e7eb;
+      padding-top:52px; display:flex; flex-direction:column;
+      border-right:1px solid #020617; z-index:20;
+    }
+    .sidebar-title{
+      padding:10px 14px; font-size:11px;
+      text-transform:uppercase; letter-spacing:0.08em;
+      color:#6b7280;
+    }
+    .nav-list{ list-style:none; margin:0; padding:0 8px 12px; }
+    .nav-item{ margin-bottom:4px; }
+    .nav-link{
+      display:flex; align-items:center; gap:8px;
+      padding:7px 8px; border-radius:8px;
+      font-size:12px; color:#9ca3af; cursor:pointer;
+    }
+    .nav-link:hover{ background:rgba(148,163,184,0.15); color:#e5e7eb; }
+    .nav-link.active{
+      background:#111827; color:#e5e7eb;
+      border:1px solid rgba(129,140,248,0.5);
+    }
+    .nav-icon{ width:14px; text-align:center; font-size:12px; }
+    .sidebar-footer{
+      margin-top:auto; padding:10px 14px 12px;
+      font-size:11px; color:#6b7280;
+      border-top:1px solid rgba(31,41,55,0.9);
+    }
+
+    /* Main */
+    .main{ margin-left:200px; padding-top:52px; }
+    .main-inner{ max-width:1120px; margin:0 auto; padding:16px 18px 24px; }
+    .page-title{ font-size:16px; font-weight:600; margin-bottom:4px; }
+    .page-sub{ font-size:11px; color:var(--text-muted); margin-bottom:10px; }
+
+    /* Group cards */
+    .group-grid{
+      display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:8px; margin-bottom:10px;
+    }
+    @media(max-width:960px){ .group-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:640px){ .group-grid{ grid-template-columns:1fr; } }
+
+    .group-card{
+      background:#fff; border-radius:10px;
+      border:1px solid var(--border-soft);
+      padding:8px 9px 7px;
+      font-size:11px; cursor:pointer;
+      box-shadow:0 1px 2px rgba(15,23,42,0.03);
+    }
+    .group-card.active{
+      border-color:var(--primary);
+      box-shadow:0 0 0 1px var(--primary-soft);
+      background:#eef2ff;
+    }
+    .group-name{ font-size:13px; font-weight:600; margin-bottom:2px; }
+    .group-system{ font-size:11px; color:var(--text-muted); margin-bottom:3px; }
+    .group-count{ font-size:11px; color:var(--text-muted); }
+
+    /* Filters + bulk actions */
+    .filters-card{
+      background:#fff; border-radius:10px;
+      border:1px solid var(--border-soft);
+      padding:10px 12px 8px;
+      box-shadow:0 1px 2px rgba(15,23,42,0.03);
+      margin-bottom:10px;
+    }
+    .filters-row{
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:8px;
+    }
+    .filters-title{ font-size:13px; font-weight:600; }
+    .filters-meta{ font-size:11px; color:var(--text-muted); }
+    .filters-grid{
+      display:grid;
+      grid-template-columns:minmax(0,1.1fr) minmax(0,0.8fr) minmax(0,0.8fr) minmax(0,0.7fr);
+      gap:8px;
+    }
+    @media(max-width:960px){ .filters-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:640px){ .filters-grid{ grid-template-columns:1fr; } }
+    .field{
+      display:flex; flex-direction:column; gap:2px;
+      font-size:11px;
+    }
+    .field label{ color:var(--text-muted); }
+    .field input,.field select{
+      border-radius:6px; border:1px solid var(--border-soft);
+      padding:6px 7px; font-size:11px;
+      outline:none; background:#fff;
+    }
+    .field input:focus,.field select:focus{ border-color:var(--primary); }
+
+    .bulk-row{
+      display:flex; justify-content:space-between; align-items:center;
+      margin-top:8px; gap:8px; flex-wrap:wrap;
+      font-size:11px;
+    }
+    .bulk-controls{
+      display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    }
+    .btn-xs{
+      padding:4px 9px; border-radius:999px;
+      font-size:11px; border:1px solid var(--border-soft);
+      background:#fff; cursor:pointer;
+    }
+    .btn-xs-primary{
+      background:var(--primary); color:#fff; border-color:var(--primary);
+    }
+
+    /* User table */
+    .table-card{
+      background:#fff; border-radius:10px;
+      border:1px solid var(--border-soft);
+      box-shadow:0 1px 2px rgba(15,23,42,0.03);
+      padding:10px 11px 9px; font-size:12px;
+    }
+    .card-header-row{
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:6px;
+    }
+    .card-title-small{ font-size:13px; font-weight:600; }
+    .card-sub-small{ font-size:11px; color:var(--text-muted); }
+
+    table{ width:100%; border-collapse:collapse; font-size:11px; }
+    th,td{
+      padding:6px 4px; border-bottom:1px solid #e5e7eb;
+      white-space:nowrap; text-align:left;
+    }
+    th{ color:var(--text-muted); font-weight:600; }
+    th:first-child,td:first-child{ text-align:center; width:32px; }
+    .user-name-cell{ font-weight:600; }
+    .badge{
+      border-radius:999px; padding:2px 8px;
+      font-size:10px; display:inline-flex; align-items:center;
+    }
+    .badge-group{ background:var(--primary-soft); color:var(--primary); }
+    .badge-status-active{ background:#dcfce7; color:var(--success); }
+    .badge-status-pending{ background:#ffedd5; color:var(--pending); }
+    .badge-status-suspended{ background:#fee2e2; color:var(--danger); }
+
+    .note{ font-size:10px; color:var(--text-muted); margin-top:4px; }
+
+    .toast{
+      position:fixed; right:16px; bottom:16px;
+      background:#111827; color:#f9fafb;
+      padding:8px 14px; border-radius:999px;
+      font-size:11px; display:none; z-index:50;
+    }
+    .toast.show{ display:block; }
+
+    @media(max-width:768px){
+      .admin-header{ padding-left:54px; }
+      .sidebar{ width:180px; }
+      .main{ margin-left:180px; }
+    }
+    @media(max-width:640px){
+      .sidebar{ transform:translateX(-100%); }
+      .main{ margin-left:0; }
+      .admin-header{ padding-left:12px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-title">メニュー</div>
+    <ul class="nav-list">
+      <li class="nav-item"><a href="index.html" class="nav-link"><span class="nav-icon">🏠</span><span>ダッシュボード</span></a></li>
+      <li class="nav-item"><a href="tickets.html" class="nav-link"><span class="nav-icon">💬</span><span>問い合わせ管理</span></a></li>
+      <li class="nav-item"><a href="users.html" class="nav-link"><span class="nav-icon">👥</span><span>ユーザー一覧</span></a></li>
+      <li class="nav-item"><a href="kyc.html" class="nav-link"><span class="nav-icon">🪪</span><span>KYC確認</span></a></li>
+      <li class="nav-item"><a href="trades.html" class="nav-link"><span class="nav-icon">📊</span><span>取引状況</span></a></li>
+      <li class="nav-item"><a href="deposit.html" class="nav-link"><span class="nav-icon">➕</span><span>入金申請</span></a></li>
+      <li class="nav-item"><a href="withdraw.html" class="nav-link"><span class="nav-icon">➖</span><span>出金申請</span></a></li>
+      <li class="nav-item"><a href="group.html" class="nav-link active"><span class="nav-icon">🧩</span><span>グループ管理</span></a></li>
+      <li class="nav-item"><a href="settings.html" class="nav-link"><span class="nav-icon">⚙️</span><span>システム設定</span></a></li>
+    </ul>
+    <div class="sidebar-footer">CryptoX Admin<br>UI Demo &copy; 2025</div>
+  </aside>
+
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <div class="logo-badge">AX</div>
+      <div>
+        <div class="logo-text">Admin Console</div>
+        <div class="logo-sub">グループ管理</div>
+      </div>
+    </div>
+    <div class="admin-header-right">
+      <span>管理者：admin@example.com</span>
+      <button class="btn btn-outline btn-sm" onclick="location.href='login.html'">ログアウト（デモ）</button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="main-inner">
+      <div class="page-title">グループ管理</div>
+      <div class="page-sub">
+        ユーザーを A / B / C / D などのグループ（システムプラン）に振り分ける管理画面です。<br>
+        登録日・アフィリコード・現在のグループで検索して、チェックボックスから一括または個別に移動できます。
+      </div>
+
+      <!-- Group cards -->
+      <section class="group-grid" id="group-grid">
+        <!-- JSで生成 -->
+      </section>
+
+      <!-- Filters + bulk -->
+      <section class="filters-card">
+        <div class="filters-row">
+          <div>
+            <div class="filters-title">ユーザーフィルター</div>
+            <div class="filters-meta">
+              キーワード / 登録日 / アフィリコード / 現在グループで絞り込みます。グループカードをクリックすると、そのグループだけに絞られます。
+            </div>
+          </div>
+        </div>
+        <div class="filters-grid">
+          <div class="field">
+            <label>キーワード（名前・メール・ユーザーID）</label>
+            <input type="text" id="f-keyword" placeholder="例：Taro / user@example.com / user-demo-001" />
+          </div>
+          <div class="field">
+            <label>アフィリコード</label>
+            <input type="text" id="f-aff" placeholder="例：AFF-12345" />
+          </div>
+          <div class="field">
+            <label>登録日（From）</label>
+            <input type="date" id="f-from" />
+          </div>
+          <div class="field">
+            <label>登録日（To）</label>
+            <input type="date" id="f-to" />
+          </div>
+        </div>
+        <div class="bulk-row">
+          <div class="bulk-controls">
+            <span>現在のグループ：</span>
+            <select id="f-group">
+              <option value="all">すべて</option>
+              <option value="A">Group A</option>
+              <option value="B">Group B</option>
+              <option value="C">Group C</option>
+              <option value="D">Group D</option>
+            </select>
+            <button class="btn-xs" id="btn-filter">検索</button>
+            <button class="btn-xs" id="btn-clear">条件クリア</button>
+          </div>
+          <div class="bulk-controls">
+            <span>選択したユーザーを</span>
+            <select id="bulk-target">
+              <option value="">移動先グループを選択</option>
+              <option value="A">Group A</option>
+              <option value="B">Group B</option>
+              <option value="C">Group C</option>
+              <option value="D">Group D</option>
+            </select>
+            <button class="btn-xs btn-xs-primary" id="btn-bulk-move">グループ移動</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- User table -->
+      <section class="table-card">
+        <div class="card-header-row">
+          <div>
+            <div class="card-title-small">ユーザー一覧（グループ別）</div>
+            <div class="card-sub-small" id="list-count">0件</div>
+          </div>
+          <div class="card-sub-small">チェックボックスで一括選択が可能です。</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="select-all" /></th>
+              <th>ユーザーID</th>
+              <th>名前 / メール</th>
+              <th>現在グループ</th>
+              <th>アフィリコード</th>
+              <th>登録日</th>
+              <th>ステータス / KYC</th>
+              <th>個別移動</th>
+            </tr>
+          </thead>
+          <tbody id="user-tbody">
+            <!-- JSで生成 -->
+          </tbody>
+        </table>
+        <div class="note">
+          ※ このページはフロントのみのデモです。実際の環境では、このグループ変更処理を API 経由で DB の user.groupId に反映させる想定です。
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // デモ用ユーザーデータ（users.html と同様の構造）
+    let users = [
+      {
+        userId: "user-demo-001",
+        name: "Taro Yamada",
+        email: "taro@example.com",
+        groupId: "A",
+        kycLevel: 2,
+        status: "active",
+        affiliateCode: "AFF-12345",
+        createdAt: "2025-10-01",
+      },
+      {
+        userId: "user-demo-002",
+        name: "Hanako Suzuki",
+        email: "hanako@example.com",
+        groupId: "B",
+        kycLevel: 1,
+        status: "pending",
+        affiliateCode: "AFF-77777",
+        createdAt: "2025-11-05",
+      },
+      {
+        userId: "user-demo-003",
+        name: "Crypto Tester",
+        email: "tester@example.com",
+        groupId: "C",
+        kycLevel: 3,
+        status: "active",
+        affiliateCode: "",
+        createdAt: "2025-09-20",
+      },
+      {
+        userId: "user-demo-004",
+        name: "Affiliate User",
+        email: "aff@example.com",
+        groupId: "A",
+        kycLevel: 0,
+        status: "active",
+        affiliateCode: "AFF-REF01",
+        createdAt: "2025-11-10",
+      },
+      {
+        userId: "user-demo-005",
+        name: "High Risk User",
+        email: "hr@example.com",
+        groupId: "D",
+        kycLevel: 2,
+        status: "active",
+        affiliateCode: "AFF-HIGH",
+        createdAt: "2025-08-15",
+      },
+      {
+        userId: "user-demo-999",
+        name: "Suspended User",
+        email: "suspended@example.com",
+        groupId: "D",
+        kycLevel: 1,
+        status: "suspended",
+        affiliateCode: "AFF-99999",
+        createdAt: "2025-07-01",
+      },
+    ];
+
+    // グループ情報
+    const groups = [
+      {
+        id: "A",
+        name: "Group A",
+        description: "低リスク・安定運用プラン",
+        system: "RSI + ローリスク戦略セット",
+      },
+      {
+        id: "B",
+        name: "Group B",
+        description: "標準的なバランス運用",
+        system: "RSI + ブレイクアウト標準",
+      },
+      {
+        id: "C",
+        name: "Group C",
+        description: "ハイリスク / ハイリターン",
+        system: "レバレッジ＋ボラティリティ戦略",
+      },
+      {
+        id: "D",
+        name: "Group D",
+        description: "カスタム（紹介者専用など）",
+        system: "個別カスタマイズ",
+      },
+    ];
+
+    const groupGridEl = document.getElementById("group-grid");
+    const tbodyEl = document.getElementById("user-tbody");
+    const listCountEl = document.getElementById("list-count");
+    const toastEl = document.getElementById("toast");
+    const selectAllEl = document.getElementById("select-all");
+
+    const fKeyword = document.getElementById("f-keyword");
+    const fAff = document.getElementById("f-aff");
+    const fFrom = document.getElementById("f-from");
+    const fTo = document.getElementById("f-to");
+    const fGroup = document.getElementById("f-group");
+    const btnFilter = document.getElementById("btn-filter");
+    const btnClear = document.getElementById("btn-clear");
+    const bulkTargetEl = document.getElementById("bulk-target");
+    const btnBulkMove = document.getElementById("btn-bulk-move");
+
+    let filteredUsers = users.slice();
+    let currentGroupFilter = "all"; // A/B/C/D/all
+    const selectedUserIds = new Set();
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), 2200);
+    }
+
+    function computeGroupCounts() {
+      const counts = { A: 0, B: 0, C: 0, D: 0 };
+      users.forEach((u) => {
+        if (counts[u.groupId] != null) counts[u.groupId]++;
+      });
+      return counts;
+    }
+
+    function renderGroupCards() {
+      const counts = computeGroupCounts();
+      groupGridEl.innerHTML = "";
+      groups.forEach((g) => {
+        const div = document.createElement("div");
+        div.className =
+          "group-card" + (currentGroupFilter === g.id ? " active" : "");
+        div.dataset.id = g.id;
+        div.innerHTML = `
+          <div class="group-name">${g.name}</div>
+          <div class="group-system">${g.system}</div>
+          <div class="group-count">所属ユーザー: ${counts[g.id] || 0} 人</div>
+          <div style="margin-top:3px; font-size:10px; color:var(--text-muted);">
+            ${g.description}
+          </div>
+        `;
+        div.addEventListener("click", () => {
+          currentGroupFilter = g.id;
+          fGroup.value = g.id; // フィルターの現在グループも合わせる
+          applyFilters();
+          renderGroupCards();
+        });
+        groupGridEl.appendChild(div);
+      });
+    }
+
+    function applyFilters() {
+      const kw = fKeyword.value.trim().toLowerCase();
+      const aff = fAff.value.trim().toLowerCase();
+      const fromVal = fFrom.value;
+      const toVal = fTo.value;
+      const grp = fGroup.value;
+
+      filteredUsers = users.filter((u) => {
+        if (currentGroupFilter !== "all" && u.groupId !== currentGroupFilter) {
+          return false;
+        }
+        if (grp !== "all" && u.groupId !== grp) return false;
+
+        if (kw) {
+          const hay =
+            (u.name || "").toLowerCase() +
+            " " +
+            (u.email || "").toLowerCase() +
+            " " +
+            (u.userId || "").toLowerCase();
+          if (!hay.includes(kw)) return false;
+        }
+        if (aff) {
+          const code = (u.affiliateCode || "").toLowerCase();
+          if (!code.includes(aff)) return false;
+        }
+
+        if (fromVal) {
+          const uDate = new Date(u.createdAt + "T00:00:00").getTime();
+          const fromTs = new Date(fromVal + "T00:00:00").getTime();
+          if (uDate < fromTs) return false;
+        }
+        if (toVal) {
+          const uDate = new Date(u.createdAt + "T00:00:00").getTime();
+          const toTs = new Date(toVal + "T23:59:59").getTime();
+          if (uDate > toTs) return false;
+        }
+
+        return true;
+      });
+
+      filteredUsers.sort((a, b) =>
+        a.userId < b.userId ? -1 : a.userId > b.userId ? 1 : 0
+      );
+
+      // フィルターを変えたら全選択を解除
+      selectedUserIds.clear();
+      selectAllEl.checked = false;
+
+      renderUserTable();
+    }
+
+    function statusBadgeClass(status) {
+      if (status === "active") return "badge-status-active";
+      if (status === "pending") return "badge-status-pending";
+      return "badge-status-suspended";
+    }
+
+    function statusLabel(status) {
+      if (status === "active") return "有効";
+      if (status === "pending") return "KYC確認中";
+      if (status === "suspended") return "停止中";
+      return status;
+    }
+
+    function kycLabel(level) {
+      if (level === 0) return "未登録";
+      return "KYC " + level;
+    }
+
+    function renderUserTable() {
+      tbodyEl.innerHTML = "";
+      listCountEl.textContent = filteredUsers.length + "件";
+
+      filteredUsers.forEach((u) => {
+        const tr = document.createElement("tr");
+        const checked = selectedUserIds.has(u.userId);
+        tr.innerHTML = `
+          <td>
+            <input type="checkbox" class="row-check" data-id="${u.userId}" ${
+          checked ? "checked" : ""
+        } />
+          </td>
+          <td>${u.userId}</td>
+          <td>
+            <div class="user-name-cell">${u.name}</div>
+            <div style="color:var(--text-muted); font-size:11px;">${u.email}</div>
+          </td>
+          <td>
+            <span class="badge badge-group">${u.groupId}</span>
+          </td>
+          <td>${u.affiliateCode || "-"}</td>
+          <td>${u.createdAt || "-"}</td>
+          <td>
+            <span class="badge ${statusBadgeClass(u.status)}">${statusLabel(
+          u.status
+        )}</span><br/>
+            <span style="font-size:10px; color:var(--text-muted);">${kycLabel(
+              u.kycLevel
+            )}</span>
+          </td>
+          <td>
+            <select class="row-target" data-id="${u.userId}">
+              <option value="">選択</option>
+              <option value="A"${u.groupId === "A" ? " selected" : ""}>A</option>
+              <option value="B"${u.groupId === "B" ? " selected" : ""}>B</option>
+              <option value="C"${u.groupId === "C" ? " selected" : ""}>C</option>
+              <option value="D"${u.groupId === "D" ? " selected" : ""}>D</option>
+            </select>
+            <button class="btn-xs" data-id="${u.userId}">変更</button>
+          </td>
+        `;
+        tbodyEl.appendChild(tr);
+      });
+
+      // 個別チェックボックスのイベント
+      document.querySelectorAll(".row-check").forEach((cb) => {
+        cb.addEventListener("change", () => {
+          const id = cb.dataset.id;
+          if (cb.checked) selectedUserIds.add(id);
+          else selectedUserIds.delete(id);
+
+          // 全選択の状態を更新
+          if (selectedUserIds.size === filteredUsers.length && filteredUsers.length > 0) {
+            selectAllEl.checked = true;
+          } else {
+            selectAllEl.checked = false;
+          }
+        });
+      });
+
+      // 個別移動ボタン
+      document
+        .querySelectorAll("td:last-child .btn-xs")
+        .forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.dataset.id;
+            const select = btn.parentElement.querySelector(".row-target");
+            const target = select.value;
+            if (!target) {
+              showToast("移動先グループを選択してください。");
+              return;
+            }
+            moveUsers([id], target);
+          });
+        });
+    }
+
+    // グループ移動処理（ユーザーID配列）
+    function moveUsers(userIds, targetGroup) {
+      let changed = 0;
+      users = users.map((u) => {
+        if (userIds.includes(u.userId)) {
+          if (u.groupId !== targetGroup) {
+            changed++;
+            return { ...u, groupId: targetGroup };
+          }
+        }
+        return u;
+      });
+
+      if (changed === 0) {
+        showToast("対象ユーザーのグループはすでに指定のグループです。");
+        return;
+      }
+
+      showToast(`ユーザー ${changed} 件を Group ${targetGroup} に移動しました（デモ）。`);
+      renderGroupCards();
+      applyFilters();
+    }
+
+    // 全選択
+    selectAllEl.addEventListener("change", () => {
+      selectedUserIds.clear();
+      if (selectAllEl.checked) {
+        filteredUsers.forEach((u) => selectedUserIds.add(u.userId));
+      }
+      renderUserTable();
+    });
+
+    // 一括移動ボタン
+    btnBulkMove.addEventListener("click", () => {
+      const target = bulkTargetEl.value;
+      if (!target) {
+        showToast("移動先グループを選択してください。");
+        return;
+      }
+      if (selectedUserIds.size === 0) {
+        showToast("移動するユーザーを選択してください。");
+        return;
+      }
+      const ids = Array.from(selectedUserIds);
+      moveUsers(ids, target);
+      // 移動後は選択解除
+      selectedUserIds.clear();
+      selectAllEl.checked = false;
+    });
+
+    // フィルタボタン
+    btnFilter.addEventListener("click", applyFilters);
+    btnClear.addEventListener("click", () => {
+      fKeyword.value = "";
+      fAff.value = "";
+      fFrom.value = "";
+      fTo.value = "";
+      fGroup.value = "all";
+      currentGroupFilter = "all";
+      renderGroupCards();
+      applyFilters();
+    });
+
+    function initDates() {
+      const today = new Date();
+      const isoToday = today.toISOString().slice(0, 10);
+      const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      fTo.value = isoToday;
+      fFrom.value = monthAgo.toISOString().slice(0, 10);
+    }
+
+    function init() {
+      initDates();
+      renderGroupCards();
+      applyFilters();
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - KYC（本人確認）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+    /* ------- カード全体 ------- */
+    .section-card {
+      background: #fff;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      max-width: 760px;
+    }
+    h1.card-title { font-size:22px; margin-bottom:16px; }
+    
+    /* ------- KYC レベルピル ------- */
+    .kyc-pill {
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: inline-block;
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .kyc-0 { background:#fee2e2; color:#b91c1c; }
+    .kyc-1 { background:#fef3c7; color:#92400e; }
+    .kyc-2 { background:#fef9c3; color:#854d0e; }
+    .kyc-3 { background:#d9f99d; color:#365314; }
+    .kyc-4 { background:#bbf7d0; color:#166534; }
+    .kyc-5 { background:#86efac; color:#065f46; }
+
+    /* ------- BOX ------- */
+    .kyc-box {
+      padding: 16px;
+      border: 1px solid var(--border-soft);
+      background: #fafbfd;
+      border-radius: 10px;
+    }
+
+    .upload-section {
+      margin-top: 14px;
+    }
+    .upload-section label {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid var(--border-soft);
+      width: 100%;
+    }
+
+    .btn-submit {
+      margin-top: 18px;
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+    }
+
+    .note {
+      font-size: 12px;
+      margin-top: 8px;
+      color: var(--text-muted);
+    }
+
+    /* スマホ対応 */
+    @media (max-width:600px){
+      h1.card-title { font-size:20px; }
+      .btn-submit { font-size:14px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- HEADER（ログイン状態で自動変化） -->
+<header class="site-header" id="header-area"></header>
+
+<main>
+  <section class="section-card">
+
+    <h1 class="card-title">本人確認（KYC）</h1>
+    <p class="muted" id="kyc-msg"></p>
+
+    <!-- KYC レベル表示  -->
+    <div id="kyc-level-pill" class="kyc-pill kyc-0">
+      レベル - （取得中）
+    </div>
+
+    <div class="kyc-box">
+
+      <div id="kyc-status" style="font-size:15px; margin-bottom:10px; font-weight:bold;">
+        ステータス取得中...
+      </div>
+
+      <!-- KYC フォーム -->
+      <div id="kyc-form">
+
+        <div class="upload-section">
+          <label>本人確認書類（表）</label>
+          <input type="file" id="front-file" accept="image/*">
+        </div>
+
+        <div class="upload-section">
+          <label>本人確認書類（裏）</label>
+          <input type="file" id="back-file" accept="image/*">
+        </div>
+
+        <button class="btn btn-primary btn-submit" id="submit-kyc">
+          KYCを提出する
+        </button>
+
+        <p class="note">
+          JPG / PNG などの画像ファイルをアップロードしてください。
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+</main>
+
+<script>
+const API_BASE = "https://api.exchange-template.com";
+
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path, { credentials:"include" });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function apiPostForm(path, form) {
+  const res = await fetch(API_BASE + path, {
+    method:"POST",
+    credentials:"include",
+    body: form,
+  });
+  const txt = await res.text();
+  if (!res.ok) throw new Error(txt);
+  return JSON.parse(txt);
+}
+
+/* -------------------------
+    KYC ステータス読み込み
+--------------------------*/
+async function loadKycStatus(){
+  const data = await apiGet("/kyc/status");
+  const status = data.status;
+  const level  = data.level ?? 0;
+
+  const pill = document.getElementById("kyc-level-pill");
+  pill.textContent = `レベル ${level}`;
+  pill.className = `kyc-pill kyc-${level}`;
+
+  const statusEl = document.getElementById("kyc-status");
+  const msgEl    = document.getElementById("kyc-msg");
+  const formEl   = document.getElementById("kyc-form");
+
+  switch(status){
+    case 0:
+      statusEl.textContent = "ステータス：未提出";
+      msgEl.textContent = "下記より本人確認書類を提出してください。";
+      formEl.style.display = "block";
+      break;
+
+    case 1:
+      statusEl.textContent = "ステータス：提出済み（確認待ち）";
+      msgEl.textContent = "審査中です。";
+      formEl.style.display = "none";
+      break;
+
+    case 2:
+      statusEl.textContent = "ステータス：審査中";
+      msgEl.textContent = "審査結果をお待ちください。";
+      formEl.style.display = "none";
+      break;
+
+    case 3:
+      statusEl.textContent = "ステータス：承認（一次）";
+      msgEl.textContent = "最終確認中です。";
+      formEl.style.display = "none";
+      break;
+
+    case 4:
+      statusEl.textContent = "ステータス：否認";
+      msgEl.textContent = "問題がありました。書類を再提出してください。";
+      formEl.style.display = "block";
+      break;
+
+    case 5:
+      statusEl.textContent = "ステータス：KYC 完了";
+      msgEl.textContent = "本人確認が完了しました。すべての機能が利用できます。";
+      formEl.style.display = "none";
+      break;
+
+    default:
+      statusEl.textContent = "ステータス";
+      formEl.style.display = "block";
+  }
+}
+
+/* -------------------------
+       KYC 提出
+--------------------------*/
+document.getElementById("submit-kyc").onclick = async ()=>{
+
+  const front = document.getElementById("front-file").files[0];
+  const back  = document.getElementById("back-file").files[0];
+  const msg   = document.getElementById("kyc-msg");
+
+  if(!front || !back){
+    msg.textContent = "両方の画像を選択してください。";
+    msg.style.color = "red";
+    return;
+  }
+
+  const form = new FormData();
+  form.append("files", front);
+  form.append("files", back);
+
+  try{
+    await apiPostForm("/kyc/submit", form);
+    msg.textContent = "提出しました。審査中です。";
+    msg.style.color = "green";
+    loadKycStatus();
+  } catch(e){
+    msg.textContent = "提出に失敗しました。";
+    msg.style.color = "red";
+  }
+};
+
+/* -------------------------
+       初期ロード
+--------------------------*/
+loadKycStatus().catch(()=>{
+  document.getElementById("kyc-msg").textContent = "KYC情報の取得に失敗しました。";
+});
+
+/* -------------------------
+      ヘッダー切替（ログイン後）
+--------------------------*/
+async function updateHeader(){
+  const res = await fetch(API_BASE + "/auth/me", { credentials:"include" });
+  if(!res.ok) return;
+
+  const data = await res.json();
+  const user = data.user || data;
+
+  const header = document.getElementById("header-area");
+
+  header.innerHTML = `
+    <div class="logo"><div class="logo-badge">CX</div>CryptoX Exchange</div>
+    <nav class="site-nav">
+      <a href="index.html">TOP</a>
+      <a href="exchange.html">トレード</a>
+      <a href="wallet.html">ウォレット</a>
+      <a href="system-trade.html">システム取引</a>
+      <a href="support.html">サポート</a>
+      <a href="mypage.html" class="active">マイページ</a>
+      <a href="kyc.html">KYC</a>
+      <a href="history.html">履歴</a>
+    </nav>
+    <div class="header-actions">
+      <a class="btn btn-outline btn-sm">${user.name} さん</a>
+      <a class="btn btn-primary btn-sm" id="logout">ログアウト</a>
+    </div>
+  `;
+
+  document.getElementById("logout").onclick = async()=>{
+    await fetch(API_BASE + "/auth/logout",{method:"POST",credentials:"include"});
+    location.href = "login.html";
+  };
+}
+document.addEventListener("DOMContentLoaded", updateHeader);
+</script>
+</body>
+</html>

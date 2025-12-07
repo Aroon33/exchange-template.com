@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - 次世代の仮想通貨取引所（デモ）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #1f2933;
+      --text-muted: #7b8794;
+      --border-soft: #e4e7eb;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      background: radial-gradient(circle at top left, #e5edff 0, #f5f7fb 40%, #f5f7fb 100%);
+      color: var(--text-main);
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* Header */
+    header {
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 10px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 20px;
+    }
+    .logo-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+    }
+    nav {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .nav-link.active {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn {
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 13px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-outline {
+      border-color: var(--border-soft);
+      color: var(--text-main);
+      background: #fff;
+    }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+    main {
+      padding: 32px 20px 40px;
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    /* Hero */
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 26px;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+    .hero-eyebrow a {
+      text-decoration: underline;
+    }
+    .hero-title {
+      font-size: clamp(26px, 4vw, 32px);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .hero-title span {
+      color: var(--primary);
+    }
+    .hero-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .hero-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .hero-card {
+      background: rgba(255,255,255,0.96);
+      border-radius: 14px;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 8px 24px rgba(15,23,42,0.1);
+      padding: 16px 16px 14px;
+      font-size: 11px;
+    }
+    .hero-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .hero-card-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .chip {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+    .market-mini {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+    .market-mini th,
+    .market-mini td {
+      padding: 4px 4px;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .market-mini th:first-child,
+    .market-mini td:first-child {
+      text-align: left;
+    }
+    .price-up { color: #16a34a; }
+    .price-down { color: #dc2626; }
+
+    /* Sections */
+    .section {
+      margin-bottom: 28px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .section-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 900px) {
+      .features {
+        grid-template-columns: 1fr;
+      }
+    }
+    .feature-card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--border-soft);
+      padding: 12px 12px 10px;
+      font-size: 12px;
+    }
+    .feature-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      font-size: 12px;
+    }
+    @media (max-width: 900px) {
+      .steps {
+        grid-template-columns: 1fr;
+      }
+    }
+    .step-card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--border-soft);
+      padding: 10px 11px 9px;
+    }
+    .step-label {
+      font-size: 11px;
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .step-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .coins-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0,1fr));
+      gap: 8px;
+      font-size: 11px;
+    }
+    @media (max-width: 900px) {
+      .coins-grid {
+        grid-template-columns: repeat(2, minmax(0,1fr));
+      }
+    }
+    .coin-pill {
+      background: #fff;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      padding: 6px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .coin-pill span.symbol {
+      font-weight: 600;
+      font-size: 11px;
+    }
+    .coin-pill span.name {
+      color: var(--text-muted);
+      font-size: 10px;
+    }
+
+    .campaign-banner {
+      background: linear-gradient(135deg, #1652f0, #1d8ff0);
+      border-radius: 14px;
+      color: #fff;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+    }
+    @media (max-width: 780px) {
+      .campaign-banner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+    .campaign-banner h3 {
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .campaign-chip {
+      font-size: 11px;
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: rgba(255,255,255,0.18);
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+    .campaign-btn {
+      border-radius: 999px;
+      padding: 7px 14px;
+      border: none;
+      background: #ffffff;
+      color: #1652f0;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    footer {
+      padding: 16px 20px 20px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+<nav>
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link active">取引履歴</a>
+      <a href="campaign.html" class="nav-link">キャンペーン</a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="campaign.html" class="btn btn-outline btn-sm">キャンペーン</a>
+      <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div>
+        <div class="hero-eyebrow">
+          新規口座開設 & 初回入金で特典あり
+          <a href="campaign.html">詳細を見る →</a>
+        </div>
+        <h1 class="hero-title">
+          次世代の<span>仮想通貨取引体験</span>を、<br />シンプルなUIで。
+        </h1>
+        <p class="hero-sub">
+          CryptoX Exchange は、ビットコイン・イーサリアムはもちろん、話題のミームコインまで
+          <strong>10銘柄以上</strong> に対応したデモ用取引所UIです。<br />
+          口座開設・入金・トレード・システム取引まで、一連のフローを<strong>一画面でイメージ</strong>できます。
+        </p>
+        <div class="hero-actions">
+          <a href="signup.html" class="btn btn-primary">無料で口座開設（デモ）</a>
+          <a href="exchange.html" class="btn btn-outline">取引画面をひと目で見る</a>
+        </div>
+        <div class="hero-meta">
+          ※ 本サイトは UI デザイン確認用のデモであり、実際の注文・入出金は行われません。
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="hero-card-header">
+          <div class="hero-card-title">注目マーケット（サンプル）</div>
+          <span class="chip">10 通貨ペア</span>
+        </div>
+        <table class="market-mini">
+          <thead>
+            <tr>
+              <th>ペア</th><th>価格 (USD)</th><th>24h</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>BTC / USD</td><td class="price-up">67,000.00</td><td class="price-up">+1.25%</td></tr>
+            <tr><td>ETH / USD</td><td class="price-down">3,200.50</td><td class="price-down">-0.80%</td></tr>
+            <tr><td>SOL / USD</td><td class="price-up">180.10</td><td class="price-up">+3.40%</td></tr>
+            <tr><td>DOGE / USD</td><td class="price-up">0.1700</td><td class="price-up">+6.80%</td></tr>
+            <tr><td>SHIB / USD</td><td class="price-up">0.000028</td><td class="price-up">+12.30%</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px; font-size:11px; color:var(--text-muted);">
+          詳細な板・約定履歴は <a href="exchange.html" style="color:var(--primary);">トレード画面</a> で確認できます。
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section">
+      <h2 class="section-title">CryptoX の特徴（UIイメージ）</h2>
+      <p class="section-sub">
+        クライアントへの提案・モックアップとして、そのままデモ可能なレベルの UI 構成になっています。
+      </p>
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-title">1. プロ仕様の取引画面</div>
+          <p>
+            Coinbase 風のクリーンなインターフェースで、<br />
+            ・板（Orderbook）<br />
+            ・約定履歴<br />
+            ・注文パネル（指値 / 成行）<br />
+            を 1 つの画面で確認できます。
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-title">2. ウォレット & 入出金（JPY対応）</div>
+          <p>
+            仮想通貨に加えて <strong>日本円（JPY）</strong> も入出金通貨に対応。<br />
+            銀行振込イメージの UI を用意しているため、国内向けサービスの雰囲気を伝えやすくなっています。
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-title">3. システム取引 UI</div>
+          <p>
+            RSI / 移動平均 / グリッドなどの戦略テンプレート、<br />
+            損切り・利確・最大注文数などを設定できるシステム取引画面を搭載。<br />
+            実装を想像しやすいシグナルログ表示も含まれます。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Steps -->
+    <section class="section">
+      <h2 class="section-title">ご利用イメージ（3ステップ）</h2>
+      <div class="steps">
+        <div class="step-card">
+          <div class="step-label">STEP 1</div>
+          <div class="step-title">口座開設</div>
+          <p>
+            <a href="signup.html" style="color:var(--primary);">口座開設ページ</a> から、メールアドレス・パスワード・基本情報を入力。
+            実際のKYC項目は別途追加できます。
+          </p>
+        </div>
+        <div class="step-card">
+          <div class="step-label">STEP 2</div>
+          <div class="step-title">入金（JPY/USDTなど）</div>
+          <p>
+            <a href="wallet.html" style="color:var(--primary);">ウォレット画面</a> で JPY / BTC / ETH / USDT を選択し、
+            銀行振込・ウォレットアドレスを利用した入金フローを案内。
+          </p>
+        </div>
+        <div class="step-card">
+          <div class="step-label">STEP 3</div>
+          <div class="step-title">トレード & システム取引</div>
+          <p>
+            <a href="exchange.html" style="color:var(--primary);">トレード画面</a> でスポット取引、<br />
+            <a href="system-trade.html" style="color:var(--primary);">システム取引</a> で自動売買の設定・ログ確認ができます。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Coins List -->
+    <section class="section">
+      <h2 class="section-title">対応通貨（サンプル 10 通貨）</h2>
+      <div class="section-sub">
+        実際の実装時には、この一覧から「有効 / 無効」を切り替えるだけでサービス開始イメージを共有できます。
+      </div>
+      <div class="coins-grid">
+        <div class="coin-pill"><span class="symbol">BTC</span><span class="name">Bitcoin</span></div>
+        <div class="coin-pill"><span class="symbol">ETH</span><span class="name">Ethereum</span></div>
+        <div class="coin-pill"><span class="symbol">SOL</span><span class="name">Solana</span></div>
+        <div class="coin-pill"><span class="symbol">XRP</span><span class="name">XRP</span></div>
+        <div class="coin-pill"><span class="symbol">ADA</span><span class="name">Cardano</span></div>
+        <div class="coin-pill"><span class="symbol">DOGE</span><span class="name">Dogecoin</span></div>
+        <div class="coin-pill"><span class="symbol">SHIB</span><span class="name">Shiba Inu</span></div>
+        <div class="coin-pill"><span class="symbol">PEPE</span><span class="name">PEPE</span></div>
+        <div class="coin-pill"><span class="symbol">BONK</span><span class="name">BONK</span></div>
+        <div class="coin-pill"><span class="symbol">WIF</span><span class="name">dogwifhat</span></div>
+      </div>
+    </section>
+
+    <!-- Campaign banner -->
+    <section class="section">
+      <div class="campaign-banner">
+        <div>
+          <div class="campaign-chip">CAMPAIGN</div>
+          <h3>新規口座開設 & 初回入金キャンペーン（デモ）</h3>
+          <p style="font-size:12px;">
+            期間中に口座開設＋一定額の入金で、取引手数料キャッシュバックやボーナス付与などの
+            キャンペーン設計イメージを確認できます。
+          </p>
+        </div>
+        <div>
+          <button class="campaign-btn" onclick="location.href='campaign.html'">
+            キャンペーン詳細を見る
+          </button>
+          <div style="font-size:11px; margin-top:4px; opacity:0.9;">
+            ※ 条件・期間はお客様の要件に合わせて変更可能です。
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    CryptoX Exchange UI Demo &copy; 2025 — このサイトはフロントエンドUIのデモ用途です。
+  </footer>
+</body>
+</html>

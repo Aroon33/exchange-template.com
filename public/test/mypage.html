@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - マイページ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #1f2933;
+      --text-muted: #7b8794;
+      --border-soft: #e4e7eb;
+      --danger: #e02424;
+      --success: #1ca36a;
+      --pending: #f97316;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-soft);
+      padding: 10px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 20px;
+    }
+    .logo-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+    }
+    nav {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .nav-link.active {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn {
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 13px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-outline {
+      background: #fff;
+      border-color: var(--border-soft);
+      color: var(--text-main);
+    }
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 18px 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--bg-soft);
+      border-radius: 12px;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+      padding: 12px 14px;
+      font-size: 12px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .card-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+    }
+    .badge-level {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+    .badge-kyc {
+      background: #dcfce7;
+      color: var(--success);
+    }
+
+    .grid-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+      gap: 14px;
+    }
+    @media (max-width: 900px) {
+      .grid-main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #1652f0, #4f46e5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .user-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .user-email {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .user-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .pill {
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      padding: 3px 8px;
+      font-size: 11px;
+      background: #fff;
+      color: var(--text-muted);
+    }
+    .pill-strong {
+      background: var(--primary-soft);
+      border-color: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      margin-top: 2px;
+    }
+    .summary-main-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .summary-main-value {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .summary-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    @media (max-width: 780px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .summary-card {
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      padding: 8px 9px 7px;
+      background: #f9fafb;
+    }
+    .summary-card-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .summary-card-value {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .two-cols {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      gap: 14px;
+    }
+    @media (max-width: 900px) {
+      .two-cols {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+    th,
+    td {
+      padding: 5px 4px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .link {
+      color: var(--primary);
+      font-size: 11px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      display: inline-block;
+      margin-right: 4px;
+    }
+    .dot-on {
+      background: var(--success);
+    }
+    .dot-off {
+      background: #d1d5db;
+    }
+    .dot-warn {
+      background: var(--pending);
+    }
+
+    .chip-status-open {
+      background: #ffedd5;
+      color: var(--pending);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+    }
+    .chip-status-none {
+      background: #e5e7eb;
+      color: var(--text-muted);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+    }
+
+    .note {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+<nav>
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link active">取引履歴</a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- ユーザー情報＋資産サマリー -->
+    <section class="card">
+      <div class="grid-main">
+        <!-- 左：ユーザー情報 -->
+        <div>
+          <div class="card-header" style="margin-bottom:6px;">
+            <div class="card-title">マイプロフィール</div>
+            <span class="badge badge-level">アカウントランク：Standard</span>
+          </div>
+          <div class="user-row">
+            <div class="avatar" id="avatar-initial">U</div>
+            <div>
+              <div class="user-email" id="user-email">user@example.com</div>
+              <div class="user-meta">最終ログイン：<span id="last-login">2025-11-19 20:00</span></div>
+            </div>
+          </div>
+          <div class="flex-row">
+            <span class="pill-strong">KYC レベル 1 完了</span>
+            <span class="pill">2段階認証：有効</span>
+            <span class="pill">ログイン通知：オン</span>
+          </div>
+          <div class="note" style="margin-top:6px;">
+            ※ 実運用時は、ここに実際のユーザー情報・KYC ステータス・最終ログイン履歴を表示します。
+          </div>
+       </div>
+
+        <!-- 右：資産サマリー -->
+        <div>
+          <div class="card-header" style="margin-bottom:4px;">
+            <div class="card-title">資産サマリー</div>
+            <a href="wallet.html" class="link">ウォレット詳細を見る →</a>
+          </div>
+          <div class="summary-row">
+            <div>
+              <div class="summary-main-label">総評価額</div>
+              <div class="summary-main-value" id="total-balance">0.00 USD</div>
+            </div>
+            <div class="summary-sub">
+              現物＋JPY換算のみを集計（デモ）<br />
+              実運用時はデリバティブ等も含めて計算可能です。
+            </div>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-card">
+              <div class="summary-card-label">現物資産</div>
+              <div class="summary-card-value" id="spot-balance">0.00 USD</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-card-label">日本円残高（JPY相当）</div>
+              <div class="summary-card-value" id="jpy-balance">0.00 USD</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-card-label">含み損益（概算）</div>
+              <div class="summary-card-value" id="pnl-estimate">+0.00 USD</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 下：左：セキュリティ/通知 右：トレード/システム/サポート -->
+    <section class="two-cols">
+      <!-- セキュリティ＆通知 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">セキュリティ設定</div>
+          <span class="card-sub">サンプル表示（実際の設定は未連携）</span>
+        </div>
+        <table>
+          <tbody>
+            <tr>
+              <th>2段階認証（2FA）</th>
+              <td>
+                <span class="status-dot dot-on"></span> 有効（認証アプリ）
+              </td>
+            </tr>
+            <tr>
+              <th>ログイン通知</th>
+              <td>
+                <span class="status-dot dot-on"></span> 新しい端末からのログイン時にメール通知
+              </td>
+            </tr>
+            <tr>
+              <th>出金時の追加認証</th>
+              <td>
+                <span class="status-dot dot-warn"></span> メール認証のみ（2FA の追加を推奨）
+              </td>
+            </tr>
+            <tr>
+              <th>デバイス管理</th>
+              <td>現在ログイン中の端末：2件（サンプル）</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top:10px; font-size:11px; font-weight:600;">通知設定（イメージ）</div>
+        <table>
+          <tbody>
+            <tr>
+              <th>入出金通知</th>
+              <td>メール＋アプリ通知</td>
+            </tr>
+            <tr>
+              <th>強制ロスカット通知</th>
+              <td>アプリ通知のみ</td>
+            </tr>
+            <tr>
+              <th>キャンペーン・お知らせ</th>
+              <td>メール（頻度：月1回程度）</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="note">
+          実際のサービスでは、ここからオン/オフを切り替えられるスイッチ UI を配置します。
+        </div>
+      </div>
+
+      <!-- トレード履歴・システム取引・サポート状況 -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">アクティビティ概況</div>
+          <span class="card-sub">直近のトレード / システム取引 / サポート状況</span>
+        </div>
+
+        <!-- 最近のトレード -->
+        <div style="margin-bottom:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; font-weight:600;">最近のトレード（サンプル）</span>
+            <a href="exchange.html" class="link">トレード画面へ →</a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>日時</th>
+                <th>ペア</th>
+                <th>サイド</th>
+                <th>数量</th>
+                <th>価格 (USD)</th>
+              </tr>
+            </thead>
+            <tbody id="recent-trades">
+              <!-- JSで挿入 -->
+            </tbody>
+          </table>
+        </div>
+
+        <hr style="margin:8px 0; border:none; border-top:1px dashed var(--border-soft);" />
+
+        <!-- システム取引 -->
+        <div style="margin-bottom:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; font-weight:600;">システム取引の状態</span>
+            <a href="system-trade.html" class="link">システム取引設定へ →</a>
+          </div>
+          <table>
+            <tbody>
+              <tr>
+                <th style="width:34%;">稼働ステータス</th>
+                <td><span class="status-dot dot-on"></span> 有効（デモ）</td>
+              </tr>
+              <tr>
+                <th>対象シンボル</th>
+                <td>BTC / USD, ETH / USD</td>
+              </tr>
+              <tr>
+                <th>戦略テンプレート</th>
+                <td>RSI / ブレイクアウト（組み合わせ）</td>
+              </tr>
+              <tr>
+                <th>推定日次取引回数</th>
+                <td>15〜30 回 / 日（サンプル値）</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <hr style="margin:8px 0; border:none; border-top:1px dashed var(--border-soft);" />
+
+        <!-- サポート状況 -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:12px; font-weight:600;">サポート状況</span>
+            <a href="support.html" class="link">サポート画面へ →</a>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+            <div style="font-size:11px;">
+              未クローズの問い合わせ：<span id="open-tickets">0</span> 件<br />
+              これまでの総問い合わせ：<span id="total-tickets">0</span> 件
+            </div>
+            <div id="ticket-chip">
+              <span class="chip-status-none">問い合わせはありません</span>
+            </div>
+          </div>
+          <div class="note">
+            support.html と同じ localStorage（cx_support_threads）を参照して、件数だけを集計しています。
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // デモ用ユーザーID（support.html と合わせる）
+    const CURRENT_USER_ID = "user-demo-001";
+    const STORAGE_KEY = "cx_support_threads";
+
+    // ウォレットのダミー残高（wallet.html と同じ数値）
+    const walletBalances = [
+      { symbol: "BTC", amount: 0.5321, value: 35628.7 },
+      { symbol: "ETH", amount: 4.2345, value: 13550.1 },
+      { symbol: "SOL", amount: 80.12, value: 14421.6 },
+      { symbol: "USDT", amount: 1000, value: 1000 },
+      { symbol: "JPY", amount: 500000, value: 3500 }, // 1 USD ≒ 143JPY のイメージ
+      { symbol: "DOGE", amount: 5200, value: 884 },
+    ];
+
+    // 最近のトレード（ダミー）
+    const sampleTrades = [
+      { time: "2025-11-19 18:21", pair: "BTC / USD", side: "買い", size: "0.0100", price: "67,050.00" },
+      { time: "2025-11-19 17:02", pair: "ETH / USD", side: "売り", size: "0.5000", price: "3,210.50" },
+      { time: "2025-11-18 22:15", pair: "DOGE / USD", side: "買い", size: "1,000", price: "0.1700" },
+    ];
+
+    function formatUsd(num) {
+      return num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USD";
+    }
+
+    function loadSupportThreads() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const all = JSON.parse(raw);
+        return all.filter(t => t.userId === CURRENT_USER_ID);
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
+    }
+
+    function renderBalances() {
+      const total = walletBalances.reduce((sum, w) => sum + w.value, 0);
+      const jpy = walletBalances.find(w => w.symbol === "JPY")?.value || 0;
+      const spot = total; // デモなので全部現物扱い
+
+      document.getElementById("total-balance").textContent = formatUsd(total);
+      document.getElementById("spot-balance").textContent = formatUsd(spot);
+      document.getElementById("jpy-balance").textContent = formatUsd(jpy);
+      document.getElementById("pnl-estimate").textContent = "+0.00 USD"; // ダミー
+    }
+
+    function renderTrades() {
+      const tbody = document.getElementById("recent-trades");
+      tbody.innerHTML = "";
+      sampleTrades.forEach(t => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${t.time}</td>
+          <td>${t.pair}</td>
+          <td>${t.side}</td>
+          <td>${t.size}</td>
+          <td>${t.price}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderSupportSummary() {
+      const threads = loadSupportThreads();
+      const open = threads.filter(t => t.status !== "closed").length;
+      const total = threads.length;
+
+      document.getElementById("open-tickets").textContent = open;
+      document.getElementById("total-tickets").textContent = total;
+
+      const chipWrap = document.getElementById("ticket-chip");
+      chipWrap.innerHTML = "";
+      const span = document.createElement("span");
+      if (open > 0) {
+        span.className = "chip-status-open";
+        span.textContent = `対応中 / 未対応 ${open} 件`;
+      } else if (total > 0) {
+        span.className = "chip-status-none";
+        span.textContent = "すべて対応済み";
+      } else {
+        span.className = "chip-status-none";
+        span.textContent = "問い合わせはありません";
+      }
+      chipWrap.appendChild(span);
+    }
+
+    function initUserInfo() {
+      // 実運用ではサーバーから受け取る想定。ここではダミー。
+      const name = "Demo User";
+      const email = "user@example.com";
+      const lastLogin = new Date().toLocaleString("ja-JP", { hour12: false });
+
+      document.getElementById("user-name").textContent = name;
+      document.getElementById("user-email").textContent = email;
+      document.getElementById("last-login").textContent = lastLogin;
+      document.getElementById("avatar-initial").textContent = (name[0] || "U").toUpperCase();
+    }
+
+    function init() {
+      initUserInfo();
+      renderBalances();
+      renderTrades();
+      renderSupportSummary();
+    }
+
+    init();
+  </script>
+</body>
+</html>

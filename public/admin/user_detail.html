@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ユーザー詳細 | CryptoX Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+<header class="admin-header">
+  <div class="admin-header-left">
+    <div class="admin-logo-badge">AX</div>
+    <div>
+      <div class="admin-logo-text">Admin Console</div>
+      <div class="admin-logo-sub">ユーザー詳細</div>
+    </div>
+  </div>
+  <div class="admin-header-right">
+    <button class="btn btn-outline btn-sm" onclick="location.href='../login.html'">ログアウト</button>
+  </div>
+</header>
+
+<main class="admin-main">
+  <div class="admin-main-inner">
+
+    <h1 class="page-title">ユーザー詳細</h1>
+    <p id="msg" class="muted"></p>
+
+    <section class="card">
+      <h2 class="card-title">基本情報</h2>
+      <div class="info-grid">
+        <div class="info-row"><span class="info-label">ユーザーID</span><span id="u-id">-</span></div>
+        <div class="info-row"><span class="info-label">名前</span><span id="u-name">-</span></div>
+        <div class="info-row"><span class="info-label">メール</span><span id="u-email">-</span></div>
+        <div class="info-row"><span class="info-label">開設日</span><span id="u-created">-</span></div>
+        <div class="info-row"><span class="info-label">KYCレベル</span><span id="u-kyc">-</span></div>
+        <div class="info-row"><span class="info-label">グループ</span>
+          <select id="u-group" class="input-sm">
+            <option value="">-</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+          <button class="btn-xs" id="btn-update-group">変更</button>
+        </div>
+        <div class="info-row">
+          <span class="info-label">システム状態</span>
+          <select id="u-status" class="input-sm">
+            <option value="RUNNING">RUNNING</option>
+            <option value="STOPPED">STOPPED</option>
+          </select>
+          <button class="btn-xs" id="btn-update-status">更新</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">プロフィール情報</h2>
+      <div class="info-grid">
+        <div class="info-row"><span class="info-label">生年月日</span><span id="p-birth">-</span></div>
+        <div class="info-row"><span class="info-label">住所</span><span id="p-address">-</span></div>
+        <div class="info-row"><span class="info-label">電話番号</span><span id="p-phone">-</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">口座残高</h2>
+      <div class="info-grid">
+        <div class="info-row"><span class="info-label">総残高</span><span id="w-total">-</span></div>
+        <div class="info-row"><span class="info-label">利用可能</span><span id="w-avail">-</span></div>
+        <div class="info-row"><span class="info-label">ロック</span><span id="w-lock">-</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">入出金履歴</h2>
+      <table class="table">
+        <thead>
+          <tr><th>ID</th><th>種別</th><th>金額</th><th>ステータス</th><th>日時</th></tr>
+        </thead>
+        <tbody id="transfer-body"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">取引履歴（Trade）</h2>
+      <table class="table">
+        <thead>
+          <tr><th>ID</th><th>通貨</th><th>方向</th><th>サイズ</th><th>利益</th><th>日時</th></tr>
+        </thead>
+        <tbody id="trade-body"></tbody>
+      </table>
+    </section>
+
+  </div>
+</main>
+
+<script>
+const API = "https://api.exchange-template.com";
+const msg = l => {
+  const el = document.getElementById("msg");
+  el.textContent = l;
+  el.style.color = "green";
+};
+const err = l => {
+  const el = document.getElementById("msg");
+  el.textContent = l;
+  el.style.color = "red";
+};
+
+function fmtDate(i) {
+  return new Date(i).toLocaleString("ja-JP", { hour12:false });
+}
+
+/* ▼ ID パラメータ取得 */
+const params = new URLSearchParams(window.location.search);
+const userId = Number(params.get("id"));
+
+if (!userId) {
+  err("ユーザーIDが指定されていません");
+}
+
+/* ▼ API GET */
+async function apiGet(p) {
+  const r = await fetch(API + p, { credentials: "include" });
+  const t = await r.text();
+  if (!r.ok) throw new Error(t);
+  return JSON.parse(t);
+}
+
+/* ▼ API POST */
+async function apiPost(p, body) {
+  const r = await fetch(API + p, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(body)
+  });
+  const t = await r.text();
+  if (!r.ok) throw new Error(t);
+  return JSON.parse(t);
+}
+
+/* ▼ ユーザー詳細読み込み */
+async function loadDetail() {
+  try {
+    const u = await apiGet(`/admin/users/${userId}`);
+
+    document.getElementById("u-id").textContent = u.id;
+    document.getElementById("u-name").textContent = u.name;
+    document.getElementById("u-email").textContent = u.email;
+    document.getElementById("u-created").textContent = fmtDate(u.createdAt);
+    document.getElementById("u-kyc").textContent = u.kycRequests[0]?.status ?? 0;
+
+    document.getElementById("u-group").value = u.groupId ?? "";
+    document.getElementById("u-status").value = u.systemStatus;
+
+    document.getElementById("p-birth").textContent = u.UserProfile?.dateOfBirth ?? "-";
+    document.getElementById("p-address").textContent = u.UserProfile?.address ?? "-";
+    document.getElementById("p-phone").textContent = u.UserProfile?.phone ?? "-";
+
+    document.getElementById("w-total").textContent = u.wallet?.balanceTotal ?? 0;
+    document.getElementById("w-avail").textContent = u.wallet?.balanceAvailable ?? 0;
+    document.getElementById("w-lock").textContent = u.wallet?.balanceLocked ?? 0;
+
+    /* 入出金履歴 */
+    const tBody = document.getElementById("transfer-body");
+    tBody.innerHTML = "";
+    u.transfers.forEach(t => {
+      tBody.innerHTML += `
+        <tr>
+          <td>${t.id}</td>
+          <td>${t.type}</td>
+          <td>${t.amount}</td>
+          <td>${t.status}</td>
+          <td>${fmtDate(t.createdAt)}</td>
+        </tr>`;
+    });
+
+    /* 取引履歴 */
+    const tradeBody = document.getElementById("trade-body");
+    tradeBody.innerHTML = "";
+    u.trades?.forEach(tr => {
+      tradeBody.innerHTML += `
+        <tr>
+          <td>${tr.id}</td>
+          <td>${tr.symbol}</td>
+          <td>${tr.side}</td>
+          <td>${tr.size}</td>
+          <td>${tr.profit}</td>
+          <td>${fmtDate(tr.openedAt)}</td>
+        </tr>`;
+    });
+
+    msg("ユーザー情報を読み込みました。");
+
+  } catch (e) {
+    console.error(e);
+    err("ユーザー情報の取得に失敗しました");
+  }
+}
+
+/* ▼ グループ変更 */
+document.getElementById("btn-update-group").onclick = async () => {
+  try {
+    const groupId = Number(document.getElementById("u-group").value);
+    await apiPost(`/admin/users/${userId}/group`, { groupId });
+    msg("グループを更新しました");
+  } catch {
+    err("グループ更新に失敗");
+  }
+};
+
+/* ▼ systemStatus 更新 */
+document.getElementById("btn-update-status").onclick = async () => {
+  try {
+    const status = document.getElementById("u-status").value;
+    await apiPost(`/admin/users/${userId}/system-status`, { status });
+    msg("ステータスを更新しました");
+  } catch {
+    err("ステータス更新に失敗");
+  }
+};
+
+/* ▼ 初期読み込み */
+loadDetail();
+</script>
+
+</body>
+</html>

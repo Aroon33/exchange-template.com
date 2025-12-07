@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - 入金申請管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-title">メニュー</div>
+  <ul class="nav-list">
+    <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
+    <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
+    <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
+    <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
+    <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
+    <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
+    <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
+    <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
+    <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
+    <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
+    <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
+  </ul>
+</aside>
+
+
+  <!-- HEADER -->
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <div class="admin-logo-badge">AX</div>
+      <div>
+        <div class="admin-logo-text">Admin Console</div>
+        <div class="admin-logo-sub">入金申請管理</div>
+      </div>
+    </div>
+    <div class="admin-header-right">
+      <span id="admin-user-label">管理者</span>
+      <button class="btn btn-outline btn-sm" onclick="location.href='../login.html'">ログアウト</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div class="admin-main-inner">
+
+      <div class="page-title">入金申請一覧（PENDING）</div>
+
+      <!-- フィルター -->
+      <div style="margin:12px 0;">
+        <select id="status-filter" class="btn-sm">
+          <option value="ALL">すべて</option>
+          <option value="PENDING">申請中</option>
+          <option value="COMPLETED">完了</option>
+          <option value="CANCELED">キャンセル</option>
+        </select>
+        <button class="btn-sm" id="reload-btn">再読み込み</button>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card" style="margin-top:16px;">
+        <table class="table" style="width:100%; font-size:13px;">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>申請日時</th>
+              <th>名前</th>
+              <th>method</th>
+              <th>currency</th>
+              <th>金額</th>
+              <th>更新日時</th>
+              <th>ステータス</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="deposit-table-body">
+            <tr><td colspan="9" style="text-align:center;color:#777;">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- SCRIPT -->
+  <script>
+    const API_BASE = "https://api.exchange-template.com";
+
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2000);
+    }
+
+    function formatDate(iso) {
+      if (!iso) return "-";
+      return new Date(iso).toLocaleString("ja-JP", { hour12:false });
+    }
+
+    function formatAmount(a) {
+      const num = Number(a);
+      if (isNaN(num)) return a;
+      return num.toLocaleString("en-US", { minimumFractionDigits:2, maximumFractionDigits:8 });
+    }
+
+    // GET wrapper
+    async function apiGet(path) {
+      const res = await fetch(API_BASE + path, {
+        credentials: "include",
+      });
+      const txt = await res.text();
+      if (!res.ok) throw new Error(txt);
+      return JSON.parse(txt);
+    }
+
+    // POST wrapper
+    async function apiPost(path, body) {
+      const res = await fetch(API_BASE + path, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const txt = await res.text();
+      if (!res.ok) throw new Error(txt);
+      return JSON.parse(txt);
+    }
+
+    // 承認処理
+    async function approveDeposit(id) {
+      try {
+        await apiPost("/deposit/approve", { id });
+        showToast("承認しました");
+        loadDeposits();
+      } catch (e) {
+        console.error(e);
+        showToast("承認に失敗しました");
+      }
+    }
+
+    // 描画
+    function renderTable(list) {
+      const tbody = document.getElementById("deposit-table-body");
+      tbody.innerHTML = "";
+
+      if (!list.length) {
+        tbody.innerHTML =
+          '<tr><td colspan="9" style="text-align:center;color:#777;">申請なし</td></tr>';
+        return;
+      }
+
+      list.forEach(t => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${t.id}</td>
+          <td>${formatDate(t.createdAt)}</td>
+          <td>${t.user?.name ?? "-"}</td>
+          <td>${t.method ?? "-"}</td>
+          <td>${t.currency ?? "-"}</td>
+          <td>${formatAmount(t.amount)}</td>
+          <td>${formatDate(t.updatedAt)}</td>
+          <td>${t.status}</td>
+          <td>
+            <button class="btn-xs btn-xs-primary" onclick="approveDeposit(${t.id})">
+              承認
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // データ取得
+    async function loadDeposits() {
+      try {
+        const list = await apiGet("/deposit/pending");
+        renderTable(list);
+      } catch (e) {
+        console.error(e);
+        showToast("取得に失敗しました");
+      }
+    }
+
+    // 初期化
+    loadDeposits();
+  </script>
+
+</body>
+</html>

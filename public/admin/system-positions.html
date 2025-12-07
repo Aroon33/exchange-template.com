@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - システムポジション＆決済管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+
+  <style>
+    th, td {
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+    .btn-mini {
+      padding: 3px 6px;
+      font-size: 11px;
+      margin-left: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-title">メニュー</div>
+  <ul class="nav-list">
+    <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
+    <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
+    <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
+    <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
+    <li class="nav-item"><a href="kyc.html" class="nav-link">🪪 KYC状況</a></li>
+    <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
+    <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
+    <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
+    <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
+    <li class="nav-item"><a href="system-positions.html" class="nav-link active">📈 ポジション管理</a></li>
+    <li class="nav-item"><a href="system-history.html" class="nav-link">📜 システム履歴</a></li>
+  </ul>
+</aside>
+
+<!-- HEADER -->
+<header class="admin-header">
+  <div class="admin-header-left">
+    <div class="admin-logo-badge">AX</div>
+    <div>
+      <div class="admin-logo-text">Admin Console</div>
+      <div class="admin-logo-sub">システムポジション管理</div>
+    </div>
+  </div>
+  <div class="admin-header-right"></div>
+</header>
+
+<!-- MAIN -->
+<main class="admin-main">
+  <div class="admin-main-inner">
+
+    <div class="page-title">システムポジション（OPEN）＋ 決済操作</div>
+
+    <!-- ▼ グループ選択 -->
+    <section class="filters-card">
+      <div class="filters-grid">
+        <div class="field">
+          <label>グループID</label>
+          <select id="groupSelect"></select>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-xs btn-xs-primary" onclick="loadPositions()">更新</button>
+        <button class="btn-xs btn-danger" onclick="closeGroupAll()">⚠ 全決済（親＋子）</button>
+      </div>
+    </section>
+
+    <!-- ▼ 親口座 -->
+    <section class="table-card">
+      <div class="table-header-row">
+        <div class="table-title">親口座ポジション（MAM）</div>
+        <div class="table-meta" id="metaParent"></div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Lot</th>
+            <th>Entry</th>
+            <th>Current</th>
+            <th>PnL</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="parentBody"></tbody>
+      </table>
+    </section>
+
+    <!-- ▼ 子口座 -->
+    <section class="table-card">
+      <div class="table-header-row">
+        <div class="table-title">子口座ポジション（PAM）</div>
+        <div class="table-meta" id="metaChildren"></div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Symbol</th>
+            <th>Lot</th>
+            <th>Entry</th>
+            <th>Current</th>
+            <th>PnL</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="childBody"></tbody>
+      </table>
+    </section>
+
+  </div>
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"><span id="toast-text"></span></div>
+
+<script>
+const API = "https://api.exchange-template.com";
+
+async function apiGet(path){
+  const r = await fetch(API + path, { credentials:"include" });
+  const t = await r.text();
+  if(!r.ok) throw new Error(t);
+  return JSON.parse(t);
+}
+
+async function apiPost(path){
+  const r = await fetch(API + path, { method:"POST", credentials:"include" });
+  const t = await r.text();
+  if(!r.ok) throw new Error(t);
+  return JSON.parse(t);
+}
+
+function toast(msg){
+  const t = document.getElementById("toast");
+  document.getElementById("toast-text").textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1800);
+}
+
+/* ▼ グループ一覧読み込み */
+async function loadGroups(){
+  const list = await apiGet("/admin/groups");
+  const sel = document.getElementById("groupSelect");
+  sel.innerHTML = "";
+  list.forEach(g=>{
+    sel.innerHTML += `<option value="${g.id}">${g.name} (ID:${g.id})</option>`;
+  });
+}
+
+async function loadPositions(){
+  const gid = document.getElementById("groupSelect").value;
+  if(!gid) return;
+
+  const res = await apiGet(`/admin/system/positions/${gid}`);
+
+  renderParent(res.parent);
+  renderChildren(res.children);
+}
+
+/* ▼ 親レンダリング */
+function renderParent(list){
+  const body = document.getElementById("parentBody");
+  body.innerHTML = "";
+  document.getElementById("metaParent").textContent = `${list.length}件`;
+
+  if(!list.length){
+    body.innerHTML = `<tr><td colspan="6" class="muted">なし</td></tr>`;
+    return;
+  }
+
+  list.forEach(p=>{
+    body.innerHTML += `
+      <tr>
+        <td>${p.symbol}</td>
+        <td>${p.size}</td>
+        <td>${p.entryPrice}</td>
+        <td>${p.currentPrice.toFixed(5)}</td>
+        <td class="${p.unrealizedPnl>=0?'profit':'loss'}">${p.unrealizedPnl.toFixed(5)}</td>
+        <td>
+          <button class="btn-mini btn-danger" onclick="closeGroupSymbol('${p.symbol}')">
+            ${p.symbol} を決済
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+/* ▼ 子レンダリング */
+function renderChildren(list){
+  const body = document.getElementById("childBody");
+  body.innerHTML = "";
+  document.getElementById("metaChildren").textContent = `${list.length}件`;
+
+  if(!list.length){
+    body.innerHTML = `<tr><td colspan="7" class="muted">なし</td></tr>`;
+    return;
+  }
+
+  list.forEach(c=>{
+    body.innerHTML += `
+      <tr>
+        <td>${c.userName} (ID:${c.userId})</td>
+        <td>${c.symbol}</td>
+        <td>${c.size}</td>
+        <td>${c.entryPrice}</td>
+        <td>${c.currentPrice.toFixed(5)}</td>
+        <td class="${c.unrealizedPnl>=0?'profit':'loss'}">${c.unrealizedPnl.toFixed(5)}</td>
+        <td>
+          <button class="btn-mini btn-danger" onclick="closeUserSymbol(${c.userId}, '${c.symbol}')">
+            ${c.symbol} 決済
+          </button>
+          <button class="btn-mini btn-warning" onclick="closeUser(${c.userId})">
+            ユーザー全決済
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+/* ▼ 決済機能実装 */
+
+async function closeGroupAll(){
+  const gid = document.getElementById("groupSelect").value;
+  if(!gid) return;
+  if(!confirm("⚠ グループ全ポジションを決済しますか？")) return;
+
+  await apiPost(`/system/close-group/${gid}`);
+  toast("グループ全決済しました");
+  loadPositions();
+}
+
+async function closeGroupSymbol(symbol){
+  const gid = document.getElementById("groupSelect").value;
+  if(!gid) return;
+  if(!confirm(`⚠ ${symbol} を決済しますか？`)) return;
+
+  await apiPost(`/system/close-group/${gid}/${symbol}`);
+  toast(`${symbol} を決済しました`);
+  loadPositions();
+}
+
+async function closeUser(userId){
+  if(!confirm(`⚠ ユーザー ${userId} の全通貨を決済しますか？`)) return;
+
+  await apiPost(`/system/close-user/${userId}`);
+  toast(`ユーザー ${userId} 全決済しました`);
+  loadPositions();
+}
+
+async function closeUserSymbol(userId, symbol){
+  if(!confirm(`⚠ ユーザー ${userId} の ${symbol} を決済しますか？`)) return;
+
+  await apiPost(`/system/close-user/${userId}/${symbol}`);
+  toast(`ユーザー ${userId} の ${symbol} を決済しました`);
+  loadPositions();
+}
+
+/* 初期化 */
+loadGroups().then(loadPositions);
+</script>
+
+</body>
+</html>

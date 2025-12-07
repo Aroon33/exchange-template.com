@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - KYC確認</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-soft: #e5e7eb;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --pending: #f97316;
+    }
+    * { box-sizing:border-box; margin:0; padding:0;
+        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    body { background:var(--bg); color:var(--text-main); }
+    a { text-decoration:none; color:inherit; }
+
+    /* Header */
+    .admin-header {
+      position:fixed; top:0; left:0; right:0;
+      height:52px; background:#fff;
+      border-bottom:1px solid var(--border-soft);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 18px 0 60px; z-index:30;
+    }
+    .admin-header-left { display:flex; align-items:center; gap:10px; }
+    .logo-badge {
+      width:26px; height:26px; border-radius:8px;
+      background:var(--primary); color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:14px; font-weight:700;
+    }
+    .logo-text { font-weight:700; font-size:16px; }
+    .logo-sub { font-size:11px; color:var(--text-muted); }
+    .admin-header-right { display:flex; align-items:center; gap:10px;
+      font-size:11px; color:var(--text-muted); }
+    .btn {
+      border-radius:999px; padding:6px 12px;
+      font-size:11px; border:1px solid transparent;
+      background:transparent; cursor:pointer;
+    }
+    .btn-outline { border-color:var(--border-soft); background:#fff; color:var(--text-main); }
+    .btn-sm { padding:4px 10px; font-size:11px; }
+
+    /* Sidebar */
+    .sidebar {
+      position:fixed; top:0; left:0; bottom:0;
+      width:200px; background:#0f172a; color:#e5e7eb;
+      padding-top:52px; display:flex; flex-direction:column;
+      border-right:1px solid #020617; z-index:20;
+    }
+    .sidebar-title {
+      padding:10px 14px; font-size:11px;
+      text-transform:uppercase; letter-spacing:0.08em;
+      color:#6b7280;
+    }
+    .nav-list { list-style:none; margin:0; padding:0 8px 12px; }
+    .nav-item { margin-bottom:4px; }
+    .nav-link {
+      display:flex; align-items:center; gap:8px;
+      padding:7px 8px; border-radius:8px;
+      font-size:12px; color:#9ca3af; cursor:pointer;
+    }
+    .nav-link:hover { background:rgba(148,163,184,0.15); color:#e5e7eb; }
+    .nav-link.active {
+      background:#111827; color:#e5e7eb;
+      border:1px solid rgba(129,140,248,0.5);
+    }
+    .nav-icon { width:14px; text-align:center; font-size:12px; }
+    .sidebar-footer {
+      margin-top:auto; padding:10px 14px 12px;
+      font-size:11px; color:#6b7280;
+      border-top:1px solid rgba(31,41,55,0.9);
+    }
+
+    /* Main layout */
+    .main { margin-left:200px; padding-top:52px; }
+    .main-inner { max-width:1120px; margin:0 auto; padding:16px 18px 24px; }
+    .page-title { font-size:16px; font-weight:600; margin-bottom:4px; }
+    .page-sub { font-size:11px; color:var(--text-muted); margin-bottom:10px; }
+
+    /* Filters */
+    .filters-card {
+      background:#fff; border-radius:10px;
+      border:1px solid var(--border-soft);
+      padding:10px 12px 8px;
+      box-shadow:0 1px 2px rgba(15,23,42,0.03);
+      margin-bottom:10px;
+    }
+    .filters-row {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:8px;
+    }
+    .filters-title { font-size:13px; font-weight:600; }
+    .filters-meta { font-size:11px; color:var(--text-muted); }
+    .filters-grid {
+      display:grid;
+      grid-template-columns:minmax(0,1.1fr) minmax(0,0.8fr) minmax(0,0.8fr);
+      gap:8px;
+    }
+    @media(max-width:900px){ .filters-grid{ grid-template-columns:1fr; } }
+    .field {
+      display:flex; flex-direction:column; gap:2px;
+      font-size:11px;
+    }
+    .field label { color:var(--text-muted); }
+    .field input, .field select {
+      border-radius:6px; border:1px solid var(--border-soft);
+      padding:6px 7px; font-size:11px;
+      outline:none; background:#fff;
+    }
+    .field input:focus, .field select:focus { border-color:var(--primary); }
+
+    .btn-xs {
+      padding:4px 9px; border-radius:999px;
+      font-size:11px; border:1px solid var(--border-soft);
+      background:#fff; cursor:pointer;
+    }
+    .btn-xs-primary {
+      background:var(--primary); color:#fff; border-color:var(--primary);
+    }
+
+    /* Pane layout */
+    .pane-grid {
+      display:grid;
+      grid-template-columns:minmax(0,0.95fr) minmax(0,1.05fr);
+      gap:10px;
+    }
+    @media(max-width:900px){ .pane-grid{ grid-template-columns:1fr; } }
+
+    .card {
+      background:#fff; border-radius:10px;
+      border:1px solid var(--border-soft);
+      box-shadow:0 1px 2px rgba(15,23,42,0.03);
+      padding:10px 11px 9px; font-size:12px;
+    }
+    .card-header-row {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:6px;
+    }
+    .card-title-small { font-size:13px; font-weight:600; }
+    .card-sub-small { font-size:11px; color:var(--text-muted); }
+
+    .list-box {
+      max-height:420px; overflow-y:auto;
+      border-radius:8px; border:1px solid #e5e7eb;
+      background:#f9fafb;
+    }
+    .kyc-row {
+      padding:7px 8px; border-bottom:1px solid #e5e7eb;
+      cursor:pointer; display:grid;
+      grid-template-columns:minmax(0,1.2fr) minmax(0,0.8fr) minmax(0,0.8fr);
+      gap:4px 8px; align-items:center; background:#fff;
+      font-size:11px;
+    }
+    .kyc-row:nth-child(2n){ background:#f9fafb; }
+    .kyc-row:last-child{ border-bottom:none; }
+    .kyc-row.active{ background:#eef2ff; border-left:3px solid var(--primary); }
+
+    .user-name { font-size:12px; font-weight:600; }
+    .user-id { color:var(--text-muted); }
+
+    .badge {
+      border-radius:999px; padding:2px 8px;
+      font-size:10px; display:inline-flex;
+      align-items:center;
+    }
+    .badge-status-all_ng { background:#fee2e2; color:var(--danger); }
+    .badge-status-selfie_ng,
+    .badge-status-address_ng,
+    .badge-status-id_ng { background:#ffedd5; color:var(--pending); }
+    .badge-status-steps_ok,
+    .badge-status-all_ok { background:#dcfce7; color:var(--success); }
+
+    .detail-header {
+      display:flex; justify-content:space-between; align-items:flex-start;
+      gap:8px; margin-bottom:6px;
+    }
+    .detail-title { font-size:13px; font-weight:600; margin-bottom:2px; }
+    .detail-meta { font-size:11px; color:var(--text-muted); }
+    .detail-meta span{ margin-right:8px; }
+
+    .status-select {
+      font-size:11px; padding:4px 6px;
+      border-radius:6px; border:1px solid var(--border-soft);
+      outline:none;
+    }
+    .status-select:focus{ border-color:var(--primary); }
+
+    .info-grid {
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px; margin-top:4px;
+    }
+    @media(max-width:800px){ .info-grid{ grid-template-columns:1fr; } }
+
+    .info-block {
+      border-radius:8px; border:1px solid var(--border-soft);
+      padding:8px 9px; background:#f9fafb; font-size:11px;
+    }
+    .info-label { font-size:11px; color:var(--text-muted); margin-bottom:3px; }
+    .info-value { font-size:12px; font-weight:600; }
+    .info-row { font-size:11px; margin-top:2px; }
+
+    .check-list { font-size:11px; margin-top:4px; }
+    .check-item { margin-bottom:3px; }
+
+    .toolbar {
+      display:flex; justify-content:flex-end; gap:6px; margin-top:8px;
+    }
+    .note { font-size:10px; color:var(--text-muted); margin-top:4px; }
+
+    .toast {
+      position:fixed; right:16px; bottom:16px;
+      background:#111827; color:#f9fafb;
+      padding:8px 14px; border-radius:999px;
+      font-size:11px; display:none; z-index:50;
+    }
+    .toast.show{ display:block; }
+
+    @media(max-width:768px){
+      .admin-header{ padding-left:54px; }
+      .sidebar{ width:180px; }
+      .main{ margin-left:180px; }
+    }
+    @media(max-width:640px){
+      .sidebar{ transform:translateX(-100%); }
+      .main{ margin-left:0; }
+      .admin-header{ padding-left:12px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-title">メニュー</div>
+    <ul class="nav-list">
+      <li class="nav-item"><a href="index.html" class="nav-link"><span class="nav-icon">🏠</span><span>ダッシュボード</span></a></li>
+      <li class="nav-item"><a href="tickets.html" class="nav-link"><span class="nav-icon">💬</span><span>問い合わせ管理</span></a></li>
+      <li class="nav-item"><a href="users.html" class="nav-link"><span class="nav-icon">👥</span><span>ユーザー一覧</span></a></li>
+      <li class="nav-item"><a href="kyc.html" class="nav-link active"><span class="nav-icon">🪪</span><span>KYC確認</span></a></li>
+      <li class="nav-item"><a href="trades.html" class="nav-link"><span class="nav-icon">📊</span><span>取引状況</span></a></li>
+      <li class="nav-item"><a href="deposit.html" class="nav-link"><span class="nav-icon">➕</span><span>入金申請</span></a></li>
+      <li class="nav-item"><a href="withdraw.html" class="nav-link"><span class="nav-icon">➖</span><span>出金申請</span></a></li>
+      <li class="nav-item"><a href="group.html" class="nav-link"><span class="nav-icon">🧩</span><span>グループ管理</span></a></li>
+      <li class="nav-item"><a href="settings.html" class="nav-link"><span class="nav-icon">⚙️</span><span>システム設定</span></a></li>
+    </ul>
+    <div class="sidebar-footer">CryptoX Admin<br>UI Demo &copy; 2025</div>
+  </aside>
+
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <div class="logo-badge">AX</div>
+      <div>
+        <div class="logo-text">Admin Console</div>
+        <div class="logo-sub">KYC確認</div>
+      </div>
+    </div>
+    <div class="admin-header-right">
+      <span>管理者：admin@example.com</span>
+      <button class="btn btn-outline btn-sm" onclick="location.href='login.html'">ログアウト（デモ）</button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="main-inner">
+      <div class="page-title">KYC確認</div>
+      <div class="page-sub">
+        提出された本人確認情報を確認し、6段階の判定ステータスを付与するための管理画面（デモ）です。<br>
+        ステータス：全てNG / セルフィーNG / 住所証明NG / 本人確認書類NG / 全てOK / 1〜5 OK
+      </div>
+
+      <!-- Filters -->
+      <section class="filters-card">
+        <div class="filters-row">
+          <div>
+            <div class="filters-title">フィルター</div>
+            <div class="filters-meta">キーワード・ステータス・KYCレベルで絞り込みます。</div>
+          </div>
+          <div>
+            <button class="btn-xs" id="btn-clear">条件クリア</button>
+            <button class="btn-xs btn-xs-primary" id="btn-search">検索</button>
+          </div>
+        </div>
+        <div class="filters-grid">
+          <div class="field">
+            <label>キーワード（名前・ユーザーID）</label>
+            <input type="text" id="f-keyword" placeholder="例：Taro / user-demo-001" />
+          </div>
+          <div class="field">
+            <label>KYCレベル</label>
+            <select id="f-level">
+              <option value="all">すべて</option>
+              <option value="1">レベル1</option>
+              <option value="2">レベル2</option>
+              <option value="3">レベル3</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>判定ステータス</label>
+            <select id="f-status">
+              <option value="all">すべて</option>
+              <option value="all_ng">全てNG</option>
+              <option value="selfie_ng">セルフィーがNG</option>
+              <option value="address_ng">住所証明がNG</option>
+              <option value="id_ng">本人確認書類がNG</option>
+              <option value="all_ok">全てOK</option>
+              <option value="steps_ok">1〜5 OK</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- List + detail -->
+      <section class="pane-grid">
+        <!-- List -->
+        <div class="card">
+          <div class="card-header-row">
+            <div>
+              <div class="card-title-small">KYC申請一覧</div>
+              <div class="card-sub-small" id="list-count">0件</div>
+            </div>
+            <button class="btn-xs" id="btn-refresh">再読み込み</button>
+          </div>
+          <div class="list-box" id="kyc-list"></div>
+        </div>
+
+        <!-- Detail -->
+        <div class="card">
+          <div class="detail-header">
+            <div>
+              <div class="detail-title" id="detail-title">申請を選択してください</div>
+              <div class="detail-meta" id="detail-meta">
+                左の一覧から申請を選択すると、提出内容とステータスを確認できます。
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:var(--text-muted); margin-bottom:2px;">判定ステータス</div>
+              <select class="status-select" id="status-select" disabled>
+                <option value="all_ng">全てNG</option>
+                <option value="selfie_ng">セルフィーがNG</option>
+                <option value="address_ng">住所証明がNG</option>
+                <option value="id_ng">本人確認書類がNG</option>
+                <option value="all_ok">全てOK</option>
+                <option value="steps_ok">1〜5 OK</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-block">
+              <div class="info-label">ユーザー情報</div>
+              <div class="info-value" id="info-name">-</div>
+              <div class="info-row" id="info-userid">ユーザーID: -</div>
+              <div class="info-row" id="info-email">メール: -</div>
+              <div class="info-row" id="info-level">申請レベル: -</div>
+              <div class="info-row" id="info-created">申請日時: -</div>
+            </div>
+            <div class="info-block">
+              <div class="info-label">書類ごとの判定</div>
+              <div class="check-list">
+                <div class="check-item" id="check-selfie">セルフィー: -</div>
+                <div class="check-item" id="check-id">本人確認書類: -</div>
+                <div class="check-item" id="check-address">住所証明: -</div>
+              </div>
+              <div class="info-row" id="info-updated">最終更新: -</div>
+            </div>
+          </div>
+
+          <div class="toolbar" id="toolbar" style="display:none;">
+            <button class="btn-xs btn-xs-primary" id="btn-apply">ステータスを更新</button>
+          </div>
+          <div class="note">
+            ※ このページはフロントエンドのみのデモです。<br>
+            実際の環境では、APIを通じてKYC審査結果をバックエンドへ保存し、ユーザーのKYCレベルと連動させる想定です。
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const KYC_KEY = "cx_kyc_requests";
+
+    const statusLabels = {
+      all_ng: "全てNG",
+      selfie_ng: "セルフィーがNG",
+      address_ng: "住所証明がNG",
+      id_ng: "本人確認書類がNG",
+      all_ok: "全てOK",
+      steps_ok: "1〜5 OK",
+    };
+
+    const levelLabels = {
+      1: "レベル1",
+      2: "レベル2",
+      3: "レベル3",
+    };
+
+    const listEl = document.getElementById("kyc-list");
+    const listCountEl = document.getElementById("list-count");
+    const toastEl = document.getElementById("toast");
+
+    const fKeyword = document.getElementById("f-keyword");
+    const fLevel = document.getElementById("f-level");
+    const fStatus = document.getElementById("f-status");
+    const btnSearch = document.getElementById("btn-search");
+    const btnClear = document.getElementById("btn-clear");
+    const btnRefresh = document.getElementById("btn-refresh");
+
+    const detailTitleEl = document.getElementById("detail-title");
+    const detailMetaEl = document.getElementById("detail-meta");
+    const statusSelectEl = document.getElementById("status-select");
+    const btnApply = document.getElementById("btn-apply");
+    const toolbarEl = document.getElementById("toolbar");
+
+    const infoNameEl = document.getElementById("info-name");
+    const infoUserIdEl = document.getElementById("info-userid");
+    const infoEmailEl = document.getElementById("info-email");
+    const infoLevelEl = document.getElementById("info-level");
+    const infoCreatedEl = document.getElementById("info-created");
+    const infoUpdatedEl = document.getElementById("info-updated");
+
+    const checkSelfieEl = document.getElementById("check-selfie");
+    const checkIdEl = document.getElementById("check-id");
+    const checkAddressEl = document.getElementById("check-address");
+
+    let allKyc = [];
+    let filtered = [];
+    let currentId = null;
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), 2200);
+    }
+
+    function loadKyc() {
+      try {
+        const raw = localStorage.getItem(KYC_KEY);
+        if (!raw) return seedKyc();
+        const data = JSON.parse(raw);
+        return Array.isArray(data) ? data : seedKyc();
+      } catch (e) {
+        console.error(e);
+        return seedKyc();
+      }
+    }
+
+    // ダミーデータ
+    function seedKyc() {
+      const now = Date.now();
+      const data = [
+        {
+          id: "kyc_001",
+          userId: "user-demo-001",
+          name: "Taro Yamada",
+          email: "taro@example.com",
+          level: 2,
+          status: "selfie_ng",
+          selfie: "NG",
+          idDoc: "OK",
+          address: "OK",
+          createdAt: now - 3600 * 1000 * 5,
+          updatedAt: now - 3600 * 1000 * 3,
+        },
+        {
+          id: "kyc_002",
+          userId: "user-demo-002",
+          name: "Hanako Suzuki",
+          email: "hanako@example.com",
+          level: 1,
+          status: "pending",   // 未判定用
+          selfie: "PENDING",
+          idDoc: "PENDING",
+          address: "PENDING",
+          createdAt: now - 3600 * 1000 * 2,
+          updatedAt: now - 3600 * 1000 * 2,
+        },
+        {
+          id: "kyc_003",
+          userId: "user-demo-003",
+          name: "Crypto Tester",
+          email: "tester@example.com",
+          level: 3,
+          status: "all_ok",
+          selfie: "OK",
+          idDoc: "OK",
+          address: "OK",
+          createdAt: now - 3600 * 1000 * 48,
+          updatedAt: now - 3600 * 1000 * 24,
+        },
+      ];
+      localStorage.setItem(KYC_KEY, JSON.stringify(data));
+      return data;
+    }
+
+    function applyFilters() {
+      const kw = fKeyword.value.trim().toLowerCase();
+      const lv = fLevel.value;
+      const st = fStatus.value;
+
+      filtered = allKyc.filter((k) => {
+        if (kw) {
+          const hay =
+            (k.name || "").toLowerCase() +
+            " " +
+            (k.userId || "").toLowerCase();
+          if (!hay.includes(kw)) return false;
+        }
+        if (lv !== "all" && String(k.level) !== lv) return false;
+        if (st !== "all" && k.status !== st) return false;
+        return true;
+      });
+
+      filtered.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      renderList();
+    }
+
+    function renderList() {
+      listEl.innerHTML = "";
+      listCountEl.textContent = filtered.length + "件";
+
+      if (filtered.length === 0) {
+        listEl.innerHTML =
+          '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:30px 4px;">該当するKYC申請はありません。</div>';
+        currentId = null;
+        renderDetail();
+        return;
+      }
+
+      filtered.forEach((k) => {
+        const row = document.createElement("div");
+        row.className = "kyc-row" + (k.id === currentId ? " active" : "");
+        row.dataset.id = k.id;
+
+        const statusClass = "badge-status-" + (k.status || "pending");
+        const statusLabel =
+          statusLabels[k.status] || (k.status === "pending" ? "未レビュー" : k.status);
+
+        row.innerHTML = `
+          <div>
+            <div class="user-name">${k.name}</div>
+            <div class="user-id">${k.userId}</div>
+          </div>
+          <div>
+            <span class="badge badge-status-${k.status === "all_ok" || k.status === "steps_ok" ? "steps_ok" : k.status || "pending"}">
+              ${statusLabel}
+            </span>
+          </div>
+          <div class="user-id">
+            ${levelLabels[k.level] || "-"}
+          </div>
+        `;
+
+        row.addEventListener("click", () => {
+          currentId = k.id;
+          renderList();
+          renderDetail();
+        });
+
+        listEl.appendChild(row);
+      });
+
+      if (!currentId && filtered.length > 0) {
+        currentId = filtered[0].id;
+        renderList();
+        renderDetail();
+      }
+    }
+
+    function renderDetail() {
+      const k = allKyc.find((x) => x.id === currentId);
+      if (!k) {
+        detailTitleEl.textContent = "申請を選択してください";
+        detailMetaEl.textContent =
+          "左の一覧から申請を選択すると、提出内容とステータスを確認できます。";
+        infoNameEl.textContent = "-";
+        infoUserIdEl.textContent = "ユーザーID: -";
+        infoEmailEl.textContent = "メール: -";
+        infoLevelEl.textContent = "申請レベル: -";
+        infoCreatedEl.textContent = "申請日時: -";
+        infoUpdatedEl.textContent = "最終更新: -";
+        checkSelfieEl.textContent = "セルフィー: -";
+        checkIdEl.textContent = "本人確認書類: -";
+        checkAddressEl.textContent = "住所証明: -";
+        statusSelectEl.disabled = true;
+        toolbarEl.style.display = "none";
+        return;
+      }
+
+      detailTitleEl.textContent = `${k.name} のKYC申請`;
+      const created = k.createdAt
+        ? new Date(k.createdAt).toLocaleString("ja-JP", { hour12: false })
+        : "-";
+      const updated = k.updatedAt
+        ? new Date(k.updatedAt).toLocaleString("ja-JP", { hour12: false })
+        : "-";
+
+      detailMetaEl.innerHTML =
+        `<span>ユーザーID: ${k.userId}</span>` +
+        `<span>レベル: ${levelLabels[k.level] || "-"}</span>`;
+
+      infoNameEl.textContent = k.name;
+      infoUserIdEl.textContent = "ユーザーID: " + k.userId;
+      infoEmailEl.textContent = "メール: " + (k.email || "-");
+      infoLevelEl.textContent = "申請レベル: " + (levelLabels[k.level] || "-");
+      infoCreatedEl.textContent = "申請日時: " + created;
+      infoUpdatedEl.textContent = "最終更新: " + updated;
+
+      checkSelfieEl.textContent = "セルフィー: " + (k.selfie || "-");
+      checkIdEl.textContent = "本人確認書類: " + (k.idDoc || "-");
+      checkAddressEl.textContent = "住所証明: " + (k.address || "-");
+
+      statusSelectEl.value = k.status === "pending" ? "all_ng" : (k.status || "all_ng");
+      statusSelectEl.disabled = false;
+      toolbarEl.style.display = "block";
+    }
+
+    function applyStatus() {
+      const k = allKyc.find((x) => x.id === currentId);
+      if (!k) return;
+      const newStatus = statusSelectEl.value;
+      const oldStatus = k.status;
+      if (oldStatus === newStatus) {
+        showToast("ステータスは変更されていません。");
+        return;
+      }
+      k.status = newStatus;
+      k.updatedAt = Date.now();
+
+      localStorage.setItem(KYC_KEY, JSON.stringify(allKyc));
+      showToast(`KYCステータスを「${statusLabels[newStatus]}」に更新しました。`);
+      applyFilters();
+      renderDetail();
+    }
+
+    // Events
+    btnSearch.addEventListener("click", applyFilters);
+    btnClear.addEventListener("click", () => {
+      fKeyword.value = "";
+      fLevel.value = "all";
+      fStatus.value = "all";
+      applyFilters();
+    });
+    btnRefresh.addEventListener("click", () => {
+      allKyc = loadKyc();
+      applyFilters();
+    });
+    btnApply.addEventListener("click", applyStatus);
+
+    // Init
+    allKyc = loadKyc();
+    applyFilters();
+  </script>
+</body>
+</html>

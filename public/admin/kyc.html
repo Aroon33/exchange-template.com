@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - KYC管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-title">メニュー</div>
+    <ul class="nav-list">
+      <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
+      <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
+      <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
+      <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
+      <li class="nav-item"><a href="kyc.html" class="nav-link active">📋 KYC状況</a></li>
+      <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
+      <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
+      <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
+      <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
+    </ul>
+  </aside>
+
+  <!-- HEADER -->
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <div class="admin-logo-badge">AX</div>
+      <div>
+        <div class="admin-logo-text">Admin Console</div>
+        <div class="admin-logo-sub">KYC管理</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div class="admin-main-inner">
+
+      <div class="page-title">KYC申請一覧</div>
+
+      <!-- フィルター -->
+      <div style="margin:12px 0;">
+        <select id="status-filter" class="btn-sm">
+          <option value="ALL">すべて</option>
+          <option value="0">未提出 / NONE</option>
+          <option value="1">提出済み</option>
+          <option value="2">審査中</option>
+          <option value="3">承認（一次）</option>
+          <option value="4">否認</option>
+          <option value="5">完了</option>
+        </select>
+        <button class="btn-sm" id="reload-btn">再読み込み</button>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card">
+        <table class="table" style="width:100%; font-size:13px;">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>申請日時</th>
+              <th>名前</th>
+              <th>表面画像</th>
+              <th>裏面画像</th>
+              <th>更新日時</th>
+              <th>ステータス</th>
+              <th>変更</th>
+            </tr>
+          </thead>
+          <tbody id="kyc-table-body">
+            <tr><td colspan="8" style="text-align:center;color:#777;">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  const API_BASE = "https://api.exchange-template.com";
+  let allKyc = [];
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2000);
+  }
+
+  function formatDate(s) {
+    if (!s) return "-";
+    return new Date(s).toLocaleString("ja-JP", { hour12:false });
+  }
+
+  async function apiGet(path) {
+    const res = await fetch(API_BASE + path, { credentials:"include" });
+    const txt = await res.text();
+    if (!res.ok) throw new Error(txt);
+    return JSON.parse(txt);
+  }
+
+  async function apiPost(path, body) {
+    const res = await fetch(API_BASE + path, {
+      method:"POST",
+      credentials:"include",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(body)
+    });
+    const txt = await res.text();
+    if (!res.ok) throw new Error(txt);
+    return JSON.parse(txt);
+  }
+
+  async function changeStatus(id) {
+    const level = Number(prompt("新しいステータス（0〜5）を入力："));
+    if (isNaN(level) || level < 0 || level > 5) {
+      showToast("無効なステータスです");
+      return;
+    }
+
+    try {
+      await apiPost("/kyc/admin/set-status", { id, level });
+      showToast("更新しました");
+      loadKyc();
+    } catch(e) {
+      showToast("更新失敗");
+    }
+  }
+
+  function renderTable(list) {
+    const tbody = document.getElementById("kyc-table-body");
+    tbody.innerHTML = "";
+
+    if (!list.length) {
+      tbody.innerHTML =
+        `<tr><td colspan="8" style="text-align:center;color:#777;">なし</td></tr>`;
+      return;
+    }
+
+    list.forEach(k => {
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${k.id}</td>
+        <td>${formatDate(k.createdAt)}</td>
+        <td>${k.name ?? "-"}</td>
+        <td>
+          ${k.frontUrl ? `<a href="${k.frontUrl}" target="_blank">表示</a>` : "-"}
+        </td>
+        <td>
+          ${k.backUrl ? `<a href="${k.backUrl}" target="_blank">表示</a>` : "-"}
+        </td>
+        <td>${formatDate(k.updatedAt)}</td>
+        <td>${k.statusText}</td>
+        <td>
+          <button class="btn-xs btn-xs-primary" onclick="changeStatus(${k.id})">
+            更新
+          </button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function applyFilter() {
+    const f = document.getElementById("status-filter").value;
+    if (f === "ALL") {
+      renderTable(allKyc);
+    } else {
+      renderTable(allKyc.filter(k => String(k.level) === f));
+    }
+  }
+
+  async function loadKyc() {
+    try {
+      allKyc = await apiGet("/kyc/admin/list");
+      applyFilter();
+    } catch (e) {
+      showToast("取得失敗");
+    }
+  }
+
+  document.getElementById("status-filter").addEventListener("change", applyFilter);
+  document.getElementById("reload-btn").addEventListener("click", loadKyc);
+
+  loadKyc();
+</script>
+
+</body>
+</html>

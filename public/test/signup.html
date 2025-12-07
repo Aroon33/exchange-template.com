@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - 口座開設</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #1f2933;
+      --text-muted: #7b8794;
+      --border-soft: #e4e7eb;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    header {
+      background: var(--bg-soft);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 20px;
+    }
+    .logo-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+    }
+    nav {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .btn {
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 14px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-outline {
+      border-color: var(--border-soft);
+      color: var(--text-main);
+      background: #fff;
+    }
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    main {
+      min-height: calc(100vh - 64px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      padding: 20px 22px 18px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .card-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .form-row {
+      margin-bottom: 10px;
+    }
+    .form-row label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .form-row input,
+    .form-row select {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      padding: 8px 9px;
+      font-size: 13px;
+      outline: none;
+    }
+    .form-row input:focus,
+    .form-row select:focus {
+      border-color: var(--primary);
+    }
+    .row-inline {
+      display: flex;
+      gap: 10px;
+    }
+    .row-inline .form-row {
+      flex: 1;
+    }
+    .tos {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin: 6px 0 10px;
+    }
+    .tos a {
+      color: var(--primary);
+    }
+    .btn-signup {
+      width: 100%;
+      border-radius: 8px;
+      border: none;
+      padding: 9px 0;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .muted {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .muted a {
+      color: var(--primary);
+      font-weight: 500;
+    }
+    .tips {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    .tips ul {
+      margin-top: 4px;
+      padding-left: 18px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+<nav>
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link active">取引履歴</a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h1 class="card-title">口座開設</h1>
+      <p class="card-sub">
+        数分で無料口座を開設できます。メールアドレスと基本情報を入力してください。<br />
+        ※ このフォームはデモ用であり、実際の登録処理は行われません。
+      </p>
+
+      <div class="row-inline">
+        <div class="form-row">
+          <label>姓</label>
+          <input type="text" placeholder="山田" />
+        </div>
+        <div class="form-row">
+          <label>名</label>
+          <input type="text" placeholder="太郎" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>メールアドレス</label>
+        <input type="email" placeholder="you@example.com" />
+      </div>
+
+      <div class="form-row">
+        <label>パスワード</label>
+        <input type="password" placeholder="半角英数8文字以上" />
+      </div>
+
+      <div class="row-inline">
+        <div class="form-row">
+          <label>居住国/地域</label>
+          <select>
+            <option>日本</option>
+            <option>アメリカ合衆国</option>
+            <option>シンガポール</option>
+            <option>香港</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>招待コード（任意）</label>
+          <input type="text" placeholder="例: ABC123" />
+        </div>
+      </div>
+
+      <div class="tos">
+        <label>
+          <input type="checkbox" />
+          <span> <a href="#">利用規約</a> と <a href="#">プライバシーポリシー</a> に同意します。</span>
+        </label>
+      </div>
+
+      <button class="btn-signup">口座開設を申し込む（デモ）</button>
+
+      <p class="muted">
+        すでにアカウントをお持ちですか？ <a href="login.html">ログインはこちら</a>
+      </p>
+
+      <div class="tips">
+        実際のKYC/本人確認フローでは、以下のような項目を追加することができます：
+        <ul>
+          <li>本人確認書類のアップロード（運転免許証・マイナンバーカードなど）</li>
+          <li>現住所確認書類（公共料金領収書など）</li>
+          <li>セルフィー撮影による顔認証</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

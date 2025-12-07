@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - お問い合わせ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #1f2933;
+      --text-muted: #7b8794;
+      --border-soft: #e4e7eb;
+      --danger: #e02424;
+      --success: #1ca36a;
+      --pending: #f97316;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    body { background:var(--bg); color:var(--text-main); }
+    a { text-decoration:none; color:inherit; }
+
+    header {
+      background:#fff;
+      border-bottom:1px solid var(--border-soft);
+      padding:10px 32px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .logo { display:flex; align-items:center; gap:8px; font-weight:700; font-size:20px; }
+    .logo-badge { width:24px; height:24px; border-radius:8px; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; }
+    nav { display:flex; gap:16px; font-size:14px; color:var(--text-muted); }
+    .nav-link.active { color:var(--primary); font-weight:600; }
+    .header-actions { display:flex; gap:10px; align-items:center; }
+    .btn { border-radius:999px; padding:7px 14px; font-size:13px; border:1px solid transparent; cursor:pointer; background:transparent; }
+    .btn-primary { background:var(--primary); color:#fff; }
+    .btn-outline { background:#fff; border-color:var(--border-soft); color:var(--text-main); }
+    .btn-sm { padding:4px 10px; font-size:12px; }
+
+    main {
+      max-width:1120px;
+      margin:0 auto;
+      padding:18px 20px 24px;
+      display:grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+      gap:14px;
+    }
+    @media (max-width:900px){
+      main { grid-template-columns:1fr; }
+    }
+
+    .card {
+      background:var(--bg-soft);
+      border-radius:12px;
+      border:1px solid var(--border-soft);
+      box-shadow:0 1px 2px rgba(15,23,42,0.03);
+      padding:12px 14px;
+      font-size:12px;
+    }
+    .card-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:8px;
+    }
+    .card-title { font-size:14px; font-weight:600; }
+    .badge { padding:2px 8px; border-radius:999px; font-size:11px; }
+
+    .badge-status-new { background:#fee2e2; color:var(--danger); }
+    .badge-status-open { background:#ffedd5; color:var(--pending); }
+    .badge-status-closed { background:#dcfce7; color:var(--success); }
+
+    /* 左：スレッド一覧 + 新規問い合わせ */
+    .thread-list { max-height:420px; overflow:auto; margin-top:4px; }
+    .thread-item {
+      border-radius:10px;
+      border:1px solid var(--border-soft);
+      padding:7px 8px;
+      margin-bottom:6px;
+      cursor:pointer;
+      display:flex;
+      justify-content:space-between;
+      gap:6px;
+      align-items:flex-start;
+      background:#fff;
+    }
+    .thread-item.active { border-color:var(--primary); box-shadow:0 0 0 1px var(--primary-soft); }
+    .thread-title { font-size:12px; font-weight:600; margin-bottom:2px; }
+    .thread-meta { font-size:11px; color:var(--text-muted); }
+
+    .form-row { margin-bottom:6px; }
+    .form-row label { display:block; font-size:11px; margin-bottom:2px; }
+    .form-row input,
+    .form-row textarea {
+      width:100%;
+      border-radius:6px;
+      border:1px solid var(--border-soft);
+      padding:7px 8px;
+      font-size:12px;
+      outline:none;
+      resize:vertical;
+      min-height:34px;
+    }
+    .form-row textarea { min-height:70px; }
+    .form-row input:focus,
+    .form-row textarea:focus { border-color:var(--primary); }
+
+    /* 右：チャット */
+    .chat-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:6px;
+    }
+    .chat-thread-title { font-size:13px; font-weight:600; }
+    .chat-status {
+      display:flex;
+      gap:6px;
+      align-items:center;
+      font-size:11px;
+    }
+    .chat-status span.label { color:var(--text-muted); }
+    .chat-window {
+      border-radius:10px;
+      border:1px solid var(--border-soft);
+      background:#f9fafb;
+      height:260px;
+      overflow-y:auto;
+      padding:8px 8px 6px;
+      margin-bottom:6px;
+    }
+    .msg {
+      max-width:80%;
+      margin-bottom:6px;
+      padding:6px 8px;
+      border-radius:10px;
+      font-size:12px;
+      line-height:1.4;
+    }
+    .msg-user { background:#dbeafe; margin-left:auto; border-bottom-right-radius:2px; }
+    .msg-admin { background:#e5e7eb; margin-right:auto; border-bottom-left-radius:2px; }
+    .msg-meta { font-size:10px; color:#6b7280; margin-top:2px; text-align:right; }
+
+    .chat-input-row { display:flex; gap:6px; margin-top:2px; }
+    .chat-input-row textarea {
+      flex:1;
+      resize:none;
+      min-height:44px;
+    }
+    .chat-empty {
+      font-size:12px;
+      color:var(--text-muted);
+      text-align:center;
+      margin-top:80px;
+    }
+    .note { font-size:10px; color:var(--text-muted); margin-top:4px; }
+
+    .status-pill {
+      border-radius:999px;
+      border:1px solid var(--border-soft);
+      padding:3px 8px;
+      font-size:11px;
+      background:#fff;
+    }
+
+    .toast {
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      background:#111827;
+      color:#f9fafb;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:11px;
+      display:none;
+      z-index:30;
+    }
+    .toast.show { display:block; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CX</div> CryptoX Exchange
+    </div>
+<nav>
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link active">取引履歴</a>
+    </nav>
+
+
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- 左：新規問い合わせ & スレッド一覧 -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">お問い合わせを送信</div>
+        <span style="font-size:11px; color:var(--text-muted);">
+          ※ デモ用。実際の送信は行われません。
+        </span>
+      </div>
+      <div class="form-row">
+        <label>件名</label>
+        <input type="text" id="new-title" placeholder="例：入出金について質問があります" />
+      </div>
+      <div class="form-row">
+        <label>内容</label>
+        <textarea id="new-body" placeholder="できるだけ具体的にご記入ください。"></textarea>
+      </div>
+      <button class="btn btn-primary btn-sm" id="btn-create-thread">問い合わせを送信（デモ）</button>
+      <div class="note">送信すると「未対応」のスレッドが作成され、右側のチャットでやり取りできます。</div>
+
+      <hr style="margin:10px 0; border:none; border-top:1px dashed var(--border-soft);" />
+
+      <div class="card-header" style="margin-bottom:4px;">
+        <div class="card-title" style="font-size:13px;">あなたの問い合わせ一覧</div>
+        <span style="font-size:11px; color:var(--text-muted);" id="thread-count">0件</span>
+      </div>
+      <div class="thread-list" id="thread-list"></div>
+    </section>
+
+    <!-- 右：チャット -->
+    <section class="card">
+      <div class="chat-header">
+        <div>
+          <div class="chat-thread-title" id="chat-title">問い合わせを選択してください</div>
+          <div style="font-size:11px; color:var(--text-muted);" id="chat-sub">左の一覧からスレッドをクリックすると、内容と履歴が表示されます。</div>
+        </div>
+        <div class="chat-status">
+          <span class="label">ステータス：</span>
+          <span id="chat-status-pill" class="status-pill">-</span>
+        </div>
+      </div>
+
+      <div class="chat-window" id="chat-window">
+        <div class="chat-empty">まだスレッドが選択されていません。</div>
+      </div>
+
+      <div id="chat-input-area" style="display:none;">
+        <div class="chat-input-row">
+          <textarea id="chat-input" placeholder="メッセージを入力して送信してください。"></textarea>
+          <button class="btn btn-primary btn-sm" id="btn-send-msg">送信</button>
+        </div>
+        <div class="note">
+          ステータスが「対応済」になると、このスレッドは自動的にクローズされ、追記できなくなります。
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // 簡易的な「ログインユーザーID」想定（実際はサーバー側から渡す）
+    const CURRENT_USER_ID = "user-demo-001";
+
+    // localStorageキー
+    const STORAGE_KEY = "cx_support_threads";
+
+    // ステータス定義
+    const STATUS = {
+      NEW: "new",        // 未対応
+      OPEN: "open",      // 対応中
+      CLOSED: "closed",  // 対応済
+    };
+
+    function loadThreads() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        return JSON.parse(raw);
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
+    }
+
+    function saveThreads(list) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    let threads = loadThreads().filter(t => t.userId === CURRENT_USER_ID);
+    let currentThreadId = null;
+
+    const threadListEl = document.getElementById("thread-list");
+    const threadCountEl = document.getElementById("thread-count");
+    const newTitleEl = document.getElementById("new-title");
+    const newBodyEl = document.getElementById("new-body");
+
+    const chatTitleEl = document.getElementById("chat-title");
+    const chatSubEl = document.getElementById("chat-sub");
+    const chatStatusPillEl = document.getElementById("chat-status-pill");
+    const chatWindowEl = document.getElementById("chat-window");
+    const chatInputAreaEl = document.getElementById("chat-input-area");
+    const chatInputEl = document.getElementById("chat-input");
+
+    const toastEl = document.getElementById("toast");
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), 2200);
+    }
+
+    function statusLabel(status) {
+      switch (status) {
+        case STATUS.NEW: return "未対応";
+        case STATUS.OPEN: return "対応中";
+        case STATUS.CLOSED: return "対応済";
+        default: return "-";
+      }
+    }
+
+    function statusBadgeClass(status) {
+      switch (status) {
+        case STATUS.NEW: return "badge-status-new";
+        case STATUS.OPEN: return "badge-status-open";
+        case STATUS.CLOSED: return "badge-status-closed";
+        default: return "";
+      }
+    }
+
+    function renderThreadList() {
+      threadListEl.innerHTML = "";
+      threadCountEl.textContent = threads.length + "件";
+
+      if (threads.length === 0) {
+        threadListEl.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:20px;">まだお問い合わせはありません。</div>';
+        return;
+      }
+
+      threads
+        .slice()
+        .sort((a,b) => b.updatedAt - a.updatedAt)
+        .forEach(t => {
+          const div = document.createElement("div");
+          div.className = "thread-item" + (t.id === currentThreadId ? " active" : "");
+          div.dataset.id = t.id;
+          const updated = new Date(t.updatedAt).toLocaleString("ja-JP", {hour12:false});
+          div.innerHTML = `
+            <div>
+              <div class="thread-title">${escapeHtml(t.title || "無題")}</div>
+              <div class="thread-meta">更新: ${updated}</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="badge ${statusBadgeClass(t.status)}">${statusLabel(t.status)}</div>
+              <div class="thread-meta">ID: ${t.id.slice(-6)}</div>
+            </div>
+          `;
+          div.addEventListener("click", () => {
+            currentThreadId = t.id;
+            renderThreadList();
+            renderChat();
+          });
+          threadListEl.appendChild(div);
+        });
+    }
+
+    function renderChat() {
+      const t = threads.find(th => th.id === currentThreadId);
+      if (!t) {
+        chatTitleEl.textContent = "問い合わせを選択してください";
+        chatSubEl.textContent = "左の一覧からスレッドをクリックすると、内容と履歴が表示されます。";
+        chatStatusPillEl.textContent = "-";
+        chatStatusPillEl.className = "status-pill";
+        chatWindowEl.innerHTML = '<div class="chat-empty">まだスレッドが選択されていません。</div>';
+        chatInputAreaEl.style.display = "none";
+        return;
+      }
+
+      chatTitleEl.textContent = t.title || "無題の問い合わせ";
+      chatSubEl.textContent = "スレッドID: " + t.id;
+      chatStatusPillEl.textContent = statusLabel(t.status);
+      chatStatusPillEl.className = "status-pill " + statusBadgeClass(t.status);
+
+      chatWindowEl.innerHTML = "";
+      if (!t.messages || t.messages.length === 0) {
+        chatWindowEl.innerHTML = '<div class="chat-empty">まだメッセージはありません。</div>';
+      } else {
+        t.messages.forEach(m => {
+          const wrap = document.createElement("div");
+          wrap.className = "msg " + (m.from === "user" ? "msg-user" : "msg-admin");
+          wrap.innerHTML = `
+            <div>${escapeHtml(m.text)}</div>
+            <div class="msg-meta">${m.from === "user" ? "あなた" : "サポート"} ・ ${formatTime(m.at)}</div>
+          `;
+          chatWindowEl.appendChild(wrap);
+        });
+        chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
+      }
+
+      if (t.status === STATUS.CLOSED) {
+        chatInputAreaEl.style.display = "none";
+      } else {
+        chatInputAreaEl.style.display = "block";
+      }
+    }
+
+    function createThread() {
+      const title = newTitleEl.value.trim();
+      const body = newBodyEl.value.trim();
+      if (!title || !body) {
+        showToast("件名と内容を入力してください。");
+        return;
+      }
+      const id = "th_" + Date.now();
+      const now = Date.now();
+      const thread = {
+        id,
+        userId: CURRENT_USER_ID,
+        title,
+        status: STATUS.NEW,
+        createdAt: now,
+        updatedAt: now,
+        messages: [
+          { from:"user", text: body, at: now }
+        ]
+      };
+
+      // 本来は全体threads保存だが、ここはユーザー分だけ扱う
+      const all = loadThreads();
+      all.push(thread);
+      saveThreads(all);
+
+      threads.push(thread);
+      currentThreadId = id;
+      newTitleEl.value = "";
+      newBodyEl.value = "";
+
+      showToast("問い合わせを送信しました。（デモ）");
+      renderThreadList();
+      renderChat();
+    }
+
+    function sendMessage() {
+      const t = threads.find(th => th.id === currentThreadId);
+      if (!t) {
+        showToast("スレッドを選択してください。");
+        return;
+      }
+      if (t.status === STATUS.CLOSED) {
+        showToast("このスレッドはクローズされています。");
+        return;
+      }
+      const text = chatInputEl.value.trim();
+      if (!text) return;
+      const now = Date.now();
+      t.messages.push({from:"user", text, at:now});
+      t.updatedAt = now;
+      if (t.status === STATUS.NEW) t.status = STATUS.OPEN; // 送信したら「対応中」にしてもよい
+
+      // 全体保存更新
+      const all = loadThreads();
+      const idx = all.findIndex(x => x.id === t.id);
+      if (idx !== -1) all[idx] = t;
+      saveThreads(all);
+
+      chatInputEl.value = "";
+      renderThreadList();
+      renderChat();
+    }
+
+    function formatTime(ts) {
+      return new Date(ts).toLocaleString("ja-JP", {hour12:false});
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, s => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+      }[s]));
+    }
+
+    document.getElementById("btn-create-thread").addEventListener("click", createThread);
+    document.getElementById("btn-send-msg").addEventListener("click", sendMessage);
+
+    renderThreadList();
+    renderChat();
+  </script>
+</body>
+</html>

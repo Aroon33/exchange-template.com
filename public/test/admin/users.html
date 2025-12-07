@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - ユーザー一覧</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-soft: #e5e7eb;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --pending: #f97316;
+    }
+    * { box-sizing:border-box; margin:0; padding:0;
+        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    body { background:var(--bg); color:var(--text-main); }
+    a { text-decoration:none; color:inherit; }
+
+    /* Header */
+    .admin-header {
+      position:fixed; top:0; left:0; right:0;
+      height:52px; background:#fff;
+      border-bottom:1px solid var(--border-soft);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 18px 0 60px; z-index:30;
+    }
+    .admin-header-left { display:flex; align-items:center; gap:10px; }
+    .logo-badge {
+      width:26px; height:26px; border-radius:8px;
+      background:var(--primary); color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:14px;
+    }
+    .logo-text { font-weight:700; font-size:16px; }
+    .logo-sub { font-size:11px; color:var(--text-muted); }
+    .admin-header-right { display:flex; align-items:center; gap:10px;
+      font-size:11px; color:var(--text-muted); }
+    .btn {
+      border-radius:999px; padding:6px 12px;
+      font-size:11px; border:1px solid transparent;
+      background:transparent; cursor:pointer;
+    }
+    .btn-outline { border-color:var(--border-soft); background:#fff; color:var(--text-main); }
+    .btn-sm { padding:4px 10px; font-size:11px; }
+
+    /* Sidebar */
+    .sidebar {
+      position:fixed; top:0; left:0; bottom:0;
+      width:200px; background:#0f172a; color:#e5e7eb;
+      padding-top:52px; display:flex; flex-direction:column;
+      border-right:1px solid #020617; z-index:20;
+    }
+    .sidebar-title {
+      padding:10px 14px; font-size:11px;
+      text-transform:uppercase; letter-spacing:0.08em;
+      color:#6b7280;
+    }
+    .nav-list { list-style:none; margin:0; padding:0 8px 12px; }
+    .nav-item { margin-bottom:4px; }
+    .nav-link {
+      display:flex; align-items:center; gap:8px;
+      padding:7px 8px; border-radius:8px;
+      font-size:12px; color:#9ca3af; cursor:pointer;
+    }
+    .nav-link:hover { background:rgba(148,163,184,0.15); color:#e5e7eb; }
+    .nav-link.active {
+      background:#111827; color:#e5e7eb;
+      border:1px solid rgba(129,140,248,0.5);
+    }
+    .nav-icon { width:14px; text-align:center; font-size:12px; }
+    .sidebar-footer {
+      margin-top:auto; padding:10px 14px 12px;
+      font-size:11px; color:#6b7280;
+      border-top:1px solid rgba(31,41,55,0.9);
+    }
+
+    /* Main layout */
+    .main { margin-left:200px; padding-top:52px; }
+    .main-inner { max-width:1120px; margin:0 auto; padding:16px 18px 24px; }
+    .page-title { font-size:16px; font-weight:600; margin-bottom:4px; }
+    .page-sub { font-size:11px; color:var(--text-muted); margin-bottom:10px; }
+
+    /* Filters card */
+    .filters-card {
+      background:#fff; border-radius:10px;
+      border:1px solid var(--border-soft);
+      padding:10px 12px 8px;
+      box-shadow:0 1px 2px rgba(15,23,42,0.03);
+      margin-bottom:10px;
+    }
+    .filters-row {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:8px;
+    }
+    .filters-title { font-size:13px; font-weight:600; }
+    .filters-meta { font-size:11px; color:var(--text-muted); }
+    .filters-grid {
+      display:grid;
+      grid-template-columns:minmax(0,1.1fr) minmax(0,0.8fr) minmax(0,0.8fr) minmax(0,0.7fr);
+      gap:8px;
+    }
+    @media (max-width:960px){ .filters-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:640px){ .filters-grid{ grid-template-columns:1fr; } }
+    .field { display:flex; flex-direction:column; gap:2px; font-size:11px; }
+    .field label { color:var(--text-muted); }
+    .field input, .field select {
+      border-radius:6px; border:1px solid var(--border-soft);
+      padding:6px 7px; font-size:11px; outline:none; background:#fff;
+    }
+    .field input:focus, .field select:focus { border-color:var(--primary); }
+
+    .btn-xs {
+      padding:4px 9px; border-radius:999px;
+      font-size:11px; border:1px solid var(--border-soft);
+      background:#fff; cursor:pointer;
+    }
+    .btn-xs-primary {
+      background:var(--primary); color:#fff; border-color:var(--primary);
+    }
+
+    /* Pane layout */
+    .pane-grid {
+      display:grid;
+      grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);
+      gap:10px;
+    }
+    @media(max-width:900px){ .pane-grid{ grid-template-columns:1fr; } }
+
+    .card {
+      background:#fff; border-radius:10px;
+      border:1px solid var(--border-soft);
+      box-shadow:0 1px 2px rgba(15,23,42,0.03);
+      padding:10px 11px 9px; font-size:12px;
+    }
+    .card-header-row {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:6px;
+    }
+    .card-title-small { font-size:13px; font-weight:600; }
+    .card-sub-small { font-size:11px; color:var(--text-muted); }
+
+    .list-box {
+      max-height:420px; overflow-y:auto;
+      border-radius:8px; border:1px solid #e5e7eb;
+      background:#f9fafb;
+    }
+    .user-row {
+      padding:7px 8px; border-bottom:1px solid #e5e7eb;
+      cursor:pointer; display:grid;
+      grid-template-columns:minmax(0,1.3fr) minmax(0,0.8fr) minmax(0,0.8fr) minmax(0,0.6fr);
+      gap:4px 8px; align-items:center; background:#fff; font-size:11px;
+    }
+    .user-row:nth-child(2n){ background:#f9fafb; }
+    .user-row:last-child{ border-bottom:none; }
+    .user-row.active{ background:#eef2ff; border-left:3px solid var(--primary); }
+
+    .user-name { font-size:12px; font-weight:600; }
+    .user-email { color:var(--text-muted); }
+    .user-meta { color:var(--text-muted); }
+
+    .badge {
+      border-radius:999px; padding:2px 8px;
+      font-size:10px; display:inline-flex;
+      align-items:center;
+    }
+    .badge-status-active { background:#dcfce7; color:var(--success); }
+    .badge-status-pending { background:#ffedd5; color:var(--pending); }
+    .badge-status-suspended { background:#fee2e2; color:var(--danger); }
+    .badge-group { background:var(--primary-soft); color:var(--primary); }
+    .badge-kyc { background:#e5e7eb; color:var(--text-main); }
+
+    /* Detail */
+    .detail-header {
+      display:flex; justify-content:space-between; align-items:flex-start;
+      gap:8px; margin-bottom:6px;
+    }
+    .detail-title { font-size:13px; font-weight:600; margin-bottom:2px; }
+    .detail-meta { font-size:11px; color:var(--text-muted); }
+    .detail-meta span { margin-right:8px; }
+
+    .info-grid {
+      display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px; margin-top:4px;
+    }
+    @media(max-width:800px){ .info-grid{ grid-template-columns:1fr; } }
+
+    .info-block {
+      border-radius:8px; border:1px solid var(--border-soft);
+      padding:8px 9px; background:#f9fafb; font-size:11px;
+    }
+    .info-label { font-size:11px; color:var(--text-muted); margin-bottom:3px; }
+    .info-value { font-size:12px; font-weight:600; }
+    .info-row { font-size:11px; margin-top:2px; }
+
+    .note { font-size:10px; color:var(--text-muted); margin-top:4px; }
+
+    .toast {
+      position:fixed; right:16px; bottom:16px;
+      background:#111827; color:#f9fafb;
+      padding:8px 14px; border-radius:999px;
+      font-size:11px; display:none; z-index:50;
+    }
+    .toast.show{ display:block; }
+
+    @media(max-width:768px){
+      .admin-header{ padding-left:54px; }
+      .sidebar{ width:180px; }
+      .main{ margin-left:180px; }
+    }
+    @media(max-width:640px){
+      .sidebar{ transform:translateX(-100%); }
+      .main{ margin-left:0; }
+      .admin-header{ padding-left:12px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-title">メニュー</div>
+    <ul class="nav-list">
+      <li class="nav-item"><a href="index.html" class="nav-link"><span class="nav-icon">🏠</span><span>ダッシュボード</span></a></li>
+      <li class="nav-item"><a href="tickets.html" class="nav-link"><span class="nav-icon">💬</span><span>問い合わせ管理</span></a></li>
+      <li class="nav-item"><a href="users.html" class="nav-link active"><span class="nav-icon">👥</span><span>ユーザー一覧</span></a></li>
+      <li class="nav-item"><a href="trades.html" class="nav-link"><span class="nav-icon">📊</span><span>取引状況</span></a></li>
+      <li class="nav-item"><a href="kyc.html" class="nav-link"><span class="nav-icon">📊</span><span>KYC状況</span></a></li>
+      <li class="nav-item"><a href="deposit.html" class="nav-link"><span class="nav-icon">➕</span><span>入金申請</span></a></li>
+      <li class="nav-item"><a href="withdraw.html" class="nav-link"><span class="nav-icon">➖</span><span>出金申請</span></a></li>
+      <li class="nav-item"><a href="group.html" class="nav-link"><span class="nav-icon">🧩</span><span>グループ管理</span></a></li>
+      <li class="nav-item"><a href="settings.html" class="nav-link"><span class="nav-icon">⚙️</span><span>システム設定</span></a></li>
+    </ul>
+    <div class="sidebar-footer">CryptoX Admin<br>UI Demo &copy; 2025</div>
+  </aside>
+
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <div class="logo-badge">AX</div>
+      <div>
+        <div class="logo-text">Admin Console</div>
+        <div class="logo-sub">ユーザー一覧</div>
+      </div>
+    </div>
+    <div class="admin-header-right">
+      <span>管理者：admin@example.com</span>
+      <button class="btn btn-outline btn-sm" onclick="location.href='login.html'">ログアウト（デモ）</button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="main-inner">
+      <div class="page-title">ユーザー一覧</div>
+      <div class="page-sub">
+        登録ユーザーを検索・フィルタし、グループやKYC状況などを確認するデモ画面です。<br>
+        グループの詳細や変更は <strong>グループ管理（group.html）</strong> から行う想定です。
+      </div>
+
+      <!-- Filters -->
+      <section class="filters-card">
+        <div class="filters-row">
+          <div>
+            <div class="filters-title">フィルター</div>
+            <div class="filters-meta">名前 / メール / ユーザーID / グループ / KYCレベル / ステータスで絞り込みます。</div>
+          </div>
+          <div>
+            <button class="btn-xs" id="btn-clear">条件クリア</button>
+            <button class="btn-xs btn-xs-primary" id="btn-search">検索</button>
+          </div>
+        </div>
+        <div class="filters-grid">
+          <div class="field">
+            <label>キーワード（名前・メール・ユーザーID）</label>
+            <input type="text" id="f-keyword" placeholder="例：Taro / user@example.com / user-demo-001" />
+          </div>
+          <div class="field">
+            <label>グループ</label>
+            <select id="f-group">
+              <option value="all">すべて</option>
+              <option value="A">Group A</option>
+              <option value="B">Group B</option>
+              <option value="C">Group C</option>
+              <option value="D">Group D</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>KYCレベル</label>
+            <select id="f-kyc">
+              <option value="all">すべて</option>
+              <option value="0">未登録</option>
+              <option value="1">レベル1</option>
+              <option value="2">レベル2</option>
+              <option value="3">レベル3</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>ステータス</label>
+            <select id="f-status">
+              <option value="all">すべて</option>
+              <option value="active">有効</option>
+              <option value="pending">KYC確認中</option>
+              <option value="suspended">停止中</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- List + detail -->
+      <section class="pane-grid">
+        <!-- List -->
+        <div class="card">
+          <div class="card-header-row">
+            <div>
+              <div class="card-title-small">ユーザー一覧</div>
+              <div class="card-sub-small" id="list-count">0件</div>
+            </div>
+          </div>
+          <div class="list-box" id="user-list"></div>
+        </div>
+
+        <!-- Detail -->
+        <div class="card">
+          <div class="detail-header">
+            <div>
+              <div class="detail-title" id="detail-title">ユーザーを選択してください</div>
+              <div class="detail-meta" id="detail-meta">
+                左の一覧からユーザーをクリックすると、プロフィールとKYC状況が表示されます。
+              </div>
+            </div>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-block">
+              <div class="info-label">基本情報</div>
+              <div class="info-value" id="info-name">-</div>
+              <div class="info-row" id="info-email">メール: -</div>
+              <div class="info-row" id="info-userid">ユーザーID: -</div>
+              <div class="info-row" id="info-aff">アフィリコード: -</div>
+            </div>
+            <div class="info-block">
+              <div class="info-label">ステータス・グループ</div>
+              <div class="info-row" id="info-status">ステータス: -</div>
+              <div class="info-row" id="info-group">グループ: -</div>
+              <div class="info-row" id="info-kyc">KYCレベル: -</div>
+              <div class="info-row" id="info-created">登録日: -</div>
+              <div class="info-row" id="info-lastlogin">最終ログイン: -</div>
+            </div>
+          </div>
+
+          <div class="info-block" style="margin-top:8px;">
+            <div class="info-label">備考 / 想定フロー</div>
+            <div class="info-row">
+              ・グループ変更やシステム設定の割当は <code>group.html</code> から行うイメージです。<br>
+              ・KYCレベルの変更や本人確認状況は <code>kyc.html</code> で確認・管理する想定です。
+            </div>
+          </div>
+          <div class="note">
+            ※ このページはダミーデータを表示するフロントエンドのみのデモです。<br>
+            実際の環境では、API からユーザー一覧を取得して同じUIに流し込む想定です。
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const users = [
+      {
+        userId: "user-demo-001",
+        name: "Taro Yamada",
+        email: "taro@example.com",
+        groupId: "A",
+        kycLevel: 2,
+        status: "active",
+        affiliateCode: "AFF-12345",
+        createdAt: "2025-10-01 10:15",
+        lastLogin: "2025-11-19 08:30",
+      },
+      {
+        userId: "user-demo-002",
+        name: "Hanako Suzuki",
+        email: "hanako@example.com",
+        groupId: "B",
+        kycLevel: 1,
+        status: "pending",
+        affiliateCode: "AFF-77777",
+        createdAt: "2025-11-05 14:00",
+        lastLogin: "2025-11-18 21:10",
+      },
+      {
+        userId: "user-demo-003",
+        name: "Crypto Tester",
+        email: "tester@example.com",
+        groupId: "C",
+        kycLevel: 3,
+        status: "active",
+        affiliateCode: "",
+        createdAt: "2025-09-20 09:30",
+        lastLogin: "2025-11-17 12:45",
+      },
+      {
+        userId: "user-demo-004",
+        name: "Affiliate User",
+        email: "aff@example.com",
+        groupId: "A",
+        kycLevel: 0,
+        status: "active",
+        affiliateCode: "AFF-REF01",
+        createdAt: "2025-11-10 16:20",
+        lastLogin: "2025-11-18 19:00",
+      },
+      {
+        userId: "user-demo-999",
+        name: "Suspended User",
+        email: "suspended@example.com",
+        groupId: "D",
+        kycLevel: 1,
+        status: "suspended",
+        affiliateCode: "AFF-99999",
+        createdAt: "2025-07-01 11:11",
+        lastLogin: "2025-10-01 00:00",
+      },
+    ];
+
+    const groupLabels = {
+      A: "Group A（低リスク）",
+      B: "Group B（標準）",
+      C: "Group C（ハイリスク）",
+      D: "Group D（カスタム）",
+    };
+
+    const statusLabels = {
+      active: "有効",
+      pending: "KYC確認中",
+      suspended: "停止中",
+    };
+
+    const kycLabels = {
+      0: "未登録",
+      1: "レベル1",
+      2: "レベル2",
+      3: "レベル3",
+    };
+
+    const listEl = document.getElementById("user-list");
+    const listCountEl = document.getElementById("list-count");
+    const toastEl = document.getElementById("toast");
+
+    const fKeyword = document.getElementById("f-keyword");
+    const fGroup = document.getElementById("f-group");
+    const fKyc = document.getElementById("f-kyc");
+    const fStatus = document.getElementById("f-status");
+    const btnSearch = document.getElementById("btn-search");
+    const btnClear = document.getElementById("btn-clear");
+
+    const infoNameEl = document.getElementById("info-name");
+    const infoEmailEl = document.getElementById("info-email");
+    const infoUserIdEl = document.getElementById("info-userid");
+    const infoAffEl = document.getElementById("info-aff");
+    const infoStatusEl = document.getElementById("info-status");
+    const infoGroupEl = document.getElementById("info-group");
+    const infoKycEl = document.getElementById("info-kyc");
+    const infoCreatedEl = document.getElementById("info-created");
+    const infoLastLoginEl = document.getElementById("info-lastlogin");
+    const detailTitleEl = document.getElementById("detail-title");
+    const detailMetaEl = document.getElementById("detail-meta");
+
+    let filtered = users.slice();
+    let currentUserId = null;
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), 2200);
+    }
+
+    function applyFilters() {
+      const kw = fKeyword.value.trim().toLowerCase();
+      const g = fGroup.value;
+      const k = fKyc.value;
+      const s = fStatus.value;
+
+      filtered = users.filter((u) => {
+        if (kw) {
+          const hay =
+            (u.name || "").toLowerCase() +
+            " " +
+            (u.email || "").toLowerCase() +
+            " " +
+            (u.userId || "").toLowerCase();
+          if (!hay.includes(kw)) return false;
+        }
+        if (g !== "all" && u.groupId !== g) return false;
+        if (k !== "all" && String(u.kycLevel) !== k) return false;
+        if (s !== "all" && u.status !== s) return false;
+        return true;
+      });
+
+      filtered.sort((a, b) =>
+        a.userId < b.userId ? -1 : a.userId > b.userId ? 1 : 0
+      );
+
+      renderList();
+    }
+
+    function renderList() {
+      listEl.innerHTML = "";
+      listCountEl.textContent = filtered.length + "件";
+
+      if (filtered.length === 0) {
+        listEl.innerHTML =
+          '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:30px 4px;">該当するユーザーはいません。</div>';
+        currentUserId = null;
+        renderDetail();
+        return;
+      }
+
+      filtered.forEach((u) => {
+        const row = document.createElement("div");
+        row.className =
+          "user-row" + (u.userId === currentUserId ? " active" : "");
+        row.dataset.id = u.userId;
+
+        const statusBadgeClass =
+          u.status === "active"
+            ? "badge-status-active"
+            : u.status === "pending"
+            ? "badge-status-pending"
+            : "badge-status-suspended";
+
+        row.innerHTML = `
+          <div>
+            <div class="user-name">${u.name}</div>
+            <div class="user-email">${u.email}</div>
+          </div>
+          <div class="user-meta">
+            <div>ID: ${u.userId}</div>
+            <div>Aff: ${u.affiliateCode || "-"}</div>
+          </div>
+          <div>
+            <span class="badge badge-group">${groupLabels[u.groupId] || "-"}</span>
+          </div>
+          <div>
+            <span class="badge ${statusBadgeClass}">${statusLabels[u.status] || u.status}</span><br>
+            <span class="badge badge-kyc" style="margin-top:2px; display:inline-block;">
+              ${kycLabels[u.kycLevel] || "-"}
+            </span>
+          </div>
+        `;
+
+        row.addEventListener("click", () => {
+          currentUserId = u.userId;
+          renderList();
+          renderDetail();
+        });
+
+        listEl.appendChild(row);
+      });
+
+      if (!currentUserId && filtered.length > 0) {
+        currentUserId = filtered[0].userId;
+        renderList();
+        renderDetail();
+      }
+    }
+
+    function renderDetail() {
+      const u = users.find((x) => x.userId === currentUserId);
+      if (!u) {
+        detailTitleEl.textContent = "ユーザーを選択してください";
+        detailMetaEl.textContent =
+          "左の一覧からユーザーをクリックすると、プロフィールとKYC状況が表示されます。";
+        infoNameEl.textContent = "-";
+        infoEmailEl.textContent = "メール: -";
+        infoUserIdEl.textContent = "ユーザーID: -";
+        infoAffEl.textContent = "アフィリコード: -";
+        infoStatusEl.textContent = "ステータス: -";
+        infoGroupEl.textContent = "グループ: -";
+        infoKycEl.textContent = "KYCレベル: -";
+        infoCreatedEl.textContent = "登録日: -";
+        infoLastLoginEl.textContent = "最終ログイン: -";
+        return;
+      }
+
+      detailTitleEl.textContent = u.name;
+      detailMetaEl.innerHTML =
+        `<span>ユーザーID: ${u.userId}</span>` +
+        `<span>グループ: ${groupLabels[u.groupId] || u.groupId}</span>`;
+
+      infoNameEl.textContent = u.name;
+      infoEmailEl.textContent = "メール: " + u.email;
+      infoUserIdEl.textContent = "ユーザーID: " + u.userId;
+      infoAffEl.textContent =
+        "アフィリコード: " + (u.affiliateCode || "-");
+      infoStatusEl.textContent =
+        "ステータス: " + (statusLabels[u.status] || u.status);
+      infoGroupEl.textContent =
+        "グループ: " + (groupLabels[u.groupId] || u.groupId);
+      infoKycEl.textContent =
+        "KYCレベル: " + (kycLabels[u.kycLevel] || u.kycLevel);
+      infoCreatedEl.textContent = "登録日: " + (u.createdAt || "-");
+      infoLastLoginEl.textContent =
+        "最終ログイン: " + (u.lastLogin || "-");
+    }
+
+    // Events
+    btnSearch.addEventListener("click", applyFilters);
+    btnClear.addEventListener("click", () => {
+      fKeyword.value = "";
+      fGroup.value = "all";
+      fKyc.value = "all";
+      fStatus.value = "all";
+      applyFilters();
+      showToast("フィルターをクリアしました。");
+    });
+
+    // 初期表示
+    applyFilters();
+  </script>
+</body>
+</html>

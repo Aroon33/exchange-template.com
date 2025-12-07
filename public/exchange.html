@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - トレード画面</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- TradingView -->
+  <script src="https://s3.tradingview.com/tv.js"></script>
+
+  <!-- 外部共通 CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <!-- 追加トレードページ専用 CSS -->
+  <style>
+    /* ===========================
+       レイアウト
+    ============================ */
+    .exchange-grid {
+      display: grid;
+      grid-template-columns: 260px 1fr 320px;
+      gap: 14px;
+      padding: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .exchange-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ===========================
+       マーケットリスト
+    ============================ */
+    #market-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    .market-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      background: #fff;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .market-item.active {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+    .market-item:hover { background: #f5f7fa; }
+
+    @media(max-width:900px) {
+      #market-list {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 10px;
+        padding-bottom: 8px;
+      }
+      .market-item {
+        min-width: 140px;
+      }
+    }
+
+    /* ===========================
+       チャート
+    ============================ */
+    #tv_chart {
+      width: 100%;
+      height: 420px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    /* ===========================
+       注文板 / 約定
+    ============================ */
+    .orderbook-list,
+    .recent-trades {
+      max-height: 240px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .orderbook-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 2px;
+      font-size: 13px;
+    }
+    .orderbook-row.sell { color: #dc2626; }
+    .orderbook-row.buy  { color: #059669; }
+
+    .trade-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 2px;
+      font-size: 13px;
+    }
+
+    /* スマホでは折りたたみ */
+    .collapse-toggle {
+      cursor: pointer;
+      font-size: 14px;
+      padding: 6px;
+      background: #f3f4f6;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .collapse-content {
+      display: none;
+    }
+
+    @media(min-width:901px) {
+      .collapse-toggle { display:none; }
+      .collapse-content { display:block !important; }
+    }
+
+    /* ===========================
+       注文パネル
+    ============================ */
+    .order-panel select,
+    .order-panel input {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+      border: 1px solid var(--border-soft);
+      border-radius: 6px;
+    }
+
+    .order-btn-buy {
+      background: var(--success);
+      color: #fff;
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 6px;
+    }
+    .order-btn-sell {
+      background: var(--danger);
+      color: #fff;
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 6px;
+    }
+
+    .order-note {
+      font-size: 11px;
+      margin-top: 6px;
+      color: var(--text-muted);
+    }
+
+  </style>
+</head>
+
+<body>
+
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-badge">CX</div>
+    CryptoX Exchange
+  </div>
+  
+  <nav class="site-nav">
+    <a href="index.html" class="nav-link">TOP</a>
+    <a href="exchange.html" class="nav-link active">トレード</a>
+    <a href="wallet.html" class="nav-link">ウォレット</a>
+    <a href="system-trade.html" class="nav-link">システム取引</a>
+    <a href="support.html" class="nav-link">サポート</a>
+    <a href="mypage.html" class="nav-link">マイページ</a>
+  </nav>
+
+  <div class="header-actions">
+    <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+    <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+  </div>
+</header>
+
+
+
+<!-- ===========================
+      MAIN LAYOUT
+=========================== -->
+
+<main class="exchange-grid">
+
+  <!-- ========== MARKET LIST ========== -->
+  <section class="card">
+    <div class="card-header">
+      <div class="card-title">マーケット</div>
+    </div>
+    <div id="market-list"></div>
+  </section>
+
+  <!-- ========== CHART AREA ========== -->
+  <section class="chart-area">
+    <div class="chart-header">
+      <div>
+        <div id="chartSymbolMain" class="chart-main-symbol">BTC / USD</div>
+        <div id="chartSymbolSub" class="chart-sub-symbol">Bitcoin · 現物</div>
+      </div>
+    </div>
+
+    <div id="tv_chart"></div>
+  </section>
+
+  <!-- ========== ORDER SIDE ========== -->
+  <section class="order-side">
+
+    <!-- 折りたたみ：注文板 -->
+    <div class="collapse-toggle" onclick="toggleCollapse('orderbookWrap')">📉 注文板（タップで開閉）</div>
+    <div id="orderbookWrap" class="collapse-content">
+      <div class="card">
+        <div class="card-header"><div class="card-title">注文板</div></div>
+        <div class="orderbook-list" id="orderbook"></div>
+      </div>
+    </div>
+
+    <!-- 注文パネル -->
+    <div class="card order-panel">
+      <div class="card-header">
+        <div class="card-title">注文</div>
+      </div>
+
+      <select id="order-type">
+        <option value="market">成行注文</option>
+        <option value="limit">指値注文</option>
+      </select>
+
+      <input type="number" id="order-price" placeholder="価格 (指値時)" disabled>
+      <input type="number" id="order-amount" placeholder="数量">
+
+      <button class="order-btn-buy">買い</button>
+      <button class="order-btn-sell">売り</button>
+
+      <div class="order-note">
+        ※ デモ版のため実際には注文・約定されません。
+      </div>
+    </div>
+
+    <!-- 折りたたみ：最新約定 -->
+    <div class="collapse-toggle" onclick="toggleCollapse('recentWrap')">📈 最新の約定（タップで開閉）</div>
+    <div id="recentWrap" class="collapse-content">
+      <div class="card">
+        <div class="card-header"><div class="card-title">最新の約定</div></div>
+        <div class="recent-trades" id="recent-trades"></div>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+
+
+
+<script>
+/* ===========================
+      マーケット一覧
+=========================== */
+const markets = [
+  { symbol: "BTC/USD", tv: "BINANCE:BTCUSDT", name: "Bitcoin", price: 67420 },
+  { symbol: "ETH/USD", tv: "BINANCE:ETHUSDT", name: "Ethereum", price: 3120 },
+  { symbol: "SOL/USD", tv: "BINANCE:SOLUSDT", name: "Solana", price: 178 },
+  { symbol: "DOGE/USD", tv: "BINANCE:DOGEUSDT", name: "Dogecoin", price: 0.18 },
+  { symbol: "XRP/USD", tv: "BINANCE:XRPUSDT", name: "XRP", price: 0.55 },
+  { symbol: "ADA/USD", tv: "BINANCE:ADAUSDT", name: "Cardano", price: 0.42 }
+];
+
+let currentMarket = markets[0];
+
+function renderMarketList() {
+  const list = document.getElementById("market-list");
+  list.innerHTML = "";
+
+  markets.forEach(m => {
+    const item = document.createElement("div");
+    item.className = "market-item" + (m.symbol === currentMarket.symbol ? " active" : "");
+    item.innerHTML = `
+      <div>
+        <div class="market-symbol">${m.symbol}</div>
+        <div class="market-name">${m.name}</div>
+      </div>
+      <div>${m.price}</div>
+    `;
+
+    item.addEventListener("click", () => {
+      currentMarket = m;
+      updateMarketInfo();
+      renderMarketList();
+      initTradingView(m.tv);
+      generateOrderbook();
+      generateTrades();
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function updateMarketInfo() {
+  document.getElementById("chartSymbolMain").textContent =
+    currentMarket.symbol.replace("/", " / ");
+  document
+    .getElementById("chartSymbolSub")
+    .textContent = `${currentMarket.name} · 現物`;
+}
+
+/* ===========================
+      TradingView
+=========================== */
+function initTradingView(symbol) {
+  document.getElementById("tv_chart").innerHTML = "";
+
+  new TradingView.widget({
+    container_id: "tv_chart",
+    symbol: symbol || "BINANCE:BTCUSDT",
+    interval: "15",
+    timezone: "Asia/Tokyo",
+    theme: "light",
+    style: "1",
+    locale: "ja",
+    autosize: true,
+  });
+}
+
+/* ===========================
+      注文板
+=========================== */
+function generateOrderbook() {
+  const el = document.getElementById("orderbook");
+  el.innerHTML = "";
+  for (let i = 0; i < 12; i++) {
+    const price = (currentMarket.price + (Math.random() - 0.5) * 40).toFixed(2);
+    const amount = (Math.random() * 2).toFixed(3);
+    const row = document.createElement("div");
+    row.className = "orderbook-row " + (i < 6 ? "sell" : "buy");
+    row.innerHTML = `<span>${price}</span><span>${amount}</span>`;
+    el.appendChild(row);
+  }
+}
+
+/* ===========================
+      最新約定
+=========================== */
+function generateTrades() {
+  const el = document.getElementById("recent-trades");
+  el.innerHTML = "";
+  for (let i = 0; i < 14; i++) {
+    const price = (currentMarket.price + (Math.random() - 0.5) * 40).toFixed(2);
+    const amount = (Math.random() * 2).toFixed(3);
+    const buy = Math.random() > 0.5;
+    const row = document.createElement("div");
+    row.className = "trade-row";
+    row.style.color = buy ? "var(--success)" : "var(--danger)";
+    row.innerHTML = `<span>${price}</span><span>${amount}</span>`;
+    el.appendChild(row);
+  }
+}
+
+/* ===========================
+      折りたたみ（スマホ）
+=========================== */
+function toggleCollapse(id){
+  const box = document.getElementById(id);
+  box.style.display = box.style.display === "block" ? "none" : "block";
+}
+
+/* ===========================
+      INIT
+=========================== */
+document.addEventListener("DOMContentLoaded", () => {
+  renderMarketList();
+  updateMarketInfo();
+  initTradingView(currentMarket.tv);
+  generateOrderbook();
+  generateTrades();
+});
+
+/* ===========================
+      注文タイプ切替
+=========================== */
+document.getElementById("order-type").addEventListener("change", e => {
+  document.getElementById("order-price").disabled = e.target.value === "market";
+});
+
+/* ===========================
+      ヘッダーのログイン切替
+=========================== */
+const API_BASE = "https://api.exchange-template.com";
+
+async function updateHeaderUserState() {
+  const headerActions = document.querySelector(".header-actions");
+  if (!headerActions) return;
+
+  try {
+    const res = await fetch(API_BASE + "/auth/me", { credentials:"include" });
+    if (!res.ok) return;
+
+    const data = await res.json();
+    const user = data.user || data;
+
+    headerActions.innerHTML = `
+      <a href="mypage.html" class="btn btn-outline btn-sm">${user.name} さん</a>
+      <a href="#" id="logoutBtn" class="btn btn-primary btn-sm">ログアウト</a>
+    `;
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await fetch(API_BASE + "/auth/logout",{method:"POST",credentials:"include"});
+      location.href = "login.html";
+    });
+
+  } catch(e) {}
+}
+document.addEventListener("DOMContentLoaded", updateHeaderUserState);
+</script>
+
+</body>
+</html>

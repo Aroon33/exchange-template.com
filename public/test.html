@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - ログイン</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body class="auth-bg">
+  <header class="site-header">
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+    <nav class="site-nav">
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link">取引履歴</a>
+    </nav>
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-outline btn-sm nav-link active">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+  </header>
+
+  <main class="auth-wrapper">
+    <section class="card auth-card">
+      <h1 class="card-title">ログイン</h1>
+      <p class="card-sub">登録済みのメールアドレスとパスワードを入力してください。</p>
+
+      <div class="form-row">
+        <label>メールアドレス</label>
+        <input id="login-email" type="email" placeholder="you@example.com" />
+      </div>
+
+      <div class="form-row">
+        <label>パスワード</label>
+        <input id="login-password" type="password" placeholder="••••••••" />
+      </div>
+
+      <div class="row-inline auth-row-inline">
+        <label><input id="login-keep" type="checkbox" /> ログイン状態を保持</label>
+        <a href="#" class="link-blue">パスワードをお忘れですか？</a>
+      </div>
+
+      <button id="login-button" class="btn btn-primary btn-block">ログイン</button>
+
+      <p id="login-message" class="muted auth-message"></p>
+
+      <p class="muted auth-bottom-text">
+        まだ口座をお持ちでないですか？ <a href="signup.html" class="link-blue">口座開設はこちら</a>
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE_URL = "https://api.exchange-template.com";
+    const emailInput = document.getElementById("login-email");
+    const passwordInput = document.getElementById("login-password");
+    const messageEl = document.getElementById("login-message");
+    const btn = document.getElementById("login-button");
+
+    async function login() {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      if (!email || !password) {
+        messageEl.textContent = "メールアドレスとパスワードを入力してください。";
+        messageEl.style.color = "red";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "ログイン中...";
+
+      try {
+        const res = await fetch(API_BASE_URL + "/auth/login", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "ログインに失敗しました");
+
+        messageEl.textContent = "ログイン成功: " + data.user.email;
+        messageEl.style.color = "green";
+        setTimeout(() => window.location.href = "mypage.html", 1200);
+      } catch (err) {
+        messageEl.textContent = err.message;
+        messageEl.style.color = "red";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "ログイン";
+      }
+    }
+
+    btn.addEventListener("click", e => { e.preventDefault(); login(); });
+    [emailInput, passwordInput].forEach(el => {
+      el.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          login();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

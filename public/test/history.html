@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - 取引履歴</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #1f2933;
+      --text-muted: #7b8794;
+      --border-soft: #e4e7eb;
+      --buy: #16a34a;
+      --sell: #dc2626;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    body { background:var(--bg); color:var(--text-main); }
+    a { text-decoration:none; color:inherit; }
+
+    header {
+      background:#ffffff;
+      border-bottom:1px solid var(--border-soft);
+      padding:10px 32px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .logo { display:flex; align-items:center; gap:8px; font-weight:700; font-size:20px; }
+    .logo-badge { width:24px; height:24px; border-radius:8px; background:var(--primary); display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; }
+    nav { display:flex; gap:16px; font-size:14px; color:var(--text-muted); }
+    .nav-link.active { color:var(--primary); font-weight:600; }
+    .header-actions { display:flex; gap:10px; align-items:center; }
+    .btn { border-radius:999px; padding:7px 14px; font-size:13px; border:1px solid transparent; cursor:pointer; background:transparent; }
+    .btn-primary { background:var(--primary); color:#fff; }
+    .btn-outline { background:#fff; border-color:var(--border-soft); color:var(--text-main); }
+    .btn-sm { padding:4px 10px; font-size:12px; }
+
+    main {
+      max-width:980px;
+      margin:0 auto;
+      padding:18px 20px 26px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .card {
+      background:var(--bg-soft);
+      border-radius:12px;
+      border:1px solid var(--border-soft);
+      box-shadow:0 1px 2px rgba(15,23,42,0.03);
+      padding:14px 16px 12px;
+      font-size:12px;
+    }
+    .card-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:8px;
+    }
+    .card-title { font-size:15px; font-weight:600; }
+    .card-sub { font-size:11px; color:var(--text-muted); }
+
+    .filters {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:8px;
+      align-items:center;
+    }
+    .filter-group {
+      display:flex;
+      gap:6px;
+      align-items:center;
+      font-size:11px;
+      color:var(--text-muted);
+    }
+    select,
+    input[type="date"] {
+      border-radius:6px;
+      border:1px solid var(--border-soft);
+      padding:5px 7px;
+      font-size:11px;
+      outline:none;
+      background:#fff;
+    }
+    select:focus,
+    input[type="date"]:focus { border-color:var(--primary); }
+
+    .chips {
+      display:inline-flex;
+      border-radius:999px;
+      border:1px solid var(--border-soft);
+      overflow:hidden;
+      font-size:11px;
+    }
+    .chip-btn {
+      padding:4px 10px;
+      border:none;
+      background:#fff;
+      color:var(--text-muted);
+      cursor:pointer;
+    }
+    .chip-btn.active {
+      background:var(--primary);
+      color:#fff;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:11px;
+    }
+    th,
+    td {
+      padding:6px 4px;
+      border-bottom:1px solid #e5e7eb;
+      text-align:left;
+      white-space:nowrap;
+    }
+    th { color:var(--text-muted); font-weight:600; }
+    .side-buy { color:var(--buy); font-weight:600; }
+    .side-sell { color:var(--sell); font-weight:600; }
+    .amount { text-align:right; }
+    .no-data {
+      font-size:12px;
+      color:var(--text-muted);
+      text-align:center;
+      padding:18px 0 10px;
+    }
+    .note { font-size:10px; color:var(--text-muted); margin-top:4px; }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+    <nav>
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link active">取引履歴</a>
+    </nav>
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">取引履歴（デモ）</div>
+          <div class="card-sub">
+            直近の約定履歴を一覧表示しています。<br />
+            実運用時は、サーバー側の約定テーブルから取得して表示します。
+          </div>
+        </div>
+        <a href="exchange.html" class="btn btn-outline btn-sm">トレード画面へ</a>
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <span>種別:</span>
+          <div class="chips">
+            <button class="chip-btn active" data-side="all">すべて</button>
+            <button class="chip-btn" data-side="buy">買い</button>
+            <button class="chip-btn" data-side="sell">売り</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <span>通貨ペア:</span>
+          <select id="pair-filter">
+            <option value="all">すべて</option>
+            <option value="BTC/USD">BTC / USD</option>
+            <option value="ETH/USD">ETH / USD</option>
+            <option value="SOL/USD">SOL / USD</option>
+            <option value="DOGE/USD">DOGE / USD</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <span>期間:</span>
+          <input type="date" id="from-date" />
+          <span>〜</span>
+          <input type="date" id="to-date" />
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>日時</th>
+            <th>通貨ペア</th>
+            <th>サイド</th>
+            <th class="amount">数量</th>
+            <th class="amount">価格 (USD)</th>
+            <th class="amount">約定金額 (USD)</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <!-- JSで描画 -->
+        </tbody>
+      </table>
+      <div id="no-data" class="no-data" style="display:none;">該当する取引はありません。</div>
+
+      <div class="note">
+        * このページのデータはフロントエンド上のサンプルです。<br />
+        * API 連携時は、日付・通貨ペア・サイドでサーバー側フィルタをかけて取得する想定です。
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const trades = [
+      { time: "2025-11-19 18:21", pair: "BTC/USD", side: "buy",  size: 0.0100, price: 67050.00 },
+      { time: "2025-11-19 17:02", pair: "ETH/USD", side: "sell", size: 0.5000, price: 3210.50 },
+      { time: "2025-11-18 22:15", pair: "DOGE/USD", side: "buy",  size: 1000,   price: 0.1700 },
+      { time: "2025-11-18 19:40", pair: "SOL/USD", side: "buy",  size: 5.0,    price: 180.10 },
+      { time: "2025-11-17 15:03", pair: "BTC/USD", side: "sell", size: 0.0200, price: 66500.00 },
+      { time: "2025-11-16 11:25", pair: "ETH/USD", side: "buy",  size: 1.0000, price: 3180.00 },
+    ];
+
+    const bodyEl = document.getElementById("history-body");
+    const noDataEl = document.getElementById("no-data");
+    const pairFilterEl = document.getElementById("pair-filter");
+    const fromDateEl = document.getElementById("from-date");
+    const toDateEl = document.getElementById("to-date");
+    const sideButtons = document.querySelectorAll(".chip-btn");
+
+    let currentSide = "all";
+
+    sideButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        sideButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentSide = btn.dataset.side;
+        render();
+      });
+    });
+
+    pairFilterEl.addEventListener("change", render);
+    fromDateEl.addEventListener("change", render);
+    toDateEl.addEventListener("change", render);
+
+    function render() {
+      bodyEl.innerHTML = "";
+      let filtered = trades.slice();
+
+      if (currentSide !== "all") {
+        filtered = filtered.filter(t => t.side === currentSide);
+      }
+
+      const pair = pairFilterEl.value;
+      if (pair !== "all") {
+        filtered = filtered.filter(t => t.pair === pair);
+      }
+
+      const fromValue = fromDateEl.value;
+      const toValue = toDateEl.value;
+      if (fromValue) {
+        const fromTs = new Date(fromValue + "T00:00:00").getTime();
+        filtered = filtered.filter(t => new Date(t.time.replace(" ", "T")).getTime() >= fromTs);
+      }
+      if (toValue) {
+        const toTs = new Date(toValue + "T23:59:59").getTime();
+        filtered = filtered.filter(t => new Date(t.time.replace(" ", "T")).getTime() <= toTs);
+      }
+
+      if (filtered.length === 0) {
+        noDataEl.style.display = "block";
+        return;
+      }
+      noDataEl.style.display = "none";
+
+      filtered.forEach(t => {
+        const tr = document.createElement("tr");
+        const sideClass = t.side === "buy" ? "side-buy" : "side-sell";
+        const notional = t.size * t.price;
+        tr.innerHTML = `
+          <td>${t.time}</td>
+          <td>${t.pair}</td>
+          <td class="${sideClass}">${t.side === "buy" ? "買い" : "売り"}</td>
+          <td class="amount">${t.size.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</td>
+          <td class="amount">${t.price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td class="amount">${notional.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+        `;
+        bodyEl.appendChild(tr);
+      });
+    }
+
+    function initDates() {
+      const today = new Date();
+      const isoToday = today.toISOString().slice(0,10);
+      toDateEl.value = isoToday;
+
+      const weekAgo = new Date(today.getTime() - 6*24*60*60*1000);
+      fromDateEl.value = weekAgo.toISOString().slice(0,10);
+    }
+
+    initDates();
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - ユーザー一覧</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-title">メニュー</div>
+  <ul class="nav-list">
+    <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
+    <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
+    <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
+    <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
+    <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
+    <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
+    <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
+    <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
+    <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
+    <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
+    <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
+  </ul>
+</aside>
+
+  <!-- ヘッダー -->
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <div class="admin-logo-badge">AX</div>
+      <div>
+        <div class="admin-logo-text">Admin Console</div>
+        <div class="admin-logo-sub">ユーザー一覧</div>
+      </div>
+    </div>
+    <div class="admin-header-right">
+      <button class="btn btn-outline btn-sm" onclick="location.href='../login.html'">ログアウト</button>
+    </div>
+  </header>
+
+  <!-- メイン -->
+  <main class="admin-main">
+    <div class="admin-main-inner">
+
+      <div class="page-title">ユーザー一覧</div>
+
+      <!-- フィルター -->
+      <section class="filters-card">
+        <div class="filters-grid">
+          
+          <div class="field">
+            <label>グループID</label>
+            <select id="f-group">
+              <option value="">すべて</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>開設日 From</label>
+            <input type="date" id="f-from" />
+          </div>
+
+          <div class="field">
+            <label>開設日 To</label>
+            <input type="date" id="f-to" />
+          </div>
+
+          <div class="field">
+            <label>キーワード（名前/メール）</label>
+            <input type="text" id="f-text" placeholder="例：山田 / test@example.com" />
+          </div>
+
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn-xs" id="btn-clear">クリア</button>
+          <button class="btn-xs btn-xs-primary" id="btn-search">検索</button>
+        </div>
+      </section>
+
+      <!-- ユーザー一覧テーブル -->
+      <section class="table-card">
+        <div class="table-header-row">
+          <div class="table-title">ユーザー一覧</div>
+          <div class="table-meta" id="table-meta">0件</div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>名前</th>
+              <th>メール</th>
+              <th>グループ</th>
+              <th>開設日</th>
+              <th>残高</th>
+              <th>詳細</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- JS（後で送ります） -->
+  <script>
+const API_BASE = "https://api.exchange-template.com";
+
+/* ▼ ログアウト */
+async function doLogout() {
+  await fetch(API_BASE + "/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
+  window.location.href = "../login.html";
+}
+
+/* ▼ API GET */
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path, { credentials: "include" });
+  if (res.status === 401) doLogout();
+  const txt = await res.text();
+  if (!res.ok) throw new Error(txt);
+  return JSON.parse(txt);
+}
+
+/* ▼ DOM */
+const tbody      = document.getElementById("table-body");   // ← 修正済み
+const fGroup     = document.getElementById("f-group");
+const fFrom      = document.getElementById("f-from");
+const fTo        = document.getElementById("f-to");
+const fText      = document.getElementById("f-text");
+const metaEl     = document.getElementById("table-meta");
+
+let allUsers = [];
+
+/* ▼ 日付フォーマット */
+function fmtDate(iso) {
+  if (!iso) return "-";
+  return new Date(iso).toLocaleDateString("ja-JP");
+}
+
+/* ▼ 全ユーザー読み込み */
+async function loadUsers() {
+  allUsers = await apiGet("/admin/users");
+  renderTable(allUsers); // 初期表示は全件
+}
+
+/* ▼ フィルタ適用 */
+function applyFilters() {
+  let list = [...allUsers];
+
+  const group = Number(fGroup.value);
+  const from  = fFrom.value ? new Date(fFrom.value) : null;
+  const to    = fTo.value ? new Date(fTo.value) : null;
+  const text  = fText.value.trim().toLowerCase();
+
+  // グループ
+  if (group > 0) list = list.filter(u => Number(u.groupId) === group);
+
+  // 開設日フィルタ
+  if (from) list = list.filter(u => new Date(u.createdAt) >= from);
+  if (to)   list = list.filter(u => new Date(u.createdAt) <= to);
+
+  // キーワード（名前 / メール）
+  if (text) {
+    list = list.filter(u =>
+      u.name.toLowerCase().includes(text) ||
+      u.email.toLowerCase().includes(text)
+    );
+  }
+
+  renderTable(list);
+}
+
+/* ▼ テーブル描画 */
+function renderTable(list) {
+  tbody.innerHTML = "";
+  metaEl.textContent = `${list.length}件`;
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">データがありません。</td></tr>`;
+    return;
+  }
+
+  list.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${u.id}</td>
+      <td>${u.name}</td>
+      <td>${u.email}</td>
+      <td>${u.groupId ?? "-"}</td>
+      <td>${fmtDate(u.createdAt)}</td>
+      <td>${u.balanceTotal ?? 0}</td>
+      <td><a href="user_detail.html?id=${u.id}" class="btn-xs btn-primary">詳細</a></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ▼ フィルターイベント */
+document.getElementById("btn-search").addEventListener("click", applyFilters);
+document.getElementById("btn-clear").addEventListener("click", () => {
+  fGroup.value = "";
+  fFrom.value = "";
+  fTo.value = "";
+  fText.value = "";
+  renderTable(allUsers);
+});
+
+/* ▼ 初期ロード */
+loadUsers().catch(console.error);
+</script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,464 @@
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝ 
+<style>index.html ブロック1
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝ 
+:root {
+      --bg: #f3f4f6;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-soft: #e5e7eb;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --pending: #f97316;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* ヘッダー */
+    .admin-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px 0 60px;
+      z-index: 30;
+    }
+
+    .admin-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .logo-text {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .admin-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .btn {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .btn-outline {
+      border-color: var(--border-soft);
+      background: #fff;
+      color: var(--text-main);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* 左サイドバー */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 200px;
+      bottom: 0;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding-top: 52px; /* header 分 */
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #020617;
+      z-index: 20;
+    }
+
+    .sidebar-title {
+      padding: 10px 14px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+    }
+
+    .nav-list {
+      list-style: none;
+      margin: 0;
+      padding: 0 8px 12px;
+    }
+
+    .nav-item {
+      margin-bottom: 4px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #9ca3af;
+      cursor: pointer;
+    }
+
+    .nav-link:hover {
+      background: rgba(148, 163, 184, 0.15);
+      color: #e5e7eb;
+    }
+
+    .nav-link.active {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid rgba(129, 140, 248, 0.5);
+    }
+
+    .nav-icon {
+      width: 14px;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 10px 14px 12px;
+      font-size: 11px;
+      color: #6b7280;
+      border-top: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    /* メインコンテンツ */
+    .main {
+      margin-left: 200px;
+      padding-top: 52px;
+    }
+
+    .main-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px 18px 24px;
+    }
+
+    .page-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .page-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* 検索・フィルター */
+    .search-card {
+      background: var(--bg-soft);
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      padding: 10px 12px 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+    }
+
+    .search-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .search-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .search-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .search-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    @media (max-width: 960px) {
+      .search-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .search-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 11px;
+    }
+
+    .form-field label {
+      color: var(--text-muted);
+    }
+
+    .form-field input,
+    .form-field select {
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      padding: 6px 7px;
+      font-size: 11px;
+      outline: none;
+      background: #fff;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus {
+      border-color: var(--primary);
+    }
+
+    .search-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn-xs {
+      padding: 4px 9px;
+      font-size: 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .btn-xs-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* サマリーカード */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 960px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .summary-card {
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      padding: 8px 10px 7px;
+      font-size: 11px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+    }
+
+    .summary-label {
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    .summary-value {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .summary-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* 一覧テーブル */
+    .table-card {
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      padding: 10px 10px 8px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+    }
+
+    .table-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .table-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .table-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    th, td {
+      padding: 6px 4px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    th.sortable:hover {
+      color: var(--primary);
+    }
+
+    th .sort-indicator {
+      margin-left: 3px;
+      font-size: 10px;
+      opacity: 0.7;
+    }
+
+    td.amount {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .status-active {
+      background: #dcfce7;
+      color: var(--success);
+    }
+
+    .status-pending {
+      background: #ffedd5;
+      color: var(--pending);
+    }
+
+    .status-suspended {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    .table-row:hover {
+      background: #f9fafb;
+    }
+
+    .tag {
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      padding: 2px 6px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      .admin-header {
+        padding-left: 54px;
+      }
+      .sidebar {
+        width: 180px;
+      }
+      .main {
+        margin-left: 180px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .sidebar {
+        position: fixed;
+        transform: translateX(-100%);
+      }
+      .main {
+        margin-left: 0;
+      }
+      .admin-header {
+        padding-left: 12px;
+      }
+    }
+
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝ 
+</style>index.html ブロック1
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝ 
+

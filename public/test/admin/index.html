@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - ダッシュボード</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-soft: #e5e7eb;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --pending: #f97316;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* ヘッダー */
+    .admin-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px 0 60px;
+      z-index: 30;
+    }
+
+    .admin-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .logo-text {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .admin-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .btn {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .btn-outline {
+      border-color: var(--border-soft);
+      background: #fff;
+      color: var(--text-main);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* 左サイドバー */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 200px;
+      bottom: 0;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding-top: 52px; /* header 分 */
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #020617;
+      z-index: 20;
+    }
+
+    .sidebar-title {
+      padding: 10px 14px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+    }
+
+    .nav-list {
+      list-style: none;
+      margin: 0;
+      padding: 0 8px 12px;
+    }
+
+    .nav-item {
+      margin-bottom: 4px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #9ca3af;
+      cursor: pointer;
+    }
+
+    .nav-link:hover {
+      background: rgba(148, 163, 184, 0.15);
+      color: #e5e7eb;
+    }
+
+    .nav-link.active {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid rgba(129, 140, 248, 0.5);
+    }
+
+    .nav-icon {
+      width: 14px;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 10px 14px 12px;
+      font-size: 11px;
+      color: #6b7280;
+      border-top: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    /* メインコンテンツ */
+    .main {
+      margin-left: 200px;
+      padding-top: 52px;
+    }
+
+    .main-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px 18px 24px;
+    }
+
+    .page-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .page-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* 検索・フィルター */
+    .search-card {
+      background: var(--bg-soft);
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      padding: 10px 12px 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+    }
+
+    .search-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .search-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .search-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .search-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    @media (max-width: 960px) {
+      .search-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .search-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 11px;
+    }
+
+    .form-field label {
+      color: var(--text-muted);
+    }
+
+    .form-field input,
+    .form-field select {
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      padding: 6px 7px;
+      font-size: 11px;
+      outline: none;
+      background: #fff;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus {
+      border-color: var(--primary);
+    }
+
+    .search-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn-xs {
+      padding: 4px 9px;
+      font-size: 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .btn-xs-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* サマリーカード */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 960px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .summary-card {
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      padding: 8px 10px 7px;
+      font-size: 11px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+    }
+
+    .summary-label {
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    .summary-value {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .summary-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* 一覧テーブル */
+    .table-card {
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      padding: 10px 10px 8px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+    }
+
+    .table-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .table-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .table-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    th, td {
+      padding: 6px 4px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    th.sortable:hover {
+      color: var(--primary);
+    }
+
+    th .sort-indicator {
+      margin-left: 3px;
+      font-size: 10px;
+      opacity: 0.7;
+    }
+
+    td.amount {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    .status-active {
+      background: #dcfce7;
+      color: var(--success);
+    }
+
+    .status-pending {
+      background: #ffedd5;
+      color: var(--pending);
+    }
+
+    .status-suspended {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    .table-row:hover {
+      background: #f9fafb;
+    }
+
+    .tag {
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      padding: 2px 6px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      .admin-header {
+        padding-left: 54px;
+      }
+      .sidebar {
+        width: 180px;
+      }
+      .main {
+        margin-left: 180px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .sidebar {
+        position: fixed;
+        transform: translateX(-100%);
+      }
+      .main {
+        margin-left: 0;
+      }
+      .admin-header {
+        padding-left: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- サイドバー -->
+  <aside class="sidebar">
+    <div class="sidebar-title">メニュー</div>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a href="index.html" class="nav-link active">
+          <span class="nav-icon">🏠</span><span>ダッシュボード</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="tickets.html" class="nav-link">
+          <span class="nav-icon">💬</span><span>問い合わせ管理</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="users.html" class="nav-link">
+          <span class="nav-icon">👥</span><span>ユーザー一覧</span>
+        </a>
+      </li>
+        <li class="nav-item">
+        <a href="trades.html" class="nav-link">
+          <span class="nav-icon">📊</span><span>取引状況</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="kyc.html" class="nav-link">
+          <span class="nav-icon">📊</span><span>KYC状況</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="deposit.html" class="nav-link">
+          <span class="nav-icon">➕</span><span>入金申請</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="withdraw.html" class="nav-link">
+          <span class="nav-icon">➖</span><span>出金申請</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="group.html" class="nav-link">
+          <span class="nav-icon">🧩</span><span>グループ管理</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="settings.html" class="nav-link">
+          <span class="nav-icon">⚙️</span><span>システム設定</span>
+        </a>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      CryptoX Admin<br />UI Demo &copy; 2025
+    </div>
+  </aside>
+
+  <!-- ヘッダー -->
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <div class="logo-badge">AX</div>
+      <div>
+        <div class="logo-text">Admin Console</div>
+        <div class="logo-sub">CryptoX Exchange</div>
+      </div>
+    </div>
+    <div class="admin-header-right">
+      <span>管理者：admin@example.com</span>
+      <button class="btn btn-outline btn-sm" onclick="location.href='login.html'">ログアウト（デモ）</button>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="main">
+    <div class="main-inner">
+      <div class="page-title">ダッシュボード</div>
+      <div class="page-sub">
+        全体の状況を確認し、ユーザー / 入出金 / 問い合わせに素早くアクセスできます。
+      </div>
+
+      <!-- 検索・フィルター -->
+      <section class="search-card">
+        <div class="search-row-top">
+          <div>
+            <div class="search-title">グローバル検索</div>
+            <div class="search-meta">
+              ユーザー名 / メール / アフィリエイトコード / 日付で絞り込みできます。
+            </div>
+          </div>
+          <span class="tag">対象：ユーザー / 入出金 / 問い合わせ</span>
+        </div>
+
+        <div class="search-grid">
+          <div class="form-field">
+            <label>キーワード（名前・メール・ユーザーID）</label>
+            <input type="text" id="q-text" placeholder="例：Taro / user@example.com / user-demo-001" />
+          </div>
+          <div class="form-field">
+            <label>アフィリエイトコード</label>
+            <input type="text" id="q-affiliate" placeholder="例：AFF-12345" />
+          </div>
+          <div class="form-field">
+            <label>期間（From）</label>
+            <input type="date" id="q-from" />
+          </div>
+          <div class="form-field">
+            <label>期間（To）</label>
+            <input type="date" id="q-to" />
+          </div>
+        </div>
+
+        <div class="search-actions">
+          <button class="btn-xs" id="btn-clear">条件クリア</button>
+          <button class="btn-xs btn-xs-primary" id="btn-search">検索</button>
+        </div>
+      </section>
+
+      <!-- サマリー -->
+      <section class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">総ユーザー数（デモ）</div>
+          <div class="summary-value" id="sum-users">0</div>
+          <div class="summary-sub">本番環境ではDBから取得</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">未対応問い合わせ</div>
+          <div class="summary-value" id="sum-tickets-new">0</div>
+          <div class="summary-sub">status = new の件数</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">入金申請中</div>
+          <div class="summary-value" id="sum-dep-pending">0</div>
+          <div class="summary-sub">pending の入金申請件数（ダミー）</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">出金申請中</div>
+          <div class="summary-value" id="sum-wd-pending">0</div>
+          <div class="summary-sub">pending の出金申請件数（ダミー）</div>
+        </div>
+      </section>
+
+      <!-- 情報一覧テーブル -->
+      <section class="table-card">
+        <div class="table-header-row">
+          <div class="table-title">ユーザー / 申請 / 問い合わせ 一覧（サンプル）</div>
+          <div class="table-meta" id="table-meta">0件を表示中</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable" data-sort-key="createdAt">作成日時<span class="sort-indicator"></span></th>
+              <th class="sortable" data-sort-key="type">種別<span class="sort-indicator"></span></th>
+              <th class="sortable" data-sort-key="nameOrTitle">名前 / タイトル<span class="sort-indicator"></span></th>
+              <th class="sortable" data-sort-key="userId">ユーザーID<span class="sort-indicator"></span></th>
+              <th class="sortable" data-sort-key="affiliateCode">アフィリコード<span class="sort-indicator"></span></th>
+              <th class="sortable" data-sort-key="amount" style="text-align:right;">金額（USD）<span class="sort-indicator"></span></th>
+              <th class="sortable" data-sort-key="statusLabel">ステータス<span class="sort-indicator"></span></th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- JSで描画 -->
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // ===== ダミーデータ =====
+    // type: user / ticket / deposit / withdraw
+    const rows = [
+      {
+        id: "user-001",
+        type: "user",
+        typeLabel: "ユーザー",
+        nameOrTitle: "Taro Yamada",
+        userId: "user-demo-001",
+        affiliateCode: "AFF-12345",
+        amount: null,
+        status: "active",
+        statusLabel: "有効",
+        createdAt: "2025-11-18 10:15",
+      },
+      {
+        id: "user-002",
+        type: "user",
+        typeLabel: "ユーザー",
+        nameOrTitle: "Hanako Suzuki",
+        userId: "user-demo-002",
+        affiliateCode: "AFF-77777",
+        amount: null,
+        status: "pending",
+        statusLabel: "KYC確認中",
+        createdAt: "2025-11-19 09:05",
+      },
+      {
+        id: "ticket-001",
+        type: "ticket",
+        typeLabel: "問い合わせ",
+        nameOrTitle: "入金が反映されません",
+        userId: "user-demo-001",
+        affiliateCode: "AFF-12345",
+        amount: null,
+        status: "new",
+        statusLabel: "未対応",
+        createdAt: "2025-11-19 08:30",
+      },
+      {
+        id: "dep-001",
+        type: "deposit",
+        typeLabel: "入金申請",
+        nameOrTitle: "銀行振込 JPY",
+        userId: "user-demo-003",
+        affiliateCode: "AFF-00001",
+        amount: 1000.0,
+        status: "pending",
+        statusLabel: "申請中",
+        createdAt: "2025-11-19 07:45",
+      },
+      {
+        id: "wd-001",
+        type: "withdraw",
+        typeLabel: "出金申請",
+        nameOrTitle: "BTC 出金",
+        userId: "user-demo-001",
+        affiliateCode: "AFF-12345",
+        amount: 0.5 * 67000,
+        status: "pending",
+        statusLabel: "申請中",
+        createdAt: "2025-11-18 22:10",
+      },
+      {
+        id: "ticket-002",
+        type: "ticket",
+        typeLabel: "問い合わせ",
+        nameOrTitle: "システム取引の設定について",
+        userId: "user-demo-004",
+        affiliateCode: "",
+        amount: null,
+        status: "open",
+        statusLabel: "対応中",
+        createdAt: "2025-11-18 16:20",
+      },
+      {
+        id: "dep-002",
+        type: "deposit",
+        typeLabel: "入金申請",
+        nameOrTitle: "USDT 入金",
+        userId: "user-demo-002",
+        affiliateCode: "AFF-77777",
+        amount: 500.0,
+        status: "completed",
+        statusLabel: "完了",
+        createdAt: "2025-11-17 19:00",
+      },
+      {
+        id: "wd-002",
+        type: "withdraw",
+        typeLabel: "出金申請",
+        nameOrTitle: "USDT 出金",
+        userId: "user-demo-005",
+        affiliateCode: "",
+        amount: 200.0,
+        status: "admin_cancel",
+        statusLabel: "管理側キャンセル",
+        createdAt: "2025-11-17 15:30",
+      },
+      {
+        id: "user-003",
+        type: "user",
+        typeLabel: "ユーザー",
+        nameOrTitle: "Suspended User",
+        userId: "user-demo-999",
+        affiliateCode: "AFF-99999",
+        amount: null,
+        status: "suspended",
+        statusLabel: "停止中",
+        createdAt: "2025-11-10 11:11",
+      }
+    ];
+
+    // ===== 検索用 =====
+    const qTextEl = document.getElementById("q-text");
+    const qAffEl = document.getElementById("q-affiliate");
+    const qFromEl = document.getElementById("q-from");
+    const qToEl = document.getElementById("q-to");
+    const btnSearch = document.getElementById("btn-search");
+    const btnClear = document.getElementById("btn-clear");
+    const tableBody = document.getElementById("table-body");
+    const tableMeta = document.getElementById("table-meta");
+    const sumUsersEl = document.getElementById("sum-users");
+    const sumTicketsNewEl = document.getElementById("sum-tickets-new");
+    const sumDepPendingEl = document.getElementById("sum-dep-pending");
+    const sumWdPendingEl = document.getElementById("sum-wd-pending");
+
+    let currentSortKey = "createdAt";
+    let currentSortDir = "desc"; // asc or desc
+    let filteredRows = rows.slice();
+
+    function parseDateTime(str) {
+      // "YYYY-MM-DD HH:MM" → Date
+      return new Date(str.replace(" ", "T"));
+    }
+
+    function applyFilters() {
+      const text = qTextEl.value.trim().toLowerCase();
+      const aff = qAffEl.value.trim().toLowerCase();
+      const fromVal = qFromEl.value;
+      const toVal = qToEl.value;
+
+      filteredRows = rows.filter((r) => {
+        // キーワード（名前、タイトル、メール相当、ユーザーID）
+        if (text) {
+          const haystack =
+            (r.nameOrTitle || "").toLowerCase() +
+            " " +
+            (r.userId || "").toLowerCase();
+          if (!haystack.includes(text)) return false;
+        }
+
+        // アフィリコード
+        if (aff) {
+          const code = (r.affiliateCode || "").toLowerCase();
+          if (!code.includes(aff)) return false;
+        }
+
+        // 日付範囲
+        if (fromVal) {
+          const fromTs = new Date(fromVal + "T00:00:00").getTime();
+          if (parseDateTime(r.createdAt).getTime() < fromTs) return false;
+        }
+        if (toVal) {
+          const toTs = new Date(toVal + "T23:59:59").getTime();
+          if (parseDateTime(r.createdAt).getTime() > toTs) return false;
+        }
+
+        return true;
+      });
+
+      applySort();
+      renderTable();
+    }
+
+    function applySort() {
+      const key = currentSortKey;
+      const dir = currentSortDir;
+
+      filteredRows.sort((a, b) => {
+        let va, vb;
+
+        if (key === "createdAt") {
+          va = parseDateTime(a.createdAt).getTime();
+          vb = parseDateTime(b.createdAt).getTime();
+        } else if (key === "amount") {
+          va = a.amount == null ? -Infinity : a.amount;
+          vb = b.amount == null ? -Infinity : b.amount;
+        } else {
+          va = (a[key] || "").toString().toLowerCase();
+          vb = (b[key] || "").toString().toLowerCase();
+        }
+
+        if (va < vb) return dir === "asc" ? -1 : 1;
+        if (va > vb) return dir === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    function renderTable() {
+      tableBody.innerHTML = "";
+      filteredRows.forEach((r) => {
+        const tr = document.createElement("tr");
+        tr.className = "table-row";
+
+        const statusChip = (() => {
+          if (r.type === "user") {
+            if (r.status === "active") return `<span class="status-chip status-active">有効</span>`;
+            if (r.status === "pending") return `<span class="status-chip status-pending">KYC確認中</span>`;
+            if (r.status === "suspended") return `<span class="status-chip status-suspended">停止中</span>`;
+          } else if (r.type === "ticket") {
+            if (r.status === "new") return `<span class="status-chip status-pending">未対応</span>`;
+            if (r.status === "open") return `<span class="status-chip status-active">対応中</span>`;
+            if (r.status === "closed") return `<span class="status-chip status-suspended">対応済</span>`;
+          } else if (r.type === "deposit" || r.type === "withdraw") {
+            if (r.status === "pending") return `<span class="status-chip status-pending">申請中</span>`;
+            if (r.status === "completed") return `<span class="status-chip status-active">完了</span>`;
+            if (r.status === "user_cancel") return `<span class="status-chip status-suspended">ユーザーキャンセル</span>`;
+            if (r.status === "admin_cancel") return `<span class="status-chip status-suspended">管理側キャンセル</span>`;
+          }
+          return `<span class="status-chip status-suspended">${r.statusLabel || "不明"}</span>`;
+        })();
+
+        const amountText =
+          r.amount == null
+            ? "-"
+            : r.amount.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              });
+
+        tr.innerHTML = `
+          <td>${r.createdAt}</td>
+          <td>${r.typeLabel}</td>
+          <td>${r.nameOrTitle}</td>
+          <td>${r.userId || "-"}</td>
+          <td>${r.affiliateCode || "-"}</td>
+          <td class="amount">${amountText}</td>
+          <td>${statusChip}</td>
+        `;
+        tableBody.appendChild(tr);
+      });
+
+      tableMeta.textContent = `${filteredRows.length}件を表示中`;
+    }
+
+    function updateSummary() {
+      const userCount = rows.filter((r) => r.type === "user").length;
+      const ticketNewCount = rows.filter(
+        (r) => r.type === "ticket" && r.status === "new"
+      ).length;
+      const depPendingCount = rows.filter(
+        (r) => r.type === "deposit" && r.status === "pending"
+      ).length;
+      const wdPendingCount = rows.filter(
+        (r) => r.type === "withdraw" && r.status === "pending"
+      ).length;
+
+      sumUsersEl.textContent = userCount;
+      sumTicketsNewEl.textContent = ticketNewCount;
+      sumDepPendingEl.textContent = depPendingCount;
+      sumWdPendingEl.textContent = wdPendingCount;
+    }
+
+    // ソートヘッダーのイベント
+    document.querySelectorAll("th.sortable").forEach((th) => {
+      th.addEventListener("click", () => {
+        const key = th.dataset.sortKey;
+        if (!key) return;
+        if (currentSortKey === key) {
+          currentSortDir = currentSortDir === "asc" ? "desc" : "asc";
+        } else {
+          currentSortKey = key;
+          currentSortDir = "asc";
+        }
+        // インジケータ更新
+        document.querySelectorAll("th.sortable .sort-indicator").forEach((el) => {
+          el.textContent = "";
+        });
+        const indicator = th.querySelector(".sort-indicator");
+        indicator.textContent = currentSortDir === "asc" ? "▲" : "▼";
+
+        applySort();
+        renderTable();
+      });
+    });
+
+    // 検索ボタン
+    btnSearch.addEventListener("click", applyFilters);
+
+    // 条件クリア
+    btnClear.addEventListener("click", () => {
+      qTextEl.value = "";
+      qAffEl.value = "";
+      qFromEl.value = "";
+      qToEl.value = "";
+      filteredRows = rows.slice();
+      applySort();
+      renderTable();
+    });
+
+    // 初期化
+    function init() {
+      updateSummary();
+      // 日付初期値：直近7日間
+      const today = new Date();
+      const isoToday = today.toISOString().slice(0, 10);
+      const weekAgo = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
+      const isoWeekAgo = weekAgo.toISOString().slice(0, 10);
+      qToEl.value = isoToday;
+      qFromEl.value = isoWeekAgo;
+
+      applyFilters();
+      // デフォルトソートインジケータ
+      const th = document.querySelector('th[data-sort-key="createdAt"]');
+      if (th) {
+        th.querySelector(".sort-indicator").textContent = "▼";
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

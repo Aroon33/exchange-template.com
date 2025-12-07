@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - ログイン</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --text-main: #1f2933;
+      --text-muted: #7b8794;
+      --border-soft: #e4e7eb;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+    }
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+    header {
+      background: var(--bg-soft);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 20px;
+    }
+    .logo-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+    }
+    nav {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .nav-link.active {
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .btn {
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 14px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-outline {
+      border-color: var(--border-soft);
+      color: var(--text-main);
+      background: #fff;
+    }
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    main {
+      min-height: calc(100vh - 64px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      padding: 20px 22px 18px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .card-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .form-row {
+      margin-bottom: 10px;
+    }
+    .form-row label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .form-row input {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      padding: 8px 9px;
+      font-size: 13px;
+      outline: none;
+    }
+    .form-row input:focus {
+      border-color: var(--primary);
+    }
+    .row-inline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      margin-bottom: 10px;
+      color: var(--text-muted);
+    }
+    .row-inline a {
+      color: var(--primary);
+    }
+    .btn-login {
+      width: 100%;
+      border-radius: 8px;
+      border: none;
+      padding: 9px 0;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .muted {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .muted a {
+      color: var(--primary);
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+<nav>
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link active">取引履歴</a>
+    </nav>
+
+
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-outline btn-sm nav-link active">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h1 class="card-title">ログイン</h1>
+      <p class="card-sub">
+        登録済みのメールアドレスとパスワードを入力してください。<br />
+        ※ この画面はデモ用であり、実際の認証処理は行われません。
+      </p>
+
+      <div class="form-row">
+        <label>メールアドレス</label>
+        <input type="email" placeholder="you@example.com" />
+      </div>
+      <div class="form-row">
+        <label>パスワード</label>
+        <input type="password" placeholder="••••••••" />
+      </div>
+      <div class="row-inline">
+        <label>
+          <input type="checkbox" /> ログイン状態を保持
+        </label>
+        <a href="#">パスワードをお忘れですか？</a>
+      </div>
+
+      <button class="btn-login">ログイン（デモ）</button>
+
+      <p class="muted">
+        まだ口座をお持ちでないですか？ <a href="signup.html">口座開設はこちら</a>
+      </p>
+    </section>
+  </main>
+</body>
+</html>

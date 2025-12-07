@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - ダッシュボード</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+
+  <style>
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .dash-card {
+      padding: 18px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .dash-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .dash-value {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--primary);
+    }
+
+    .filter-box {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .filter-box input {
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+    }
+
+    .filter-btn {
+      padding: 8px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: 1px solid var(--primary);
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-title">メニュー</div>
+  <ul class="nav-list">
+    <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
+    <li class="nav-item"><a href="tickets.html" class="nav-link active">💬 問い合わせ管理</a></li>
+    <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
+    <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
+    <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
+    <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
+    <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
+    <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
+    <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
+  </ul>
+</aside>
+
+<header class="admin-header">
+  <div class="admin-header-left">
+    <div class="admin-logo-badge">AX</div>
+    <div>
+      <div class="admin-logo-text">Admin Console</div>
+      <div class="admin-logo-sub">ダッシュボード</div>
+    </div>
+  </div>
+  <div class="admin-header-right">
+    <button class="btn btn-outline btn-sm" onclick="doLogout()">ログアウト</button>
+  </div>
+</header>
+
+
+<main class="admin-main">
+  <div class="admin-main-inner">
+
+    <h1 class="page-title">ダッシュボード</h1>
+
+    <!-- フィルター -->
+    <div class="filter-box">
+      <div>
+        <label>期間（From）</label><br>
+        <input type="date" id="from-date" />
+      </div>
+      <div>
+        <label>期間（To）</label><br>
+        <input type="date" id="to-date" />
+      </div>
+      <button class="filter-btn" onclick="loadDashboard()">更新</button>
+    </div>
+
+    <!-- ダッシュボードカード -->
+    <div class="dash-grid">
+
+      <div class="dash-card">
+        <div class="dash-title">総ユーザー数</div>
+        <div class="dash-value" id="d-total-users">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">総口座残高</div>
+        <div class="dash-value" id="d-total-balance">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">口座開設（期間）</div>
+        <div class="dash-value" id="d-new-users">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">入金合計（期間）</div>
+        <div class="dash-value" id="d-deposit-sum">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">出金合計（期間）</div>
+        <div class="dash-value" id="d-withdraw-sum">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">入金申請 Pending</div>
+        <div class="dash-value" id="d-deposit-pending">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">出金申請 Pending</div>
+        <div class="dash-value" id="d-withdraw-pending">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">KYC 未処理</div>
+        <div class="dash-value" id="d-kyc-pending">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">問い合わせ 未処理</div>
+        <div class="dash-value" id="d-ticket-pending">-</div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+const API_BASE = "https://api.exchange-template.com";
+
+/* ▼ ログアウト処理 */
+async function doLogout() {
+  await fetch(API_BASE + "/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
+  window.location.href = "../login.html";
+}
+
+/* ▼ 過去30日をデフォルト期間に設定 */
+function initDates() {
+  const to = new Date();
+  const from = new Date();
+  from.setDate(to.getDate() - 30);
+
+  document.getElementById("from-date").value = from.toISOString().slice(0, 10);
+  document.getElementById("to-date").value = to.toISOString().slice(0, 10);
+}
+
+/* ▼ API GET */
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path, { credentials: "include" });
+  if (res.status === 401) {
+    // 認証切れ → ログインへ
+    doLogout();
+  }
+  const txt = await res.text();
+  if (!res.ok) throw new Error(txt);
+  return JSON.parse(txt);
+}
+
+/* ▼ ダッシュボードデータを読み込み */
+async function loadDashboard() {
+  const from = document.getElementById("from-date").value;
+  const to   = document.getElementById("to-date").value;
+
+  const data = await apiGet(`/admin/dashboard?from=${from}&to=${to}`);
+
+  // ===== メイン統計 =====
+  document.getElementById("d-total-users").textContent      = data.totalUsers;
+  document.getElementById("d-total-balance").textContent    = data.totalBalance;
+  document.getElementById("d-new-users").textContent        = data.newUsers;
+  document.getElementById("d-deposit-sum").textContent      = data.depositSum;
+  document.getElementById("d-withdraw-sum").textContent     = data.withdrawSum;
+
+  // ===== PENDING counts =====
+  document.getElementById("d-deposit-pending").textContent  = data.pendingDeposits;
+  document.getElementById("d-withdraw-pending").textContent = data.pendingWithdraws;
+  document.getElementById("d-kyc-pending").textContent      = data.pendingKyc;
+  document.getElementById("d-ticket-pending").textContent   = data.openTickets;
+
+  document.getElementById("dashboard-message").textContent = "最新情報を取得しました。";
+}
+
+/* 初期化 */
+initDates();
+loadDashboard();
+
+// ▼ 再読み込みイベント
+document.getElementById("btn-refresh").addEventListener("click", loadDashboard);
+</script>
+
+
+</body>
+</html>

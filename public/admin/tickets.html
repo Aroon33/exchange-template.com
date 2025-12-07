@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - 問い合わせ管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-title">メニュー</div>
+  <ul class="nav-list">
+    <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
+    <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
+    <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
+    <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
+    <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
+    <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
+    <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
+    <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
+    <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
+    <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
+    <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
+  </ul>
+</aside>
+
+<header class="admin-header">
+  <div class="admin-header-left">
+    <div class="admin-logo-badge">AX</div>
+    <div>
+      <div class="admin-logo-text">Admin Console</div>
+      <div class="admin-logo-sub">問い合わせ管理</div>
+    </div>
+  </div>
+</header>
+
+<main class="admin-main">
+  <div class="admin-main-inner">
+    <div class="page-title">問い合わせ一覧</div>
+
+    <!-- テーブル -->
+    <div class="card">
+      <table class="table" style="width:100%; font-size:13px;">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>日時</th>
+            <th>名前</th>
+            <th>件名</th>
+            <th>最新メッセージ</th>
+            <th>ステータス</th>
+            <th>表示</th>
+          </tr>
+        </thead>
+        <tbody id="ticket-table-body">
+          <tr><td colspan="7" style="text-align:center;">読み込み中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 個別チャット表示エリア -->
+    <div class="card" style="margin-top:20px;">
+      <h3 id="chat-title">問い合わせ詳細</h3>
+      <div id="chat-window" class="chat-window" style="height:300px; overflow-y:auto;">
+        <div class="muted">問い合わせを選択してください。</div>
+      </div>
+
+      <div id="chat-input-area" style="display:none;">
+        <textarea id="chat-input" class="chat-input" placeholder="返信内容を入力..."></textarea>
+        <button class="btn btn-primary btn-sm" id="btn-send">返信</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = "https://api.exchange-template.com";
+let allTickets = [];
+let currentTicketId = null;
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+function fmt(s) {
+  return new Date(s).toLocaleString("ja-JP", { hour12:false });
+}
+
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path, { credentials:"include" });
+  const txt = await res.text();
+  if (!res.ok) throw new Error(txt);
+  return JSON.parse(txt);
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(API_BASE + path, {
+    method:"POST",
+    credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify(body)
+  });
+  const txt = await res.text();
+  if (!res.ok) throw new Error(txt);
+  return JSON.parse(txt);
+}
+
+async function loadTickets() {
+  try {
+    allTickets = await apiGet("/tickets/admin/all");
+    renderTable();
+  } catch(e) {
+    showToast("読み込み失敗");
+  }
+}
+
+function renderTable() {
+  const tbody = document.getElementById("ticket-table-body");
+  tbody.innerHTML = "";
+
+  if (!allTickets.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">なし</td></tr>`;
+    return;
+  }
+
+  allTickets.forEach(t => {
+    const latestText = t.lastMessage 
+      ? t.lastMessage.slice(0, 30) + "…" 
+      : "-";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${t.id}</td>
+      <td>${fmt(t.createdAt)}</td>
+      <td>${t.email}</td>
+      <td>${t.title}</td>
+      <td>${latestText}</td>
+      <td>${t.status}</td>
+      <td><button class="btn-xs btn-xs-primary" onclick="openChat(${t.id})">表示</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function openChat(ticketId) {
+  currentTicketId = ticketId;
+
+  const chatWindow = document.getElementById("chat-window");
+  const chatTitle = document.getElementById("chat-title");
+
+  try {
+    const msgs = await apiGet(`/tickets/${ticketId}/messages`);
+
+    chatTitle.textContent = `問い合わせID: ${ticketId}`;
+    chatWindow.innerHTML = "";
+
+    msgs.forEach(m => {
+      const item = document.createElement("div");
+      item.className = "chat-message " + (m.sender === "ADMIN" ? "admin" : "user");
+      item.innerHTML = `
+        <div class="chat-message-meta">${m.sender} ／ ${fmt(m.createdAt)}</div>
+        <div class="chat-message-body">${m.message}</div>
+      `;
+      chatWindow.appendChild(item);
+    });
+
+    document.getElementById("chat-input-area").style.display = "block";
+  } catch (e) {
+    showToast("チャット取得に失敗");
+  }
+}
+
+document.getElementById("btn-send").addEventListener("click", async () => {
+  const body = document.getElementById("chat-input").value.trim();
+  if (!body) return;
+
+  try {
+    await apiPost(`/tickets/admin/${currentTicketId}/reply`, { message: body });
+    document.getElementById("chat-input").value = "";
+    openChat(currentTicketId);
+  } catch (e) {
+    showToast("送信に失敗");
+  }
+});
+
+loadTickets();
+</script>
+
+</body>
+</html>

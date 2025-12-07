@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - ログイン</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Base CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+    /* レイアウト */
+    main {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-card {
+      background: #ffffff;
+      padding: 26px;
+      max-width: 420px;
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    .login-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .login-desc {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+
+    /* 入力欄 */
+    .form-row {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      color: #475569;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #f8fafc;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+    input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.25);
+      background: #ffffff;
+      outline: none;
+    }
+
+    /* ログイン状態保持＋リンク */
+    .login-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      font-size: 12px;
+    }
+    .login-options a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .login-options a:hover {
+      text-decoration: underline;
+    }
+
+    /* ログインボタン */
+    .btn-login {
+      width: 100%;
+      background: #2563eb;
+      color: white;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-login:hover {
+      background: #1e4fcf;
+    }
+
+    /* 結果メッセージ */
+    #login-message {
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    /* スマホ最適化 */
+    @media(max-width: 480px){
+      .login-card { padding: 20px; }
+      .login-title { font-size: 20px; }
+    }
+  </style>
+
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-badge">CX</div>
+    CryptoX Exchange
+  </div>
+
+  <nav class="site-nav">
+    <a href="index.html" class="nav-link">TOP</a>
+    <a href="exchange.html" class="nav-link">トレード</a>
+    <a href="wallet.html" class="nav-link">ウォレット</a>
+    <a href="system-trade.html" class="nav-link">システム取引</a>
+    <a href="support.html" class="nav-link">サポート</a>
+    <a href="mypage.html" class="nav-link">マイページ</a>
+    <a href="kyc.html" class="nav-link">KYC</a>
+    <a href="history.html" class="nav-link">履歴</a>
+  </nav>
+
+  <div class="header-actions">
+    <a href="login.html" class="btn btn-outline btn-sm nav-link active">ログイン</a>
+    <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+  </div>
+</header>
+
+<main>
+  <section class="login-card">
+
+    <h1 class="login-title">ログイン</h1>
+    <p class="login-desc">メールアドレスとパスワードを入力してください。</p>
+
+    <div class="form-row">
+      <label>メールアドレス</label>
+      <input id="login-email" type="email" placeholder="you@example.com">
+    </div>
+
+    <div class="form-row">
+      <label>パスワード</label>
+      <input id="login-password" type="password" placeholder="••••••••">
+    </div>
+
+    <div class="login-options">
+      <label><input id="login-keep" type="checkbox"> ログイン状態を保持</label>
+      <a href="#">パスワードをお忘れですか？</a>
+    </div>
+
+    <button id="login-button" class="btn-login">ログイン</button>
+
+    <p id="login-message"></p>
+
+    <p class="muted" style="margin-top:12px;">
+      アカウント未登録ですか？ <a href="signup.html" style="color:#2563eb;">口座開設はこちら</a>
+    </p>
+
+  </section>
+</main>
+
+<script>
+const API_BASE_URL = "https://api.exchange-template.com";
+
+const emailInput = document.getElementById("login-email");
+const passwordInput = document.getElementById("login-password");
+const messageEl = document.getElementById("login-message");
+const btn = document.getElementById("login-button");
+
+async function login() {
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+
+  if (!email || !password) {
+    messageEl.textContent = "メールアドレスとパスワードを入力してください。";
+    messageEl.style.color = "red";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "ログイン中...";
+
+  try {
+    const res = await fetch(API_BASE_URL + "/auth/login", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "ログインに失敗しました");
+    }
+
+    // ログイン成功
+    messageEl.textContent = "ログイン成功: " + data.user.email;
+    messageEl.style.color = "green";
+
+    // 管理者判定で遷移先を変更
+    if (data.user.role === "ADMIN") {
+      window.location.href = "/admin/index.html";
+    } else {
+      window.location.href = "mypage.html";
+    }
+
+  } catch (err) {
+    messageEl.textContent = err.message;
+    messageEl.style.color = "red";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "ログイン";
+  }
+}
+
+// クリックイベント
+btn.addEventListener("click", (e) => {
+  e.preventDefault();
+  login();
+});
+
+// Enterキー送信
+[emailInput, passwordInput].forEach((el) => {
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      login();
+    }
+  });
+});
+</script>
+
+</body>
+</html>

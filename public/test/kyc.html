@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - KYC / 本人確認</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #1f2933;
+      --text-muted: #7b8794;
+      --border-soft: #e4e7eb;
+      --success: #16a34a;
+      --warn: #f97316;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    body { background:var(--bg); color:var(--text-main); }
+    a { text-decoration:none; color:inherit; }
+
+    header {
+      background:#ffffff;
+      border-bottom:1px solid var(--border-soft);
+      padding:10px 32px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .logo { display:flex; align-items:center; gap:8px; font-weight:700; font-size:20px; }
+    .logo-badge { width:24px; height:24px; border-radius:8px; background:var(--primary); display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; }
+    nav { display:flex; gap:16px; font-size:14px; color:var(--text-muted); }
+    .nav-link.active { color:var(--primary); font-weight:600; }
+    .header-actions { display:flex; gap:10px; align-items:center; }
+    .btn { border-radius:999px; padding:7px 14px; font-size:13px; border:1px solid transparent; cursor:pointer; background:transparent; }
+    .btn-primary { background:var(--primary); color:#fff; }
+    .btn-outline { background:#fff; border-color:var(--border-soft); color:var(--text-main); }
+    .btn-sm { padding:4px 10px; font-size:12px; }
+
+    main {
+      max-width:960px;
+      margin:0 auto;
+      padding:18px 20px 26px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .card {
+      background:var(--bg-soft);
+      border-radius:12px;
+      border:1px solid var(--border-soft);
+      box-shadow:0 1px 2px rgba(15,23,42,0.03);
+      padding:14px 16px 12px;
+      font-size:12px;
+    }
+    .card-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:8px;
+    }
+    .card-title { font-size:15px; font-weight:600; }
+    .card-sub { font-size:11px; color:var(--text-muted); }
+    .badge { padding:2px 8px; border-radius:999px; font-size:11px; }
+    .badge-level { background:var(--primary-soft); color:var(--primary); }
+    .badge-ok { background:#dcfce7; color:var(--success); }
+    .badge-warn { background:#ffedd5; color:var(--warn); }
+
+    .progress {
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+      margin-bottom:2px;
+    }
+    .step {
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:4px;
+      font-size:11px;
+    }
+    .step-bar {
+      width:100%;
+      height:6px;
+      border-radius:999px;
+      background:#e5e7eb;
+      overflow:hidden;
+    }
+    .step-bar-fill {
+      height:100%;
+      border-radius:999px;
+      background:var(--primary);
+    }
+    .step-label { font-weight:600; }
+    .step-status { font-size:11px; color:var(--text-muted); }
+
+    .steps-grid {
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:12px;
+      margin-top:10px;
+    }
+    @media (max-width:780px){ .steps-grid{ grid-template-columns:1fr; } }
+
+    .step-card {
+      border-radius:10px;
+      border:1px solid var(--border-soft);
+      padding:10px 11px 9px;
+      background:#f9fafb;
+      font-size:12px;
+    }
+    .step-card-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:4px;
+    }
+    .step-card-title { font-size:13px; font-weight:600; }
+    .form-row { margin-bottom:7px; }
+    .form-row label { display:block; font-size:11px; margin-bottom:3px; }
+    .form-row input,
+    .form-row select {
+      width:100%;
+      border-radius:6px;
+      border:1px solid var(--border-soft);
+      padding:7px 8px;
+      font-size:12px;
+      outline:none;
+    }
+    .form-row input:focus,
+    .form-row select:focus { border-color:var(--primary); }
+
+    .hint { font-size:10px; color:var(--text-muted); margin-top:4px; }
+
+    .upload-box {
+      border-radius:8px;
+      border:1px dashed var(--border-soft);
+      padding:10px;
+      background:#fff;
+      text-align:center;
+      font-size:11px;
+      color:var(--text-muted);
+    }
+
+    .btn-block {
+      width:100%;
+      border-radius:8px;
+      border:none;
+      padding:8px 0;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      background:var(--primary);
+      color:#fff;
+      margin-top:6px;
+    }
+
+    .address-list li { margin-left:16px; margin-bottom:3px; }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+    <nav>
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link active">KYC</a>
+      <a href="history.html" class="nav-link">取引履歴</a>
+    </nav>
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- 概要＆進捗 -->
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">本人確認（KYC）ステータス</div>
+          <div class="card-sub">
+            レベル1〜3までの本人確認状況を表示しています。<br />
+            ※ このページはデザイン確認用のデモであり、実際の送信は行われません。
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div class="badge badge-level">現在：レベル1 完了</div><br />
+          <div class="badge badge-warn" style="margin-top:4px;">レベル2・3 の完了で出金上限がアップ</div>
+        </div>
+      </div>
+
+      <div class="progress">
+        <div class="step">
+          <div class="step-label">レベル1：基本情報</div>
+          <div class="step-bar"><div class="step-bar-fill" style="width:100%;"></div></div>
+          <div class="step-status">完了</div>
+        </div>
+        <div class="step">
+          <div class="step-label">レベル2：本人確認書類</div>
+          <div class="step-bar"><div class="step-bar-fill" style="width:40%;"></div></div>
+          <div class="step-status">未完了（アップロード待ち）</div>
+        </div>
+        <div class="step">
+          <div class="step-label">レベル3：住所確認</div>
+          <div class="step-bar"><div class="step-bar-fill" style="width:10%;"></div></div>
+          <div class="step-status">未着手</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- レベル1〜3 -->
+    <section class="card">
+      <div class="steps-grid">
+        <!-- レベル1 -->
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-card-title">レベル1：基本情報</div>
+            <span class="badge badge-ok">完了済み</span>
+          </div>
+          <div class="form-row">
+            <label>氏名（ローマ字）</label>
+            <input type="text" value="TARO YAMADA" disabled />
+          </div>
+          <div class="form-row">
+            <label>生年月日</label>
+            <input type="text" value="1990-01-01" disabled />
+          </div>
+          <div class="form-row">
+            <label>国籍</label>
+            <input type="text" value="日本" disabled />
+          </div>
+          <div class="hint">
+            実運用では、初回登録時に入力された情報を表示し、変更申請ボタンなどを配置します。
+          </div>
+        </div>
+
+        <!-- レベル2 -->
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-card-title">レベル2：本人確認書類</div>
+            <span class="badge badge-warn">未提出</span>
+          </div>
+          <div class="form-row">
+            <label>提出する書類の種類</label>
+            <select>
+              <option>運転免許証</option>
+              <option>マイナンバーカード</option>
+              <option>パスポート</option>
+            </select>
+          </div>
+          <div class="upload-box">
+            書類の表面・裏面の画像をアップロード（ドラッグ＆ドロップ想定）<br />
+            ※ デモのため、実際のアップロードは行われません。
+          </div>
+          <button class="btn-block">書類を提出する（デモ）</button>
+          <div class="hint">
+            本番環境では、アップロード完了後に自動審査 / 人手審査のステータスを表示します。
+          </div>
+        </div>
+      </div>
+
+      <div class="steps-grid" style="margin-top:10px;">
+        <!-- レベル3 -->
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-card-title">レベル3：住所確認</div>
+            <span class="badge">未着手</span>
+          </div>
+          <div class="form-row">
+            <label>郵便番号</label>
+            <input type="text" placeholder="例：100-0001" />
+          </div>
+          <div class="form-row">
+            <label>住所</label>
+            <input type="text" placeholder="都道府県・市区町村・番地・建物名" />
+          </div>
+          <div class="upload-box" style="margin-top:4px;">
+            公共料金領収書・銀行明細など、住所記載のある書類をアップロード（デモ）
+          </div>
+          <button class="btn-block">住所確認書類を提出する（デモ）</button>
+          <div class="hint">
+            住所確認が完了すると、出金上限やレバレッジ上限を引き上げるなどの設定が可能です。
+          </div>
+        </div>
+
+        <!-- 注意事項 -->
+        <div class="step-card">
+          <div class="step-card-header">
+            <div class="step-card-title">本人確認の目的と注意事項</div>
+          </div>
+          <p style="font-size:12px; margin-bottom:6px;">
+            KYC（Know Your Customer）は、犯罪収益移転防止法等に基づく本人確認手続きです。<br />
+            実際のサービスでは、以下のような点に注意して設計します。
+          </p>
+          <ul class="address-list" style="font-size:11px; color:var(--text-muted);">
+            <li>本人以外が利用していないことの確認</li>
+            <li>マネーロンダリング・テロ資金供与対策</li>
+            <li>住所・氏名・生年月日の正確性の担保</li>
+            <li>一定期間の書類保管義務への対応</li>
+          </ul>
+          <div class="hint" style="margin-top:6px;">
+            規約・プライバシーポリシーへのリンクや、外部eKYCサービスへの遷移ボタンもこのカード内に配置可能です。
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

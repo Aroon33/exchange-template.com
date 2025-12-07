@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - 口座開設</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Base CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+    /* 全体レイアウト */
+    main {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .signup-card {
+      background: #ffffff;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .signup-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .signup-desc {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 16px;
+    }
+
+    /* フォーム行 */
+    .form-row {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      color: #475569;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: 0.2s;
+      background: #f8fafc;
+    }
+    input:focus, select:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.25);
+      background: white;
+      outline: none;
+    }
+
+    /* ボタン */
+    .btn-signup {
+      width: 100%;
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: 0.2s;
+    }
+    .btn-signup:hover {
+      background: #1e4fcf;
+    }
+
+    /* 注意文 */
+    #signup-message {
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    .tos {
+      margin: 14px 0;
+    }
+    .tos label {
+      display: flex;
+      gap: 8px;
+      font-size: 13px;
+      align-items: center;
+    }
+
+    /* Tips (KYC説明) → 小さく簡潔化 */
+    .tips {
+      margin-top: 18px;
+      padding: 12px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #475569;
+    }
+    .tips ul {
+      padding-left: 20px;
+      margin: 6px 0 0;
+    }
+
+    /* スマホ最適化 */
+    @media(max-width: 480px) {
+      .signup-card { padding: 18px; }
+      .signup-title { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-badge">CX</div>
+    CryptoX Exchange
+  </div>
+  <nav class="site-nav">
+    <a href="index.html" class="nav-link">TOP</a>
+    <a href="exchange.html" class="nav-link">トレード</a>
+    <a href="wallet.html" class="nav-link">ウォレット</a>
+    <a href="system-trade.html" class="nav-link">システム取引</a>
+    <a href="support.html" class="nav-link">サポート</a>
+    <a href="mypage.html" class="nav-link">マイページ</a>
+    <a href="kyc.html" class="nav-link">KYC</a>
+    <a href="history.html" class="nav-link">履歴</a>
+  </nav>
+</header>
+
+<main>
+  <section class="signup-card">
+
+    <h1 class="signup-title">口座開設</h1>
+    <p class="signup-desc">
+      数分で口座開設が完了します。
+      必要事項を入力し「申し込む」を押してください。
+    </p>
+
+    <!-- 姓名 -->
+    <div class="form-row">
+      <label>お名前（姓）</label>
+      <input id="signup-lastname" type="text" placeholder="山田">
+    </div>
+
+    <div class="form-row">
+      <label>お名前（名）</label>
+      <input id="signup-firstname" type="text" placeholder="太郎">
+    </div>
+
+    <!-- メール / パスワード -->
+    <div class="form-row">
+      <label>メールアドレス</label>
+      <input id="signup-email" type="email" placeholder="you@example.com">
+    </div>
+
+    <div class="form-row">
+      <label>パスワード</label>
+      <input id="signup-password" type="password" placeholder="半角英数8文字以上">
+    </div>
+
+    <!-- 国 / 招待コード -->
+    <div class="form-row">
+      <label>居住国</label>
+      <select id="signup-country">
+        <option>日本</option>
+        <option>アメリカ合衆国</option>
+        <option>シンガポール</option>
+        <option>香港</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>招待コード（任意）</label>
+      <input id="signup-refcode" type="text" placeholder="紹介コードがあれば入力">
+    </div>
+
+    <!-- 利用規約 -->
+    <div class="tos">
+      <label>
+        <input id="signup-tos" type="checkbox">
+        <span><a href="#">利用規約</a> に同意します</span>
+      </label>
+    </div>
+
+    <!-- ボタン -->
+    <button id="signup-button" class="btn-signup">口座開設を申し込む</button>
+
+    <!-- メッセージ -->
+    <p id="signup-message"></p>
+
+    <!-- Tips（簡略版） -->
+    <div class="tips">
+      本人確認については、口座開設後に専用ページより簡単に行えます。
+      <ul>
+        <li>本人確認書類のアップロード</li>
+        <li>現住所確認書類</li>
+        <li>セルフィー認証</li>
+      </ul>
+    </div>
+
+  </section>
+</main>
+
+
+<!-- API SCRIPT -->
+<script>
+const API_BASE_URL = "https://api.exchange-template.com";
+
+const btn = document.getElementById("signup-button");
+const message = document.getElementById("signup-message");
+
+btn.addEventListener("click", async () => {
+
+  const lastname  = document.getElementById("signup-lastname").value.trim();
+  const firstname = document.getElementById("signup-firstname").value.trim();
+  const email     = document.getElementById("signup-email").value.trim();
+  const password  = document.getElementById("signup-password").value.trim();
+  const country   = document.getElementById("signup-country").value;
+  const refcode   = document.getElementById("signup-refcode").value.trim();
+  const tosOK     = document.getElementById("signup-tos").checked;
+
+  if (!email || !password) {
+    message.textContent = "メールアドレスとパスワードは必須です。";
+    message.style.color = "red";
+    return;
+  }
+  if (!tosOK) {
+    message.textContent = "利用規約に同意してください。";
+    message.style.color = "red";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "送信中...";
+
+  try {
+    const url = new URL(window.location.href);
+    const ref = url.searchParams.get("ref");
+
+    const payload = {
+      email,
+      password,
+      name: lastname + " " + firstname,
+      country,
+      referral: ref ? Number(ref) : null,
+      code: refcode || null
+    };
+
+    const res = await fetch(API_BASE_URL + "/auth/register", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.message || "登録に失敗しました");
+
+    message.textContent = "登録成功！ログイン画面へ移動します。";
+    message.style.color = "green";
+
+    setTimeout(() => {
+      window.location.href = "login.html";
+    }, 1500);
+
+  } catch (err) {
+    message.textContent = err.message;
+    message.style.color = "red";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "口座開設を申し込む";
+  }
+
+});
+</script>
+
+</body>
+</html>

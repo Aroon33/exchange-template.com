@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - ウォレット</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- 外部CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+
+    <nav class="site-nav">
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link active">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link">取引履歴</a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card" style="max-width: 720px; margin: 24px auto;">
+      <h1 class="card-title">ウォレット</h1>
+      <p id="wallet-message" class="muted" style="margin-bottom:16px;"></p>
+
+      <h2 class="card-sub">残高</h2>
+      <div class="info-grid">
+        <div class="info-row">
+          <span class="info-label">総残高</span>
+          <span class="info-value" id="wallet-total">0</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">利用可能残高</span>
+          <span class="info-value" id="wallet-available">0</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">ロック残高</span>
+          <span class="info-value" id="wallet-locked">0</span>
+        </div>
+      </div>
+
+      <h2 class="card-sub">入出金履歴</h2>
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>種別</th>
+              <th>金額</th>
+              <th>ステータス</th>
+              <th>日時</th>
+            </tr>
+          </thead>
+          <tbody id="wallet-history">
+            <tr><td colspan="5" style="text-align:center; font-size:12px; color:var(--text-muted);">入出金履歴はありません。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+

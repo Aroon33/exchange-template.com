@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - ウォレット</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #1f2933;
+      --text-muted: #7b8794;
+      --border-soft: #e4e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    header {
+      background: var(--bg-soft);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .logo-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    nav {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .nav-link.active {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 14px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-outline {
+      border-color: var(--border-soft);
+      color: var(--text-main);
+      background: #fff;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    .page {
+      padding: 20px 24px 32px;
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--bg-soft);
+      border-radius: 12px;
+      padding: 16px 18px;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .wallet-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .wallet-total-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .wallet-total-value {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .wallet-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .wallet-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .wallet-table th,
+    .wallet-table td {
+      padding: 6px 4px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .wallet-table th:first-child,
+    .wallet-table td:first-child {
+      text-align: left;
+    }
+
+    .wallet-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .wallet-actions .btn-sm {
+      flex: 1;
+    }
+
+    .note {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .form-row {
+      margin-bottom: 8px;
+    }
+
+    .form-row label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .form-row input,
+    .form-row select {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      padding: 7px 8px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .form-row input:focus {
+      border-color: var(--primary);
+    }
+
+    .two-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 720px) {
+      .two-cols {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .qr-box {
+      border-radius: 8px;
+      border: 1px dashed var(--border-soft);
+      padding: 10px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: #f9fafb;
+    }
+
+    .fake-qr {
+      width: 120px;
+      height: 120px;
+      border-radius: 8px;
+      border: 8px solid #e5e7eb;
+      margin: 4px auto 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--text-muted);
+      background: #fff;
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: #111827;
+      color: #f9fafb;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 30;
+    }
+
+    .toast.show {
+      display: inline-flex;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+<nav>
+      <a href="index.html" class="nav-link">TOP</a>
+      <a href="exchange.html" class="nav-link">トレード</a>
+      <a href="wallet.html" class="nav-link">ウォレット</a>
+      <a href="system-trade.html" class="nav-link">システム取引</a>
+      <a href="support.html" class="nav-link">サポート</a>
+      <a href="mypage.html" class="nav-link">マイページ</a>
+      <a href="kyc.html" class="nav-link">KYC</a>
+      <a href="history.html" class="nav-link active">取引履歴</a>
+    </nav>
+
+
+
+    <div class="header-actions">
+      <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+    </div>
+  </header>
+
+  <main class="page">
+    <!-- 残高サマリ -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">ウォレット残高</div>
+        <span class="badge">Demo</span>
+      </div>
+      <div class="wallet-summary">
+        <div>
+          <div class="wallet-total-label">総評価額</div>
+          <div class="wallet-total-value" id="wallet-total">0.00 USD</div>
+          <div class="wallet-sub">含み損益: +0.00 USD</div>
+        </div>
+        <div class="wallet-sub">
+          現物 / 先物 / マージンは<br />本番環境で分割表示が可能です。
+        </div>
+      </div>
+
+      <table class="wallet-table">
+        <thead>
+          <tr>
+            <th>通貨</th>
+            <th>残高</th>
+            <th>利用可能</th>
+            <th>評価額 (USD)</th>
+          </tr>
+        </thead>
+        <tbody id="wallet-body"></tbody>
+      </table>
+
+      <div class="wallet-actions">
+        <button class="btn btn-outline btn-sm" id="btn-deposit">入金</button>
+        <button class="btn btn-outline btn-sm" id="btn-withdraw">出金</button>
+      </div>
+      <div class="note">
+        現在はデモ環境のため、入出金処理・ブロックチェーン/銀行への送受金は行われません。
+      </div>
+    </section>
+
+    <!-- 入出金フォーム -->
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">入出金</div>
+      </div>
+      <div class="two-cols">
+        <!-- 入金 -->
+        <div>
+          <h3 style="font-size:13px; margin-bottom:6px;">入金（Deposit）</h3>
+          <div class="form-row">
+            <label>入金する通貨</label>
+            <select id="deposit-asset">
+              <option value="BTC">BTC - Bitcoin</option>
+              <option value="ETH">ETH - Ethereum</option>
+              <option value="USDT">USDT - Tether</option>
+              <option value="JPY">JPY - 日本円</option>
+            </select>
+          </div>
+          <div class="form-row" id="deposit-network-row">
+            <label>ネットワーク / 方法</label>
+            <select id="deposit-network">
+              <option value="Bitcoin">Bitcoin</option>
+              <option value="Ethereum">Ethereum</option>
+              <option value="Tron">Tron</option>
+            </select>
+          </div>
+          <div class="qr-box" id="deposit-box">
+            <div class="fake-qr" id="deposit-qr">QRコード（ダミー）</div>
+            <div id="deposit-text">
+              ウォレットアドレス (ダミー):<br />
+              <code id="deposit-address">bc1qxxxx...demo</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- 出金 -->
+        <div>
+          <h3 style="font-size:13px; margin-bottom:6px;">出金（Withdraw）</h3>
+          <div class="form-row">
+            <label>出金する通貨</label>
+            <select id="withdraw-asset">
+              <option value="BTC">BTC - Bitcoin</option>
+              <option value="ETH">ETH - Ethereum</option>
+              <option value="USDT">USDT - Tether</option>
+              <option value="JPY">JPY - 日本円</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label id="withdraw-address-label">送金先アドレス</label>
+            <input type="text" id="withdraw-address" placeholder="例: bc1qxxxx..." />
+          </div>
+          <div class="form-row">
+            <label>出金数量</label>
+            <input type="number" id="withdraw-amount" placeholder="0.01" />
+          </div>
+          <div class="form-row">
+            <label>二要素認証コード (6桁)</label>
+            <input type="text" id="withdraw-2fa" placeholder="123456" />
+          </div>
+          <button class="btn-primary btn-sm" id="btn-withdraw-submit" style="width:100%; margin-top:6px;">
+            出金リクエストを送信（デモ）
+          </button>
+          <div class="note">
+            ※ 本番環境では、2FA・メール認証・銀行口座確認などを組み合わせた出金フローを実装可能です。
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast">
+    <span id="toast-text">デモメッセージ</span>
+  </div>
+
+  <script>
+    const walletBalances = [
+      { symbol: "BTC", amount: 0.5321, available: 0.4321, value: 35628.7 },
+      { symbol: "ETH", amount: 4.2345, available: 3.9345, value: 13550.1 },
+      { symbol: "SOL", amount: 80.12, available: 80.12, value: 14421.6 },
+      { symbol: "USDT", amount: 1000, available: 900, value: 1000 },
+      { symbol: "JPY", amount: 500000, available: 500000, value: 3500 }, // ざっくり 1 USD = 140 JPY
+      { symbol: "DOGE", amount: 5200, available: 5200, value: 884 },
+    ];
+
+    const walletBody = document.getElementById("wallet-body");
+    const walletTotal = document.getElementById("wallet-total");
+    const btnDeposit = document.getElementById("btn-deposit");
+    const btnWithdraw = document.getElementById("btn-withdraw");
+    const btnWithdrawSubmit = document.getElementById("btn-withdraw-submit");
+    const toastEl = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
+
+    const depositAsset = document.getElementById("deposit-asset");
+    const depositNetworkRow = document.getElementById("deposit-network-row");
+    const depositNetwork = document.getElementById("deposit-network");
+    const depositBox = document.getElementById("deposit-box");
+    const depositQr = document.getElementById("deposit-qr");
+    const depositText = document.getElementById("deposit-text");
+    const depositAddress = document.getElementById("deposit-address");
+
+    const withdrawAsset = document.getElementById("withdraw-asset");
+    const withdrawAddressLabel = document.getElementById("withdraw-address-label");
+    const withdrawAddress = document.getElementById("withdraw-address");
+
+    function renderWallet() {
+      walletBody.innerHTML = "";
+      let total = 0;
+      walletBalances.forEach((w) => {
+        total += w.value;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${w.symbol}</td>
+          <td>${w.amount}</td>
+          <td>${w.available}</td>
+          <td>${w.value.toFixed(2)}</td>
+        `;
+        walletBody.appendChild(tr);
+      });
+      walletTotal.textContent = total.toFixed(2) + " USD";
+    }
+
+    function showToast(message, duration = 2600) {
+      toastText.textContent = message;
+      toastEl.classList.add("show");
+      setTimeout(() => {
+        toastEl.classList.remove("show");
+      }, duration);
+    }
+
+    btnDeposit.addEventListener("click", () => {
+      showToast("デモ: 入金セクションがアクティブです（実際の入金は行われません）");
+    });
+
+    btnWithdraw.addEventListener("click", () => {
+      showToast("デモ: 出金セクションがアクティブです（実際の送金は行われません）");
+    });
+
+    btnWithdrawSubmit.addEventListener("click", () => {
+      showToast("デモ: 出金リクエストを送信しました（実際の送金は行われません）");
+    });
+
+    // 入金通貨に応じて表示を切り替え（JPYのときは銀行振込イメージ）
+    depositAsset.addEventListener("change", () => {
+      const asset = depositAsset.value;
+      if (asset === "JPY") {
+        depositNetworkRow.style.display = "none";
+        depositQr.style.display = "none";
+        depositText.innerHTML =
+          "日本円入金（ダミー情報）:<br />みずほ銀行 ○○支店 普通 1234567<br />口座名義: ｶ) CRYPTOX EXCHANGE";
+      } else {
+        depositNetworkRow.style.display = "block";
+        depositQr.style.display = "flex";
+        depositText.innerHTML =
+          'ウォレットアドレス (ダミー):<br /><code id="deposit-address">bc1qxxxx...demo</code>';
+      }
+    });
+
+    // 出金通貨に応じてラベル変更
+    withdrawAsset.addEventListener("change", () => {
+      const asset = withdrawAsset.value;
+      if (asset === "JPY") {
+        withdrawAddressLabel.textContent = "振込先銀行口座情報";
+        withdrawAddress.placeholder = "例: ○○銀行 ○○支店 普通 1234567";
+      } else {
+        withdrawAddressLabel.textContent = "送金先アドレス";
+        withdrawAddress.placeholder = "例: bc1qxxxx...";
+      }
+    });
+
+    renderWallet();
+  </script>
+</body>
+</html>
+

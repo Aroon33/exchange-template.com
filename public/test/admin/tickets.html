@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - 問い合わせ管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --bg-soft: #ffffff;
+      --primary: #1652f0;
+      --primary-soft: #e5edff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-soft: #e5e7eb;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --pending: #f97316;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* Header */
+    .admin-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px 0 60px;
+      z-index: 30;
+    }
+    .admin-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-badge {
+      width: 26px; height: 26px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 14px;
+    }
+    .logo-text { font-weight: 700; font-size: 16px; }
+    .logo-sub { font-size: 11px; color: var(--text-muted); }
+
+    .admin-header-right {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .btn {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+    .btn-outline {
+      border-color: var(--border-soft);
+      background: #fff;
+      color: var(--text-main);
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 200px;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding-top: 52px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #020617;
+      z-index: 20;
+    }
+    .sidebar-title {
+      padding: 10px 14px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+    }
+    .nav-list {
+      list-style: none;
+      margin: 0;
+      padding: 0 8px 12px;
+    }
+    .nav-item { margin-bottom: 4px; }
+    .nav-link {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #9ca3af;
+      cursor: pointer;
+    }
+    .nav-link:hover {
+      background: rgba(148, 163, 184, 0.15);
+      color: #e5e7eb;
+    }
+    .nav-link.active {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid rgba(129, 140, 248, 0.5);
+    }
+    .nav-icon {
+      width: 14px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 10px 14px 12px;
+      font-size: 11px;
+      color: #6b7280;
+      border-top: 1px solid rgba(31, 41, 55, 0.9);
+    }
+
+    /* Main layout */
+    .main {
+      margin-left: 200px;
+      padding-top: 52px;
+    }
+    .main-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px 18px 24px;
+    }
+    .page-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .page-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* Filters */
+    .filters-card {
+      background: var(--bg-soft);
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      padding: 10px 12px 8px;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+      margin-bottom: 10px;
+    }
+    .filters-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .filters-title { font-size: 13px; font-weight: 600; }
+    .filters-meta { font-size: 11px; color: var(--text-muted); }
+    .filters-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.6fr) minmax(0, 0.7fr);
+      gap: 8px;
+    }
+    @media (max-width: 900px) {
+      .filters-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 11px;
+    }
+    .field label { color: var(--text-muted); }
+    .field input,
+    .field select {
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      padding: 6px 7px;
+      font-size: 11px;
+      outline: none;
+      background: #fff;
+    }
+    .field input:focus,
+    .field select:focus { border-color: var(--primary); }
+
+    .status-tabs {
+      display: inline-flex;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      overflow: hidden;
+      font-size: 11px;
+    }
+    .status-tab-btn {
+      padding: 4px 10px;
+      border: none;
+      background: #fff;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .status-tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* Two-pane layout */
+    .pane-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr);
+      gap: 10px;
+    }
+    @media (max-width: 900px) {
+      .pane-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--bg-soft);
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+      padding: 10px 11px 9px;
+      font-size: 12px;
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .card-title-small { font-size: 13px; font-weight: 600; }
+    .card-sub-small { font-size: 11px; color: var(--text-muted); }
+
+    /* Ticket list */
+    .ticket-list {
+      max-height: 420px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+    .ticket-item {
+      padding: 7px 8px;
+      border-bottom: 1px solid #e5e7eb;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: flex-start;
+      background: #ffffff;
+    }
+    .ticket-item:nth-child(2n) { background: #f9fafb; }
+    .ticket-item:last-child { border-bottom: none; }
+    .ticket-item.active {
+      background: #eef2ff;
+      border-left: 3px solid var(--primary);
+    }
+    .ticket-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .ticket-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .status-new { background: #fee2e2; color: var(--danger); }
+    .status-open { background: #ffedd5; color: var(--pending); }
+    .status-closed { background: #dcfce7; color: var(--success); }
+
+    /* Detail / chat */
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .detail-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .detail-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .detail-meta span { margin-right: 8px; }
+
+    .status-select {
+      font-size: 11px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      outline: none;
+    }
+    .status-select:focus { border-color: var(--primary); }
+
+    .chat-window {
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      background: #f9fafb;
+      height: 260px;
+      overflow-y: auto;
+      padding: 7px 8px 5px;
+      margin-bottom: 6px;
+    }
+    .chat-empty {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 80px;
+    }
+    .msg {
+      max-width: 80%;
+      margin-bottom: 6px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .msg-user {
+      background: #e5e7eb;
+      margin-right: auto;
+      border-bottom-left-radius: 2px;
+    }
+    .msg-admin {
+      background: #dbeafe;
+      margin-left: auto;
+      border-bottom-right-radius: 2px;
+    }
+    .msg-meta {
+      font-size: 10px;
+      color: #6b7280;
+      margin-top: 2px;
+      text-align: right;
+    }
+
+    .reply-area {
+      margin-top: 2px;
+    }
+    .reply-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .reply-row textarea {
+      flex: 1;
+      min-height: 48px;
+      resize: vertical;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+      padding: 6px 7px;
+      font-size: 12px;
+      outline: none;
+    }
+    .reply-row textarea:focus { border-color: var(--primary); }
+    .note {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .btn-xs-primary {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: none;
+      font-size: 11px;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-xs-outline {
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      font-size: 11px;
+      cursor: pointer;
+      background: #fff;
+      color: var(--text-main);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+      margin-bottom: 4px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: #111827;
+      color: #f9fafb;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      display: none;
+      z-index: 50;
+    }
+    .toast.show { display: block; }
+
+    @media (max-width: 768px) {
+      .admin-header { padding-left: 54px; }
+      .sidebar { width: 180px; }
+      .main { margin-left: 180px; }
+    }
+    @media (max-width: 640px) {
+      .sidebar { transform: translateX(-100%); }
+      .main { margin-left: 0; }
+      .admin-header { padding-left: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-title">メニュー</div>
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a href="index.html" class="nav-link">
+          <span class="nav-icon">🏠</span><span>ダッシュボード</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="tickets.html" class="nav-link active">
+          <span class="nav-icon">💬</span><span>問い合わせ管理</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="users.html" class="nav-link">
+          <span class="nav-icon">👥</span><span>ユーザー一覧</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="trades.html" class="nav-link">
+          <span class="nav-icon">📊</span><span>取引状況</span>
+        </a>
+      </li>
+       <li class="nav-item">
+        <a href="kyc.html" class="nav-link">
+          <span class="nav-icon">📊</span><span>KYC状況</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="deposit.html" class="nav-link">
+          <span class="nav-icon">➕</span><span>入金申請</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="withdraw.html" class="nav-link">
+          <span class="nav-icon">➖</span><span>出金申請</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="group.html" class="nav-link">
+          <span class="nav-icon">🧩</span><span>グループ管理</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="settings.html" class="nav-link">
+          <span class="nav-icon">⚙️</span><span>システム設定</span>
+        </a>
+      </li>
+    </ul>
+    <div class="sidebar-footer">
+      CryptoX Admin<br />UI Demo &copy; 2025
+    </div>
+  </aside>
+
+  <!-- Header -->
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <div class="logo-badge">AX</div>
+      <div>
+        <div class="logo-text">Admin Console</div>
+        <div class="logo-sub">問い合わせ管理</div>
+      </div>
+    </div>
+    <div class="admin-header-right">
+      <span>管理者：admin@example.com</span>
+      <button class="btn btn-outline btn-sm" onclick="location.href='login.html'">ログアウト（デモ）</button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="main-inner">
+      <div class="page-title">問い合わせ管理</div>
+      <div class="page-sub">
+        ユーザーからの問い合わせを一覧・検索し、ステータス変更やチャット返信を行うデモ画面です。
+      </div>
+
+      <!-- Filters -->
+      <section class="filters-card">
+        <div class="filters-row">
+          <div>
+            <div class="filters-title">フィルター</div>
+            <div class="filters-meta">
+              ステータス・キーワード・ユーザーID・期間でチケットを絞り込みます。
+            </div>
+          </div>
+          <div class="status-tabs">
+            <button class="status-tab-btn active" data-status="all">すべて</button>
+            <button class="status-tab-btn" data-status="new">未対応</button>
+            <button class="status-tab-btn" data-status="open">対応中</button>
+            <button class="status-tab-btn" data-status="closed">対応済</button>
+          </div>
+        </div>
+        <div class="filters-grid">
+          <div class="field">
+            <label>キーワード（件名・本文）</label>
+            <input type="text" id="f-keyword" placeholder="例：入金 / エラー / システム取引" />
+          </div>
+          <div class="field">
+            <label>ユーザーID</label>
+            <input type="text" id="f-user" placeholder="例：user-demo-001" />
+          </div>
+          <div class="field">
+            <label>期間（From）</label>
+            <input type="date" id="f-from" />
+          </div>
+          <div class="field">
+            <label>期間（To）</label>
+            <input type="date" id="f-to" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Two panes -->
+      <section class="pane-grid">
+        <!-- Left: list -->
+        <div class="card">
+          <div class="card-header-row">
+            <div>
+              <div class="card-title-small">問い合わせ一覧</div>
+              <div class="card-sub-small" id="list-count">0件</div>
+            </div>
+            <button class="btn-xs-outline" id="btn-refresh">再読み込み</button>
+          </div>
+          <div class="ticket-list" id="ticket-list">
+            <!-- JS -->
+          </div>
+        </div>
+
+        <!-- Right: detail & chat -->
+        <div class="card">
+          <div class="detail-header">
+            <div>
+              <div class="detail-title" id="detail-title">問い合わせを選択してください</div>
+              <div class="detail-meta" id="detail-meta">
+                左側の一覧からスレッドを選択すると、ここに詳細とチャット履歴が表示されます。
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px; color:var(--text-muted); margin-bottom:2px;">
+                ステータス
+              </div>
+              <select class="status-select" id="status-select" disabled>
+                <option value="new">未対応</option>
+                <option value="open">対応中</option>
+                <option value="closed">対応済</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="chat-window" id="chat-window">
+            <div class="chat-empty">まだスレッドが選択されていません。</div>
+          </div>
+
+          <div class="reply-area" id="reply-area" style="display:none;">
+            <div class="toolbar">
+              <button class="btn-xs-outline" id="btn-close-ticket">対応済としてクローズ</button>
+            </div>
+            <div class="reply-row">
+              <textarea id="reply-text" placeholder="サポートからの返信内容を入力してください。"></textarea>
+              <button class="btn-xs-primary" id="btn-send-reply">返信を送信</button>
+            </div>
+            <div class="note">
+              ステータスが「対応済」に変更されると、このスレッドはクローズされ、ユーザー側からは追記できなくなります（デモ）。
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = "cx_support_threads";
+
+    const STATUS_LABEL = {
+      new: "未対応",
+      open: "対応中",
+      closed: "対応済",
+    };
+
+    const STATUS_CLASS = {
+      new: "status-new",
+      open: "status-open",
+      closed: "status-closed",
+    };
+
+    const fKeyword = document.getElementById("f-keyword");
+    const fUser = document.getElementById("f-user");
+    const fFrom = document.getElementById("f-from");
+    const fTo = document.getElementById("f-to");
+    const ticketListEl = document.getElementById("ticket-list");
+    const listCountEl = document.getElementById("list-count");
+    const statusTabs = document.querySelectorAll(".status-tab-btn");
+    const statusSelectEl = document.getElementById("status-select");
+    const detailTitleEl = document.getElementById("detail-title");
+    const detailMetaEl = document.getElementById("detail-meta");
+    const chatWindowEl = document.getElementById("chat-window");
+    const replyAreaEl = document.getElementById("reply-area");
+    const replyTextEl = document.getElementById("reply-text");
+    const btnSendReply = document.getElementById("btn-send-reply");
+    const btnCloseTicket = document.getElementById("btn-close-ticket");
+    const btnRefresh = document.getElementById("btn-refresh");
+    const toastEl = document.getElementById("toast");
+
+    let allThreads = [];
+    let filteredThreads = [];
+    let currentStatusFilter = "all";
+    let currentThreadId = null;
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), 2200);
+    }
+
+    function loadThreads() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const threads = JSON.parse(raw);
+        // 形式チェック
+        return Array.isArray(threads) ? threads : [];
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
+    }
+
+    function saveThreads(threads) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(threads));
+    }
+
+    function applyFilters() {
+      const kw = fKeyword.value.trim().toLowerCase();
+      const uid = fUser.value.trim().toLowerCase();
+      const fromVal = fFrom.value;
+      const toVal = fTo.value;
+
+      filteredThreads = allThreads.filter((t) => {
+        if (currentStatusFilter !== "all" && t.status !== currentStatusFilter) {
+          return false;
+        }
+        if (kw) {
+          const hay =
+            (t.title || "").toLowerCase() +
+            " " +
+            (t.messages || [])
+              .map((m) => m.text || "")
+              .join(" ")
+              .toLowerCase();
+          if (!hay.includes(kw)) return false;
+        }
+        if (uid) {
+          const userId = (t.userId || "").toLowerCase();
+          if (!userId.includes(uid)) return false;
+        }
+        if (fromVal) {
+          const fromTs = new Date(fromVal + "T00:00:00").getTime();
+          if ((t.createdAt || 0) < fromTs) return false;
+        }
+        if (toVal) {
+          const toTs = new Date(toVal + "T23:59:59").getTime();
+          if ((t.createdAt || 0) > toTs) return false;
+        }
+        return true;
+      });
+
+      filteredThreads.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      renderList();
+    }
+
+    function renderList() {
+      ticketListEl.innerHTML = "";
+      listCountEl.textContent = filteredThreads.length + "件";
+
+      if (filteredThreads.length === 0) {
+        ticketListEl.innerHTML =
+          '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:30px 4px;">該当する問い合わせはありません。</div>';
+        // 選択解除
+        currentThreadId = null;
+        renderDetail();
+        return;
+      }
+
+      filteredThreads.forEach((t) => {
+        const div = document.createElement("div");
+        div.className =
+          "ticket-item" + (t.id === currentThreadId ? " active" : "");
+        div.dataset.id = t.id;
+
+        const updated = t.updatedAt
+          ? new Date(t.updatedAt).toLocaleString("ja-JP", {
+              hour12: false,
+            })
+          : "-";
+        const created = t.createdAt
+          ? new Date(t.createdAt).toLocaleString("ja-JP", {
+              hour12: false,
+            })
+          : "-";
+
+        div.innerHTML = `
+          <div>
+            <div class="ticket-title">${escapeHtml(t.title || "無題の問い合わせ")}</div>
+            <div class="ticket-meta">
+              <span>ユーザーID: ${escapeHtml(t.userId || "-")}</span><br/>
+              <span>作成: ${created}</span> / <span>更新: ${updated}</span>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div class="status-chip ${STATUS_CLASS[t.status] || ""}">
+              ${STATUS_LABEL[t.status] || t.status}
+            </div>
+            <div class="ticket-meta">ID: ${t.id.slice(-6)}</div>
+          </div>
+        `;
+
+        div.addEventListener("click", () => {
+          currentThreadId = t.id;
+          renderList();
+          renderDetail();
+        });
+
+        ticketListEl.appendChild(div);
+      });
+
+      // 最初の1件を自動選択（何も選んでなければ）
+      if (!currentThreadId && filteredThreads.length > 0) {
+        currentThreadId = filteredThreads[0].id;
+        renderList();
+        renderDetail();
+      }
+    }
+
+    function renderDetail() {
+      const t = allThreads.find((th) => th.id === currentThreadId);
+
+      if (!t) {
+        detailTitleEl.textContent = "問い合わせを選択してください";
+        detailMetaEl.textContent =
+          "左側の一覧からスレッドを選択すると、ここに詳細とチャット履歴が表示されます。";
+        chatWindowEl.innerHTML =
+          '<div class="chat-empty">まだスレッドが選択されていません。</div>';
+        statusSelectEl.disabled = true;
+        replyAreaEl.style.display = "none";
+        return;
+      }
+
+      detailTitleEl.textContent = t.title || "無題の問い合わせ";
+      const created = t.createdAt
+        ? new Date(t.createdAt).toLocaleString("ja-JP", { hour12: false })
+        : "-";
+      const updated = t.updatedAt
+        ? new Date(t.updatedAt).toLocaleString("ja-JP", { hour12: false })
+        : "-";
+      detailMetaEl.innerHTML = `
+        <span>スレッドID: ${escapeHtml(t.id)}</span>
+        <span>ユーザーID: ${escapeHtml(t.userId || "-")}</span><br/>
+        <span>作成: ${created}</span> / <span>更新: ${updated}</span>
+      `;
+
+      statusSelectEl.value = t.status || "new";
+      statusSelectEl.disabled = false;
+
+      // チャット描画
+      chatWindowEl.innerHTML = "";
+      if (!t.messages || t.messages.length === 0) {
+        chatWindowEl.innerHTML =
+          '<div class="chat-empty">まだメッセージはありません。</div>';
+      } else {
+        t.messages.forEach((m) => {
+          const wrap = document.createElement("div");
+          wrap.className = "msg " + (m.from === "admin" ? "msg-admin" : "msg-user");
+          const timeStr = m.at
+            ? new Date(m.at).toLocaleString("ja-JP", { hour12: false })
+            : "";
+          wrap.innerHTML = `
+            <div>${escapeHtml(m.text || "")}</div>
+            <div class="msg-meta">${
+              m.from === "admin" ? "サポート" : "ユーザー"
+            } ・ ${timeStr}</div>
+          `;
+          chatWindowEl.appendChild(wrap);
+        });
+        chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
+      }
+
+      // 対応済みなら返信不可
+      if (t.status === "closed") {
+        replyAreaEl.style.display = "none";
+      } else {
+        replyAreaEl.style.display = "block";
+      }
+    }
+
+    function changeStatus(newStatus) {
+      if (!currentThreadId) return;
+      const idx = allThreads.findIndex((t) => t.id === currentThreadId);
+      if (idx === -1) return;
+
+      allThreads[idx].status = newStatus;
+      allThreads[idx].updatedAt = Date.now();
+
+      saveThreads(allThreads);
+      applyFilters();
+      renderDetail();
+
+      showToast(`ステータスを「${STATUS_LABEL[newStatus]}」に変更しました。`);
+    }
+
+    function sendReply() {
+      if (!currentThreadId) return;
+      const text = replyTextEl.value.trim();
+      if (!text) return;
+
+      const idx = allThreads.findIndex((t) => t.id === currentThreadId);
+      if (idx === -1) return;
+
+      const now = Date.now();
+      allThreads[idx].messages = allThreads[idx].messages || [];
+      allThreads[idx].messages.push({
+        from: "admin",
+        text,
+        at: now,
+      });
+      allThreads[idx].updatedAt = now;
+
+      // 未対応だったら対応中へ
+      if (allThreads[idx].status === "new") {
+        allThreads[idx].status = "open";
+      }
+
+      saveThreads(allThreads);
+      replyTextEl.value = "";
+      applyFilters();
+      renderDetail();
+      showToast("返信を送信しました。（デモ）");
+    }
+
+    function closeTicket() {
+      if (!currentThreadId) return;
+      changeStatus("closed");
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (s) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      }[s]));
+    }
+
+    // Event bindings
+    statusTabs.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        statusTabs.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentStatusFilter = btn.dataset.status || "all";
+        applyFilters();
+      });
+    });
+
+    [fKeyword, fUser, fFrom, fTo].forEach((el) => {
+      el.addEventListener("change", applyFilters);
+    });
+
+    statusSelectEl.addEventListener("change", (e) => {
+      changeStatus(e.target.value);
+    });
+
+    btnSendReply.addEventListener("click", sendReply);
+    btnCloseTicket.addEventListener("click", closeTicket);
+    btnRefresh.addEventListener("click", init);
+
+    function initDates() {
+      const today = new Date();
+      const isoToday = today.toISOString().slice(0, 10);
+      const weekAgo = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
+      const isoWeekAgo = weekAgo.toISOString().slice(0, 10);
+      fTo.value = isoToday;
+      fFrom.value = isoWeekAgo;
+    }
+
+    function init() {
+      allThreads = loadThreads();
+      initDates();
+      applyFilters();
+    }
+
+    init();
+  </script>
+</body>
+</html>
