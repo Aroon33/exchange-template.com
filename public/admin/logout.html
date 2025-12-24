@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Logout | Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+
+  <style>
+body {
+  background: #0f0f0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.logout-card {
+  background: #fff;
+  padding: 28px;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.logout-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.logout-text {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 10px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-btn:disabled {
+  opacity: 0.6;
+}
+  </style>
+</head>
+
+<body>
+
+<div class="logout-card">
+  <div class="logout-title">ログアウトしますか？</div>
+  <div class="logout-text">
+    管理画面からログアウトします。
+  </div>
+
+  <button class="logout-btn" id="logout-btn">
+    ログアウト
+  </button>
+</div>
+
+<script>
+const API_BASE = "https://api.exchange-template.com";
+const btn = document.getElementById("logout-btn");
+
+btn.addEventListener("click", logout);
+
+async function logout() {
+  btn.disabled = true;
+
+  try {
+    await fetch(API_BASE + "/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // 失敗しても続行
+  } finally {
+    // 必ずログイン画面へ
+    location.href = "/admin/login.html";
+  }
+}
+</script>
+
+
+
+
+</body>
+</html>

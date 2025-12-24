@@ -4,129 +4,286 @@
   <meta charset="UTF-8" />
   <title>CryptoX Exchange - 取引履歴</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
 
   <style>
-    /* ============================
-        カード・レイアウト
-    ============================ */
-    .section-card {
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-      max-width: 980px;
-      margin: 24px auto;
-    }
+/* ============================
+    カード・レイアウト
+============================ */
+.section-card {
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.06);
+  max-width:980px;
+  margin:24px auto;
+}
 
-    h1.card-title {
-      font-size: 22px;
-      margin-bottom: 6px;
-    }
-    h2.section-title {
-      font-size: 18px;
-      margin-bottom: 10px;
-      margin-top: 20px;
-      font-weight: bold;
-    }
+h1.card-title {
+  font-size:22px;
+  margin-bottom:6px;
+}
 
-    /* ============================
-        テーブル
-    ============================ */
-    .table-wrapper {
-      overflow-x: auto;
-    }
+h2.section-title {
+  font-size:18px;
+  margin-bottom:10px;
+  margin-top:20px;
+  font-weight:bold;
+}
 
-    table.table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 14px;
-    }
+/* ============================
+    テーブル
+============================ */
+.table-wrapper { overflow-x:auto; }
 
-    table.table th {
-      background: #f1f5f9;
-      text-align: left;
-      padding: 10px;
-      border-bottom: 2px solid #e5e7eb;
-      white-space: nowrap;
-    }
-    table.table td {
-      padding: 10px;
-      border-bottom: 1px solid #e5e7eb;
-      white-space: nowrap;
-    }
+table.table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+  font-size:14px;
+}
 
-    tr:hover {
-      background: #f8fafc;
-    }
+table.table th {
+  background:#f1f5f9;
+  text-align:left;
+  padding:10px;
+  border-bottom:2px solid #e5e7eb;
+  white-space:nowrap;
+}
 
-    .profit {
-      color: #059669;
-      font-weight: bold;
-    }
-    .loss {
-      color: #dc2626;
-      font-weight: bold;
-    }
+table.table td {
+  padding:10px;
+  border-bottom:1px solid #e5e7eb;
+  white-space:nowrap;
+}
 
-    /* ============================
-        続きを見るボタン
-    ============================ */
-    #btn-loadmore {
-      margin-top: 14px;
-      padding: 8px 16px;
-      font-size: 14px;
-    }
+tr:hover { background:#f8fafc; }
 
-    @media (max-width: 600px) {
-      table.table th, table.table td {
-        padding: 7px;
-        font-size: 12px;
-      }
-    }
+.profit { color:#059669; font-weight:bold; }
+.loss   { color:#dc2626; font-weight:bold; }
+
+/* 続きを見る */
+#btn-loadmore {
+  margin-top:14px;
+  padding:8px 16px;
+  font-size:14px;
+}
+
+@media(max-width:600px) {
+  table.table th,
+  table.table td {
+    padding:7px;
+    font-size:12px;
+  }
+}
+
+/* ============================
+    ハンバーガー
+============================ */
+.hamburger {
+  display:none;
+  font-size:26px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  margin-left:10px;
+}
+
+@media(max-width:768px) {
+  .hamburger { display:block; }
+  .site-nav { display:none; }
+}
+
+/* ============================
+    モバイルメニュー
+============================ */
+.mobile-menu {
+  position:fixed;
+  top:0;
+  left:-260px;
+  width:240px;
+  height:100%;
+  background:#fff;
+  box-shadow:2px 0 6px rgba(0,0,0,0.1);
+  padding:20px;
+  transition:left 0.3s ease;
+  z-index:9999;
+}
+
+.mobile-menu.open { left:0; }
+
+.mobile-menu a {
+  display:block;
+  padding:12px 0;
+  border-bottom:1px solid #eee;
+  font-size:16px;
+}
+
+/* 縦並び強制 + 枠追加 */
+.mobile-menu a {
+  display:block !important;
+  width:100%;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  padding:12px 10px;
+  margin-bottom:8px;
+  border-radius:8px;
+}
+
+.mobile-menu a:hover {
+  background:#eef2ff;
+  border-color:var(--primary);
+}
+
+.close-btn {
+  background:none;
+  border:none;
+  font-size:24px;
+  float:right;
+  cursor:pointer;
+}
+
+/* 黒幕 */
+.menu-overlay {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.4);
+  z-index:9998;
+}
+.menu-overlay.show { display:block; }
+.section-card {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  max-width: 980px;
+  margin: 28px auto;
+}
+h1.card-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.section-card .muted {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+.history-filter {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.filter-btn {
+  flex: 1;
+  padding: 8px 0;
+  font-size: 13px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.filter-btn:hover {
+  background: #f1f5f9;
+}
+
+.filter-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+table.table {
+  font-size: 13px;
+}
+
+table.table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+}
+
+table.table td {
+  color: #1f2937;
+}
+
+table.table tr:hover {
+  background: #f9fafb;
+}
+@media (max-width: 768px) {
+
+  .thead-pc {
+    display: none;
+  }
+
+  .thead-sp {
+    display: table-header-group;
+  }
+
+  #trade-history-body tr {
+    display: block;
+    margin-bottom: 10px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+    cursor: pointer;
+  }
+
+  #trade-history-body td {
+    display: block;
+    padding: 12px 14px;
+    border-bottom: none;
+  }
+}
+.modal-card {
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+}
+
+.modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.modal-row {
+  padding: 8px 0;
+  font-size: 13px;
+}
+
   </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<header class="site-header">
-  <div class="logo">
-    <div class="logo-badge">CX</div>
-    CryptoX Exchange
-  </div>
-
-  <nav class="site-nav">
-    <a href="index.html" class="nav-link">TOP</a>
-    <a href="exchange.html" class="nav-link">トレード</a>
-    <a href="wallet.html" class="nav-link">ウォレット</a>
-    <a href="system-trade.html" class="nav-link">システム取引</a>
-    <a href="support.html" class="nav-link">サポート</a>
-    <a href="mypage.html" class="nav-link">マイページ</a>
-    <a href="kyc.html" class="nav-link">KYC</a>
-    <a href="history.html" class="nav-link active">取引履歴</a>
-  </nav>
-
-  <div class="header-actions">
-    <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
-    <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
-  </div>
-</header>
+<!-- 共通ヘッダー -->
+<div id="header"></div>
 
 <main>
   <section class="section-card">
+
     <h1 class="card-title">取引履歴</h1>
     <p class="muted">決済済みの取引履歴を確認できます。</p>
-    <p id="history-message" class="muted" style="margin-bottom: 16px;"></p>
+    <p id="history-message" class="muted"></p>
 
-    <!-- 取引履歴 -->
-    <h2 class="section-title">トレード履歴</h2>
+    <!-- 期間タブ -->
+    <div class="history-filter">
+      <button class="filter-btn active" data-days="1">1日</button>
+      <button class="filter-btn" data-days="3">3日</button>
+      <button class="filter-btn" data-days="7">7日</button>
+      <button class="filter-btn" data-days="30">30日</button>
+    </div>
 
     <div class="table-wrapper">
       <table class="table">
-        <thead>
+
+        <!-- PC用ヘッダー -->
+        <thead class="thead-pc">
           <tr>
             <th>ID</th>
             <th>銘柄</th>
@@ -138,170 +295,47 @@
             <th>決済日時</th>
           </tr>
         </thead>
-        <tbody id="trade-history-body">
-          <tr>
-            <td colspan="8" style="text-align:center; color:#888;">
-              取引履歴はありません。
-            </td>
-          </tr>
-        </tbody>
+
+       <!-- スマホ用ヘッダー -->
+<thead class="thead-sp">
+  <tr>
+    <th>取引</th>
+  </tr>
+</thead>
+
+
+        <tbody id="trade-history-body"></tbody>
       </table>
     </div>
 
     <div style="text-align:center;">
-      <button id="btn-loadmore" class="btn btn-outline btn-sm" style="display:none;">
+      <button id="btn-loadmore" class="btn btn-outline btn-sm">
         続きを見る
       </button>
     </div>
 
   </section>
 </main>
+<!-- ===== 詳細モーダル（スマホ用） ===== -->
+<div id="trade-modal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-title">取引詳細</div>
 
-<script>
-const API_BASE_URL = "https://api.exchange-template.com";
+    <div class="modal-row"><span>銘柄</span><span id="m-symbol"></span></div>
+    <div class="modal-row"><span>売買</span><span id="m-side"></span></div>
+    <div class="modal-row"><span>数量</span><span id="m-size"></span></div>
+    <div class="modal-row"><span>建値</span><span id="m-entry"></span></div>
+    <div class="modal-row"><span>決済値</span><span id="m-close"></span></div>
+    <div class="modal-row"><span>損益</span><span id="m-profit"></span></div>
+    <div class="modal-row"><span>決済日時</span><span id="m-date"></span></div>
 
-const elMsg       = document.getElementById("history-message");
-const elTradeBody = document.getElementById("trade-history-body");
-const btnLoadMore = document.getElementById("btn-loadmore");
+    <button class="btn btn-outline btn-sm modal-close">閉じる</button>
+  </div>
+</div>
 
-let trades = [];
-let displayCount = 20;     // 最初に表示する件数
-const LOAD_COUNT  = 20;    // ボタンで増やす件数
 
-async function apiGet(path){
-  const res = await fetch(API_BASE_URL + path, { credentials:"include" });
-  if(!res.ok) throw new Error(await res.text());
-  return res.json();
-}
-
-function fmtDate(iso){
-  if(!iso) return "-";
-  return new Date(iso).toLocaleString("ja-JP",{ hour12:false });
-}
-
-function fmtNum(n){
-  if(n == null) return "-";
-  return Number(n).toLocaleString("en-US",{ minimumFractionDigits:2 });
-}
-
-/* -------------------------
-      履歴描画
--------------------------- */
-function renderTrades(){
-  elTradeBody.innerHTML = "";
-
-  if(!trades.length){
-    elTradeBody.innerHTML =
-    `<tr><td colspan="8" style="text-align:center; color:#888;">取引履歴はありません。</td></tr>`;
-    btnLoadMore.style.display = "none";
-    return;
-  }
-
-  const slice = trades.slice(0, displayCount);
-
-  slice.forEach(t=>{
-    const profitClass = Number(t.profit) >= 0 ? "profit" : "loss";
-
-    elTradeBody.innerHTML += `
-      <tr>
-        <td>${t.id}</td>
-        <td>${t.symbol}</td>
-        <td>${t.side}</td>
-        <td>${fmtNum(t.size)}</td>
-        <td>${fmtNum(t.entryPrice)}</td>
-        <td>${fmtNum(t.closePrice)}</td>
-        <td class="${profitClass}">${fmtNum(t.profit)}</td>
-        <td>${fmtDate(t.closedAt)}</td>
-      </tr>
-    `;
-  });
-
-  // ボタン制御
-  if(displayCount >= trades.length){
-    btnLoadMore.style.display = "none";
-  } else {
-    btnLoadMore.style.display = "inline-block";
-  }
-}
-
-/* -------------------------
-      追加読み込み
--------------------------- */
-function loadMore(){
-  displayCount += LOAD_COUNT;
-  renderTrades();
-}
-
-/* -------------------------
-      初期ロード
--------------------------- */
-(async function init(){
-  try {
-    trades = await apiGet("/trades/history");
-
-    elMsg.textContent = "取引履歴を更新しました。";
-    elMsg.style.color = "green";
-
-    renderTrades();
-
-  } catch (e){
-    console.error(e);
-    elMsg.textContent = "取引履歴の取得に失敗しました。";
-    elMsg.style.color = "red";
-  }
-})();
-
-// イベント
-btnLoadMore.addEventListener("click", loadMore);
-
-const API_BASE = "https://api.exchange-template.com";
-
-async function updateHeaderUserState() {
-  const loginBtn = document.querySelector(".header-actions a[href='login.html']");
-  const signupBtn = document.querySelector(".header-actions a[href='signup.html']");
-
-  if (!loginBtn || !signupBtn) return;
-
-  try {
-    const res = await fetch(API_BASE + "/auth/me", { credentials: "include" });
-    if (!res.ok) return; // 未ログインなら何もしない
-
-    const data = await res.json();
-    const user = data.user || data;
-
-    // 既存ボタンをクリア
-    const headerActions = document.querySelector(".header-actions");
-    headerActions.innerHTML = "";
-
-    // マイページボタン
-    const mp = document.createElement("a");
-    mp.href = "mypage.html";
-    mp.className = "btn btn-outline btn-sm";
-    mp.textContent = user.name + " さん";
-    headerActions.appendChild(mp);
-
-    // ログアウトボタン
-    const lo = document.createElement("a");
-    lo.href = "#";
-    lo.className = "btn btn-primary btn-sm";
-    lo.textContent = "ログアウト";
-    lo.addEventListener("click", async () => {
-      await fetch(API_BASE + "/auth/logout", {
-        method: "POST",
-        credentials: "include"
-      });
-      location.href = "login.html";
-    });
-    headerActions.appendChild(lo);
-
-  } catch (e) {
-    console.warn("Not logged in");
-  }
-}
-
-// ページ読込後に実行
-document.addEventListener("DOMContentLoaded", updateHeaderUserState);
-</script>
+<script type="module" src="/assets/js/header-user.js"></script>
+<script type="module" src="/assets/js/history.js"></script>
 
 </body>
 </html>

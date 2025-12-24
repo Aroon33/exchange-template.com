@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - 入金先登録 / 編集</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+
+  <style>
+    /* ===== レイアウト ===== */
+    .form-card {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-row.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-row label {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 4px;
+    }
+
+    .form-row input,
+    .form-row select {
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    /* ===== スマホ対応 ===== */
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ★ ヘッダー・サイドバーは JS が生成 -->
+
+<main class="admin-main">
+  <div class="admin-main-inner">
+
+    <div class="page-title" id="page-title">入金先登録</div>
+
+    <div class="card form-card">
+
+      <div class="form-grid">
+
+        <div class="form-row">
+          <label>銀行名</label>
+          <input type="text" id="bank_name" placeholder="例：みずほ銀行" />
+        </div>
+
+        <div class="form-row">
+          <label>支店名</label>
+          <input type="text" id="branch_name" placeholder="例：東京営業部" />
+        </div>
+
+        <div class="form-row">
+          <label>口座種別</label>
+          <select id="account_type">
+            <option value="普通">普通</option>
+            <option value="当座">当座</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>口座番号</label>
+          <input type="text" id="account_number" placeholder="例：1234567" />
+        </div>
+
+        <div class="form-row full">
+          <label>口座名義</label>
+          <input type="text" id="account_holder" placeholder="例：カ）クリプトエックス" />
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="save-btn">保存</button>
+        <button class="btn btn-outline"
+                onclick="location.href='deposit-bank-accounts.html'">
+          キャンセル
+        </button>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = "https://api.exchange-template.com";
+
+/* ===== Utils ===== */
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+function getId() {
+  const p = new URLSearchParams(location.search);
+  return p.get("id");
+}
+
+/* ===== Load (edit mode) ===== */
+async function load() {
+  const id = getId();
+  if (!id) return;
+
+  document.getElementById("page-title").textContent = "入金先編集";
+
+  const res = await fetch(
+    `${API_BASE}/admin/deposit/bank-accounts/${id}`,
+    { credentials:"include" }
+  );
+  if (!res.ok) {
+    toast("データ取得に失敗しました");
+    return;
+  }
+
+  const data = await res.json();
+
+  bank_name.value      = data.bankName ?? "";
+  branch_name.value    = data.branchName ?? "";
+  account_type.value   = data.accountType ?? "普通";
+  account_number.value = data.accountNumber ?? "";
+  account_holder.value = data.accountHolder ?? "";
+}
+
+/* ===== Save ===== */
+document.getElementById("save-btn").addEventListener("click", async () => {
+  const id = getId();
+
+  const body = {
+    bankName: bank_name.value.trim(),
+    branchName: branch_name.value.trim(),
+    accountType: account_type.value,
+    accountNumber: account_number.value.trim(),
+    accountHolder: account_holder.value.trim(),
+  };
+
+  if (!body.bankName || !body.branchName ||
+      !body.accountNumber || !body.accountHolder) {
+    toast("すべて入力してください");
+    return;
+  }
+
+  const url = id
+    ? `/admin/deposit/bank-accounts/${id}`
+    : `/admin/deposit/bank-accounts`;
+
+  const res = await fetch(API_BASE + url, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    toast("保存に失敗しました");
+    return;
+  }
+
+  toast("保存しました");
+  setTimeout(() => {
+    location.href = "deposit-bank-accounts.html";
+  }, 800);
+});
+
+load();
+</script>
+
+<!-- ★ 共通JS -->
+<script src="/admin/assets/js/admin-auth.js"></script>
+<script src="/admin/assets/js/header-admin.js"></script>
+
+</body>
+</html>

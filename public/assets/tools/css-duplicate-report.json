@@ -1,0 +1,21 @@
+[
+  {
+    "selector": ".site-nav",
+    "occurrences": 2,
+    "duplicatedProperties": [
+      "display (2 times)"
+    ]
+  },
+  {
+    "selector": "@media(max-width:900px)",
+    "occurrences": 4,
+    "duplicatedProperties": []
+  },
+  {
+    "selector": ".menu-toggle",
+    "occurrences": 2,
+    "duplicatedProperties": [
+      "display (2 times)"
+    ]
+  }
+]

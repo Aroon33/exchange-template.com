@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - 入金申請管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+
+   <style>
+/* ===== Mobile Modal ===== */
+@media (max-width: 768px) {
+
+  .table td.actions,
+  .table th.actions {
+    display: none;
+  }
+
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+
+  .modal-content {
+    background: #fff;
+    margin: 10% auto;
+    width: 92%;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .modal-footer {
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+  }
+
+  .modal-body {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+  }
+}
+/* ===== Deposit Responsive ===== */
+@media (max-width: 768px) {
+
+  .thead-pc {
+    display: none;
+  }
+
+  .thead-sp {
+    display: table-header-group;
+  }
+
+  .table td.actions,
+  .table th.actions {
+    display: none;
+  }
+
+  /* スマホ行をカード風に */
+  .deposit-row td {
+    padding: 10px;
+    font-size: 14px;
+  }
+}
+@media (max-width: 768px) {
+  .pc-only {
+    display: none;
+  }
+}
+
+
+/* PCではSPヘッダー非表示 */
+@media (min-width: 769px) {
+  .thead-sp {
+    display: none;
+  }
+}
+
+
+</style>
+
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-title">メニュー</div>
+  <ul class="nav-list">
+    <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
+    <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
+    <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
+    <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
+    <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
+    <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
+    <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
+    <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
+    <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
+    <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
+    <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
+    <li class="nav-item"><a href="deposit-bank-accounts.html" class="nav-link active">📜 銀行管理</a></li>
+    <li class="nav-item"><a href="deposit-bank-accounts-edit.html" class="nav-link active">📜 口座登録</a></li>
+    <li class="nav-item"><a href="deposit-crypto-address-form.html" class="nav-link active">📜 アドレス登録</a></li>
+  </ul>
+</aside>
+<!-- HEADER -->
+<header class="admin-header">
+  <div class="admin-header-left">
+    <div class="admin-logo-badge">AX</div>
+    <div>
+      <div class="admin-logo-text">Admin Console</div>
+      <div class="admin-logo-sub">入金申請管理</div>
+    </div>
+  </div>
+  <div class="admin-header-right">
+    <span id="admin-user-label">管理者</span>
+    <!-- ▼ 追加：サイドバートグル -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button> 
+   <button class="btn btn-outline btn-sm" onclick="doLogout()">ログアウト</button>
+  </div>
+</header>
+
+<!-- overlay -->
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+<main class="admin-main">
+  <div class="admin-main-inner">
+
+    <div class="page-title">入金申請一覧</div>
+
+    <div style="margin:12px 0;">
+      <select id="status-filter" class="btn-sm">
+  <option value="ALL">すべて</option>
+  <option value="PENDING">申請中</option>
+  <option value="CONFIRMING">確認中</option>
+  <option value="COMPLETED">完了</option>
+  <option value="CANCELED">キャンセル</option>
+</select>
+      <button class="btn-sm" id="reload-btn">再読み込み</button>
+    </div>
+
+    <div class="card">
+      <table class="table" style="width:100%; font-size:13px;">
+        <!-- PC用ヘッダー -->
+<thead class="thead-pc">
+  <tr>
+    <th>ID</th>
+    <th>申請日時</th>
+    <th>名前</th>
+    <th>種別</th>
+    <th>通貨</th>
+    <th>申請金額</th>
+    <th>入金額</th>
+    <th>更新日時</th>
+    <th>ステータス</th>
+    <th class="actions">操作</th>
+  </tr>
+</thead>
+
+<!-- スマホ用ヘッダー -->
+<thead class="thead-sp">
+  <tr>
+    <th>入金</th>
+  </tr>
+</thead>
+
+        <tbody id="deposit-table-body">
+          <tr>
+  <td colspan="100%" style="text-align:center;">読み込み中...</td>
+</tr>
+
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</main>
+
+<!-- =========================
+   Deposit Detail Modal (Mobile)
+========================= -->
+<div id="deposit-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span id="modal-title">入金詳細</span>
+      <button class="modal-close" onclick="closeDepositModal()">×</button>
+    </div>
+
+    <div class="modal-body" id="modal-body">
+      <!-- JSで動的に埋める -->
+    </div>
+
+    <div class="modal-footer" id="modal-footer">
+      <!-- 操作ボタン -->
+    </div>
+  </div>
+</div>
+
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = "https://api.exchange-template.com";
+
+/* =========================
+   Toast
+========================= */
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+/* =========================
+   Formatters
+========================= */
+function formatDate(v) {
+  return v ? new Date(v).toLocaleString("ja-JP", { hour12:false }) : "-";
+}
+
+/**
+ * 金額フォーマット
+ * type = "JPY" | "CRYPTO"
+ */
+function formatAmount(value, type = "JPY") {
+  const num = Number(value);
+  if (isNaN(num)) return "-";
+
+  if (type === "CRYPTO") {
+    // 暗号資産：小数点以下4桁
+    return num.toFixed(4);
+  }
+
+  // 日本円：カンマ区切り・小数なし
+  return Math.floor(num).toLocaleString("ja-JP");
+}
+
+/* =========================
+   API wrappers
+========================= */
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path, { credentials:"include" });
+  if (!res.ok) throw new Error();
+  return res.json();
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(API_BASE + path, {
+    method:"POST",
+    credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error();
+}
+
+/* =========================
+   Actions
+========================= */
+async function approveDeposit(id) {
+  try {
+    await apiPost("/deposit/approve", { id });
+    showToast("承認しました");
+    loadDeposits();
+  } catch {
+    showToast("承認に失敗しました");
+  }
+}
+
+async function sendDepositAddress(id) {
+  // ★ ここに追加する（1行）
+  if (!confirm("入金アドレスを送信しますか？")) return;
+
+  try {
+    await apiPost("/deposit/assign-crypto", { id });
+    showToast("入金アドレスを送信しました");
+    loadDeposits();
+  } catch {
+    showToast("アドレス送信に失敗しました");
+  }
+}
+
+
+
+function openChat(userId) {
+  if (!userId) {
+    showToast("ユーザー情報がありません");
+    return;
+  }
+  location.href = `tickets.html?user=${userId}`;
+}
+
+/* =========================
+   Render table
+========================= */
+function openDepositModal(t) {
+  const modal = document.getElementById("deposit-modal");
+  const body = document.getElementById("modal-body");
+  const footer = document.getElementById("modal-footer");
+
+  body.innerHTML = `
+    <div><b>ID：</b>${t.id}</div>
+    <div><b>ユーザー：</b>${t.user?.name ?? "-"}</div>
+    <div><b>通貨：</b>${t.currency}</div>
+    <div><b>申請金額：</b>${t.amount}</div>
+    <div><b>入金額：</b>${t.cryptoAmount ?? t.amount}</div>
+    <div><b>ステータス：</b>${t.status}</div>
+    <div><b>申請日時：</b>${formatDate(t.createdAt)}</div>
+  `;
+
+  footer.innerHTML = `
+    ${
+      t.status === "PENDING" && t.method === "CRYPTO"
+        ? `<button class="btn btn-primary"
+                   onclick="sendDepositAddress(${t.id})">
+             アドレス送信
+           </button>`
+        : ""
+    }
+
+    ${
+      t.status === "CONFIRMING"
+        ? `<button class="btn btn-success"
+                   onclick="approveDeposit(${t.id})">
+             着金確認
+           </button>`
+        : ""
+    }
+
+    <button class="btn btn-warning"
+            onclick="openChat(${t.user?.id})">
+      チャット
+    </button>
+  `;
+
+  modal.style.display = "block";
+}
+
+
+
+function closeDepositModal() {
+  document.getElementById("deposit-modal").style.display = "none";
+}
+
+
+function renderTable(list) {
+  const tbody = document.getElementById("deposit-table-body");
+  tbody.innerHTML = "";
+
+  if (!list.length) {
+    tbody.innerHTML =
+      '<tr><td colspan="10" style="text-align:center;">申請なし</td></tr>';
+    return;
+  }
+
+  list.forEach(t => {
+    // CRYPTO 判定（最も安全）
+    const isCrypto =
+      t.cryptoAmount !== null &&
+      !isNaN(Number(t.cryptoAmount)) &&
+      Number(t.cryptoAmount) > 0;
+
+    const methodLabel = isCrypto ? "暗号資産" : "日本円";
+    const currency = isCrypto ? t.currency : "JPY";
+
+    // 申請金額（常にJPY）
+    const requestAmount =
+      `${formatAmount(t.amount, "JPY")} JPY`;
+
+    // 入金額（JPY or CRYPTO）
+    const depositAmount = isCrypto
+      ? `${formatAmount(t.cryptoAmount, "CRYPTO")} ${currency}`
+      : `${formatAmount(t.amount, "JPY")} JPY`;
+
+    const statusJP =
+  t.status === "PENDING"     ? "申請中" :
+  t.status === "CONFIRMING"  ? "確認中" :
+  t.status === "COMPLETED"   ? "完了" :
+  "キャンセル";
+
+
+    tbody.insertAdjacentHTML("beforeend", `
+<tr class="deposit-row"
+    onclick="
+      if (window.innerWidth <= 900) {
+        openDepositModal(${JSON.stringify(t)})
+      }
+    "
+    style="cursor:pointer;">
+
+  <!-- PC / SP 共通セル（SPでは1列として見える） -->
+  <td>
+    <div><b>ID:</b> ${t.id}</div>
+    <div><b>ユーザー:</b> ${t.user?.name ?? "-"}</div>
+    <div><b>通貨:</b> ${currency}</div>
+    <div><b>金額:</b> ${depositAmount}</div>
+    <div><b>状態:</b> ${statusJP}</div>
+    <div class="muted">${formatDate(t.createdAt)}</div>
+  </td>
+
+  <!-- PC専用セル群 -->
+  <td class="pc-only">${formatDate(t.createdAt)}</td>
+  <td class="pc-only">${t.user?.name ?? "-"}</td>
+  <td class="pc-only">${methodLabel}</td>
+  <td class="pc-only">${currency}</td>
+  <td class="pc-only">${requestAmount}</td>
+  <td class="pc-only">${depositAmount}</td>
+  <td class="pc-only">${formatDate(t.updatedAt)}</td>
+  <td class="pc-only">${statusJP}</td>
+
+  <!-- PC操作列 -->
+  <td class="actions pc-only">
+    ${
+      t.status === "PENDING" &&
+      t.method === "CRYPTO"
+        ? `<button class="btn-xs btn-primary"
+                   onclick="event.stopPropagation(); sendDepositAddress(${t.id})">
+             アドレス送信
+           </button>`
+        : ""
+    }
+
+    ${
+      t.status === "CONFIRMING"
+        ? `<button class="btn-xs btn-xs-primary"
+                   onclick="event.stopPropagation(); approveDeposit(${t.id})">
+             着金確認
+           </button>`
+        : ""
+    }
+
+    <button class="btn-xs btn-warning"
+            onclick="event.stopPropagation(); openChat(${t.user?.id})">
+      チャット
+    </button>
+  </td>
+</tr>
+`);
+
+
+  });
+}
+
+/* =========================
+   Load + Filter
+========================= */
+async function loadDeposits() {
+  try {
+    const status = document.getElementById("status-filter").value;
+
+    let list = await apiGet("/deposit/all");
+
+    // 防御ロジック
+    if (status === "PENDING") {
+      list = await apiGet("/deposit/pending");
+    } else if (status !== "ALL") {
+      list = list.filter(
+        t => String(t.status).toUpperCase() === status
+      );
+    }
+
+    renderTable(list);
+  } catch {
+    showToast("取得に失敗しました");
+  }
+}
+
+/* =========================
+   Init
+========================= */
+document.getElementById("status-filter").addEventListener("change", loadDeposits);
+document.getElementById("reload-btn").addEventListener("click", loadDeposits);
+loadDeposits();
+</script>
+
+
+
+</body>
+</html>
+

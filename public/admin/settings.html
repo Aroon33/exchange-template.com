@@ -34,17 +34,37 @@
     <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
     <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
     <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
-    <li class="nav-item"><a href="kyc.html" class="nav-link">🪪 KYC状況</a></li>
+    <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
     <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
     <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
     <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
-    <li class="nav-item"><a href="settings.html" class="nav-link active">⚙️ システム設定</a></li>
-    <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 ポジション一覧</a></li>
-    <li class="nav-item"><a href="system-history.html" class="nav-link">📜 システム履歴</a></li>
+    <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
+    <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
+    <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
+    <li class="nav-item"><a href="deposit-bank-accounts.html" class="nav-link active">📜 銀行管理</a></li>
+    <li class="nav-item"><a href="deposit-bank-accounts-edit.html" class="nav-link active">📜 口座登録</a></li>
+    <li class="nav-item"><a href="deposit-crypto-address-form.html" class="nav-link active">📜 アドレス登録</a></li>
   </ul>
 </aside>
 
-<!-- MAIN -->
+<header class="admin-header">
+  <div class="admin-header-left">
+    <div class="admin-logo-badge">AX</div>
+    <div>
+      <div class="admin-logo-text">Admin Console</div>
+      <div class="admin-logo-sub">ダッシュボード</div>
+    </div>
+  </div>
+  <div class="admin-header-right">
+
+<!-- ▼ 追加：サイドバートグル -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button> 
+   <button class="btn btn-outline btn-sm" onclick="doLogout()">ログアウト</button>
+  </div>
+</header>
+
+<!-- overlay -->
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
 <main class="admin-main">
   <div class="admin-main-inner">
 
@@ -234,6 +254,11 @@ document.getElementById("runLoopBtn").onclick = ()=>{
 /* 初期ロード */
 loadGroups();
 </script>
+
+
+<script src="/admin/assets/js/admin-auth.js"></script>
+<script src="/admin/assets/js/header-admin.js"></script>
+
 
 </body>
 </html>

@@ -4,11 +4,9 @@
   <meta charset="UTF-8" />
   <title>CryptoX Exchange - システム取引（自動売買）</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <link rel="stylesheet" href="assets/css/style.css">
-
   <style>
-   /* =============================
+/* =============================
    カード / レイアウト
 ============================= */
 .section-card {
@@ -71,27 +69,14 @@
   display: inline-block;
 }
 
-.status-RUNNING {
-  background: #bbf7d0;
-  color: #166534;
-}
-
-.status-STOP_REQUESTED {
-  background: #fde68a;
-  color: #92400e;
-}
-
-.status-STOPPED {
-  background: #fecaca;
-  color: #991b1b;
-}
+.status-RUNNING { background:#bbf7d0; color:#166534; }
+.status-STOP_REQUESTED { background:#fde68a; color:#92400e; }
+.status-STOPPED { background:#fecaca; color:#991b1b; }
 
 /* =============================
    テーブル
 ============================= */
-.table-wrapper {
-  overflow-x: auto;
-}
+.table-wrapper { overflow-x: auto; }
 
 table.table {
   width: 100%;
@@ -106,7 +91,6 @@ table.table th {
   border-bottom: 2px solid #e5e7eb;
   white-space: nowrap;
 }
-
 table.table td {
   padding: 10px;
   font-size: 13px;
@@ -114,16 +98,8 @@ table.table td {
   white-space: nowrap;
 }
 
-/* PNL 表示を右寄せ＆色付け */
-.pnl-plus {
-  color: #059669;
-  font-weight: bold;
-}
-
-.pnl-minus {
-  color: #dc2626;
-  font-weight: bold;
-}
+.pnl-plus { color:#059669; font-weight:bold; }
+.pnl-minus { color:#dc2626; font-weight:bold; }
 
 .table td.pnl-plus,
 .table td.pnl-minus {
@@ -131,9 +107,7 @@ table.table td {
   font-family: monospace;
 }
 
-table.table tr:hover {
-  background: #f9fafb;
-}
+table.table tr:hover { background:#f9fafb; }
 
 /* =============================
    ボタン
@@ -146,295 +120,223 @@ table.table tr:hover {
 }
 
 /* =============================
-   Toast
+   ハンバーガーメニュー（統一版）
 ============================= */
-.toast {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  background: #333;
-  color: #fff;
-  padding: 10px 14px;
-  border-radius: 6px;
-  opacity: 0;
-  transition: opacity .3s;
+.hamburger {
+  display: none;
+  font-size: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
 }
 
-.toast.show {
-  opacity: 1;
+@media(max-width:768px){
+  .hamburger { display:block; }
+  .site-nav { display:none; }
 }
 
 /* =============================
-   レスポンシブ最適化
+   モバイルメニュー（統一版）
 ============================= */
-@media (max-width:600px) {
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  left: -260px;
+  width: 240px;
+  height: 100%;
+  background: #fff;
+  padding: 20px;
+  z-index: 9999;
+  transition: 0.3s;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+}
+
+.mobile-menu.open { left: 0; }
+
+.mobile-menu a {
+  display:block !important;
+  width:100%;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  padding:12px 10px;
+  margin-bottom:8px;
+  border-radius:8px;
+  font-size:15px;
+  color:#333;
+}
+
+.mobile-menu a:hover {
+  background:#eef2ff;
+  border-color:var(--primary);
+}
+
+.close-btn {
+  background:none;
+  border:none;
+  font-size:24px;
+  float:right;
+  cursor:pointer;
+}
+
+.menu-overlay {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.4);
+  z-index:9998;
+}
+
+.menu-overlay.show { display:block; }
+
+/* =============================
+   レスポンシブ
+============================= */
+@media(max-width:600px) {
   table.table th,
   table.table td {
     font-size: 12px;
     padding: 8px;
   }
-
-  .info-grid {
-    grid-template-columns: 1fr 1fr;
-  }
 }
-
   </style>
 </head>
 
 <body>
 
-<header class="site-header">
-  <div class="logo">
-    <div class="logo-badge">CX</div>
-    CryptoX Exchange
-  </div>
+<!-- Header -->
+<div id="header"></div>
 
-  <nav class="site-nav">
-    <a href="index.html" class="nav-link">TOP</a>
-    <a href="exchange.html" class="nav-link">トレード</a>
-    <a href="wallet.html" class="nav-link">ウォレット</a>
-    <a href="system-trade.html" class="nav-link active">システム取引</a>
-    <a href="support.html" class="nav-link">サポート</a>
-    <a href="mypage.html" class="nav-link">マイページ</a>
-    <a href="kyc.html" class="nav-link">KYC</a>
-    <a href="history.html" class="nav-link">取引履歴</a>
-  </nav>
-
-  <div class="header-actions">
-    <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
-    <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
-  </div>
-</header>
-
+<!-- Main -->
 <main>
-  <section class="section-card">
+<section class="section-card">
 
-    <h1 class="section-title">システム取引（自動売買）</h1>
-    <p class="section-desc">
-      グループの自動売買システムの状況とあなたの保有ポジションを確認できます。<br>
-      <strong>停止したい場合は「システム停止依頼」を押してください。</strong>
-    </p>
+  <!-- Title -->
+  <h1 class="section-title">システム取引（自動売買）</h1>
+  <p class="section-desc">
+    グループの自動売買システムの状況とあなたの保有ポジションを確認できます。<br>
+    <strong>停止したい場合は「システム停止依頼」を押してください。</strong>
+  </p>
 
-    <p id="sys-message" class="muted" style="margin-bottom:14px;"></p>
+  <!-- Message -->
+  <p id="sys-message" class="muted" style="margin-bottom:14px;"></p>
 
-    <!-- ステータス情報 -->
-    <div class="info-grid">
-      <div class="info-box">
-        <div class="info-label">グループID</div>
-        <div class="info-value" id="sys-group-id">-</div>
-      </div>
+  <!-- Info Cards -->
+  <div class="info-grid">
+    <div class="info-box">
+      <div class="info-label">グループID</div>
+      <div class="info-value" id="sys-group-id">-</div>
+    </div>
 
-      <div class="info-box">
-        <div class="info-label">システムステータス</div>
-        <div class="info-value">
-          <span id="sys-status-pill" class="status-pill">-</span>
-        </div>
-      </div>
+    <div class="info-box">
+      <div class="info-label">合計含み損益</div>
+      <div class="info-value" id="sys-total-pnl">0.0000</div>
+    </div>
 
-      <div class="info-box">
-        <div class="info-label">合計口座残高</div>
-        <div class="info-value" id="sys-balance-total">0</div>
+    <div class="info-box">
+      <div class="info-label">システムステータス</div>
+      <div class="info-value">
+        <span id="sys-status-pill" class="status-pill">-</span>
       </div>
     </div>
 
-    <!-- 停止依頼 -->
-    <button id="sys-stop-btn" class="btn btn-outline">
-      ⛔ システム停止を依頼する
-    </button>
-
-    <!-- ポジション一覧 -->
-    <h2 class="section-title" style="margin-top:24px;">現在の保有ポジション</h2>
-
-    <div class="table-wrapper">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>銘柄</th>
-            <th>数量</th>
-            <th>建値</th>
-            <th>現在値</th>
-            <th>評価損益</th>
-            <th>エントリー日時</th>
-          </tr>
-        </thead>
-        <tbody id="sys-positions-body">
-          <tr>
-            <td colspan="6" style="text-align:center; color:#888; padding:12px;">
-              保有中ポジションはありません。
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="info-box">
+      <div class="info-label">合計口座残高</div>
+      <div class="info-value" id="sys-balance-total">0</div>
     </div>
+  </div>
 
-  </section>
+  <!-- Stop -->
+  <button id="sys-stop-btn" class="btn btn-outline">
+    ⛔ システム停止を依頼する
+  </button>
+
+  <!-- Positions -->
+  <h2 class="section-title" style="margin-top:24px;">現在の保有ポジション</h2>
+
+  <!-- ===== Period Tabs ===== -->
+  <div class="history-filter">
+    <button class="filter-btn active" data-days="1">1日</button>
+    <button class="filter-btn" data-days="3">3日</button>
+    <button class="filter-btn" data-days="7">7日</button>
+    <button class="filter-btn" data-days="30">30日</button>
+  </div>
+
+  <!-- ===== PC TABLE ===== -->
+  <div class="table-wrapper table-pc">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>日時</th>
+          <th>銘柄</th>
+          <th>数量</th>
+          <th>建値</th>
+          <th>現在値</th>
+          <th>損益</th>
+        </tr>
+      </thead>
+      <tbody id="sys-positions-body"></tbody>
+    </table>
+  </div>
+
+  <!-- ===== MOBILE TABLE ===== -->
+  <div class="table-wrapper table-sp">
+    <table class="table">
+      <thead class="thead-sp">
+        <tr>
+          <th>取引</th>
+        </tr>
+      </thead>
+      <tbody id="trade-history-body">
+        <!-- JS描画 -->
+      </tbody>
+    </table>
+  </div>
+
+</section>
 </main>
 
+<!-- ===== Toast ===== -->
 <div class="toast" id="toast">
   <span id="toast-text">メッセージ</span>
 </div>
 
-<script>
-/* ----------------------
-      API BASE
----------------------- */
-const API_BASE = "https://api.exchange-template.com";
+<!-- ===== Trade Detail Modal (SP) ===== -->
+<div id="trade-modal" class="modal-overlay">
+  <div class="modal-card">
 
-/* ----------------------
-      DOM 取得
----------------------- */
-const elMsg       = document.getElementById("sys-message");
-const elGroupId   = document.getElementById("sys-group-id");
-const elStatusPill= document.getElementById("sys-status-pill");
-const elBalTotal  = document.getElementById("sys-balance-total");
-const elPosBody   = document.getElementById("sys-positions-body");
-const btnStop     = document.getElementById("sys-stop-btn");
+    <div class="modal-title">取引詳細</div>
 
-/* ----------------------
-      API GET / POST
----------------------- */
-async function apiGet(path){
-  const r = await fetch(API_BASE + path, { credentials:"include" });
-  if(!r.ok) throw new Error(await r.text());
-  return r.json();
-}
-async function apiPost(path, body){
-  const r = await fetch(API_BASE + path,{
-    method:"POST",
-    credentials:"include",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(body||{})
-  });
-  const txt = await r.text();
-  if(!r.ok) throw new Error(txt);
-  return txt ? JSON.parse(txt) : {};
-}
+    <div class="modal-row">
+      <span>銘柄</span><span id="m-symbol"></span>
+    </div>
+    <div class="modal-row">
+      <span>売買</span><span id="m-side"></span>
+    </div>
+    <div class="modal-row">
+      <span>数量</span><span id="m-size"></span>
+    </div>
+    <div class="modal-row">
+      <span>建値</span><span id="m-entry"></span>
+    </div>
+    <div class="modal-row">
+      <span>決済値</span><span id="m-close"></span>
+    </div>
+    <div class="modal-row">
+      <span>損益</span><span id="m-profit"></span>
+    </div>
+    <div class="modal-row">
+      <span>決済日時</span><span id="m-date"></span>
+    </div>
 
-/* ----------------------
-      便利関数
----------------------- */
-function toast(msg){
-  const t = document.getElementById("toast");
-  document.getElementById("toast-text").textContent = msg;
-  t.classList.add("show");
-  setTimeout(()=> t.classList.remove("show"), 1800);
-}
+    <button class="btn btn-outline btn-sm modal-close">閉じる</button>
+  </div>
+</div>
 
-function fmtDate(iso){
-  if(!iso) return "-";
-  return new Date(iso).toLocaleString("ja-JP",{hour12:false});
-}
-function fmtNum(n){
-  return Number(n).toLocaleString("en-US",{
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 8
-  });
-}
-
-/* ----------------------
-      ステータス表示
----------------------- */
-function setStatusPill(status){
-  elStatusPill.textContent = status;
-  elStatusPill.className = "status-pill status-" + status;
-}
-
-/* ----------------------
-      表示レンダリング
----------------------- */
-function renderOverview(ov){
-  elGroupId.textContent = ov.groupId ?? "-";
-  setStatusPill(ov.systemStatus);
-  elBalTotal.textContent = fmtNum(ov.balanceTotal);
-
-  elPosBody.innerHTML = "";
-
-  if(!ov.positions?.length){
-    elPosBody.innerHTML =
-      `<tr><td colspan="6" style="text-align:center;color:#888;">保有中ポジションはありません。</td></tr>`;
-    return;
-  }
-
-  ov.positions.forEach(p=>{
-    const profit = Number(p.unrealizedPnl);
-    const sign = profit >= 0 ? "+" : "-";
-    const absVal = Math.abs(profit);
-
-    elPosBody.innerHTML += `
-      <tr>
-        <td>${p.symbol}</td>
-        <td>${fmtNum(p.size)}</td>
-        <td>${fmtNum(p.entryPrice)}</td>
-        <td>${fmtNum(p.currentPrice)}</td>
-        <td class="${profit>=0?'pnl-plus':'pnl-minus'}">
-          <div class="pnl-cell">
-            <span class="pnl-sign">${sign}</span>
-            <span class="pnl-value">${fmtNum(absVal)}</span>
-          </div>
-        </td>
-        <td>${fmtDate(p.openedAt)}</td>
-      </tr>`;
-  });
-}
-
-/* ----------------------
-      停止依頼
----------------------- */
-async function onStopClick(){
-  try{
-    await apiPost("/system/stop");
-    toast("停止依頼を送信しました");
-  }catch(e){
-    toast("停止依頼に失敗しました");
-  }
-}
-btnStop.addEventListener("click", onStopClick);
-
-/* ----------------------
-      初期ロード
----------------------- */
-(async function init(){
-  try{
-    const ov = await apiGet("/system/overview");
-    renderOverview(ov);
-    elMsg.textContent = "システム情報を取得しました。";
-    elMsg.style.color = "green";
-  }catch(e){
-    elMsg.textContent = "情報取得に失敗しました。ログインを確認してください。";
-    elMsg.style.color = "red";
-  }
-})();
-
-/* ----------------------
-      ヘッダー切替（ログイン状態）
----------------------- */
-async function updateHeaderUserState() {
-  const headerActions = document.querySelector(".header-actions");
-  if (!headerActions) return;
-
-  try {
-    const res = await fetch(API_BASE + "/auth/me", { credentials:"include" });
-    if (!res.ok) return;
-
-    const data = await res.json();
-    const user = data.user || data;
-
-    headerActions.innerHTML = `
-      <a href="mypage.html" class="btn btn-outline btn-sm">${user.name} さん</a>
-      <a href="#" id="logoutBtn" class="btn btn-primary btn-sm">ログアウト</a>
-    `;
-
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await fetch(API_BASE + "/auth/logout",{method:"POST",credentials:"include"});
-      location.href = "login.html";
-    });
-
-  } catch(e) {}
-}
-document.addEventListener("DOMContentLoaded", updateHeaderUserState);
-
-</script>
+<!-- Scripts -->
+<script type="module" src="/assets/js/header-user.js"></script>
+<script type="module" src="/assets/js/system-trade.js"></script>
 
 </body>
 </html>

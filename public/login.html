@@ -7,7 +7,6 @@
 
   <!-- Base CSS -->
   <link rel="stylesheet" href="assets/css/style.css">
-
   <style>
     /* レイアウト */
     main {
@@ -107,31 +106,12 @@
     }
   </style>
 
+  
 </head>
 <body>
 
-<header class="site-header">
-  <div class="logo">
-    <div class="logo-badge">CX</div>
-    CryptoX Exchange
-  </div>
-
-  <nav class="site-nav">
-    <a href="index.html" class="nav-link">TOP</a>
-    <a href="exchange.html" class="nav-link">トレード</a>
-    <a href="wallet.html" class="nav-link">ウォレット</a>
-    <a href="system-trade.html" class="nav-link">システム取引</a>
-    <a href="support.html" class="nav-link">サポート</a>
-    <a href="mypage.html" class="nav-link">マイページ</a>
-    <a href="kyc.html" class="nav-link">KYC</a>
-    <a href="history.html" class="nav-link">履歴</a>
-  </nav>
-
-  <div class="header-actions">
-    <a href="login.html" class="btn btn-outline btn-sm nav-link active">ログイン</a>
-    <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
-  </div>
-</header>
+<!-- 共通ヘッダー -->
+<div id="header"></div>
 
 <main>
   <section class="login-card">
@@ -165,77 +145,6 @@
   </section>
 </main>
 
-<script>
-const API_BASE_URL = "https://api.exchange-template.com";
-
-const emailInput = document.getElementById("login-email");
-const passwordInput = document.getElementById("login-password");
-const messageEl = document.getElementById("login-message");
-const btn = document.getElementById("login-button");
-
-async function login() {
-  const email = emailInput.value.trim();
-  const password = passwordInput.value.trim();
-
-  if (!email || !password) {
-    messageEl.textContent = "メールアドレスとパスワードを入力してください。";
-    messageEl.style.color = "red";
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = "ログイン中...";
-
-  try {
-    const res = await fetch(API_BASE_URL + "/auth/login", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.message || "ログインに失敗しました");
-    }
-
-    // ログイン成功
-    messageEl.textContent = "ログイン成功: " + data.user.email;
-    messageEl.style.color = "green";
-
-    // 管理者判定で遷移先を変更
-    if (data.user.role === "ADMIN") {
-      window.location.href = "/admin/index.html";
-    } else {
-      window.location.href = "mypage.html";
-    }
-
-  } catch (err) {
-    messageEl.textContent = err.message;
-    messageEl.style.color = "red";
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "ログイン";
-  }
-}
-
-// クリックイベント
-btn.addEventListener("click", (e) => {
-  e.preventDefault();
-  login();
-});
-
-// Enterキー送信
-[emailInput, passwordInput].forEach((el) => {
-  el.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      login();
-    }
-  });
-});
-</script>
 
 </body>
 </html>

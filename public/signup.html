@@ -7,7 +7,6 @@
 
   <!-- Base CSS -->
   <link rel="stylesheet" href="assets/css/style.css">
-
   <style>
     /* 全体レイアウト */
     main {
@@ -117,25 +116,14 @@
       .signup-title { font-size: 20px; }
     }
   </style>
+
+  
 </head>
 <body>
 
-<header class="site-header">
-  <div class="logo">
-    <div class="logo-badge">CX</div>
-    CryptoX Exchange
-  </div>
-  <nav class="site-nav">
-    <a href="index.html" class="nav-link">TOP</a>
-    <a href="exchange.html" class="nav-link">トレード</a>
-    <a href="wallet.html" class="nav-link">ウォレット</a>
-    <a href="system-trade.html" class="nav-link">システム取引</a>
-    <a href="support.html" class="nav-link">サポート</a>
-    <a href="mypage.html" class="nav-link">マイページ</a>
-    <a href="kyc.html" class="nav-link">KYC</a>
-    <a href="history.html" class="nav-link">履歴</a>
-  </nav>
-</header>
+  <!-- 共通ヘッダー -->
+<div id="header"></div>
+
 
 <main>
   <section class="signup-card">
@@ -212,78 +200,11 @@
 </main>
 
 
-<!-- API SCRIPT -->
-<script>
-const API_BASE_URL = "https://api.exchange-template.com";
 
-const btn = document.getElementById("signup-button");
-const message = document.getElementById("signup-message");
 
-btn.addEventListener("click", async () => {
+<script type="module" src="/assets/js/header-user.js"></script>
+<script type="module" src="/assets/js/auth/signup.js"></script>
 
-  const lastname  = document.getElementById("signup-lastname").value.trim();
-  const firstname = document.getElementById("signup-firstname").value.trim();
-  const email     = document.getElementById("signup-email").value.trim();
-  const password  = document.getElementById("signup-password").value.trim();
-  const country   = document.getElementById("signup-country").value;
-  const refcode   = document.getElementById("signup-refcode").value.trim();
-  const tosOK     = document.getElementById("signup-tos").checked;
-
-  if (!email || !password) {
-    message.textContent = "メールアドレスとパスワードは必須です。";
-    message.style.color = "red";
-    return;
-  }
-  if (!tosOK) {
-    message.textContent = "利用規約に同意してください。";
-    message.style.color = "red";
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = "送信中...";
-
-  try {
-    const url = new URL(window.location.href);
-    const ref = url.searchParams.get("ref");
-
-    const payload = {
-      email,
-      password,
-      name: lastname + " " + firstname,
-      country,
-      referral: ref ? Number(ref) : null,
-      code: refcode || null
-    };
-
-    const res = await fetch(API_BASE_URL + "/auth/register", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) throw new Error(data.message || "登録に失敗しました");
-
-    message.textContent = "登録成功！ログイン画面へ移動します。";
-    message.style.color = "green";
-
-    setTimeout(() => {
-      window.location.href = "login.html";
-    }, 1500);
-
-  } catch (err) {
-    message.textContent = err.message;
-    message.style.color = "red";
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "口座開設を申し込む";
-  }
-
-});
-</script>
 
 </body>
 </html>

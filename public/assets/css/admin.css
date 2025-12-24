@@ -369,14 +369,12 @@ td.amount {
   .sidebar { width:180px; }
   .admin-main { margin-left:180px; }
 }
+
 @media (max-width:640px){
-  .sidebar {
-    position:fixed;
-    transform:translateX(-100%);
-  }
   .admin-main { margin-left:0; }
   .admin-header { padding-left:12px; }
 }
+
 /* フィルターカード */
 .filters-card {
   background: #fff;
@@ -408,4 +406,51 @@ td.amount {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+}
+/* =====================================================
+   Mobile Sidebar Toggle (FINAL)
+   ===================================================== */
+@media (max-width: 640px) {
+
+  .sidebar {
+    position: fixed;
+    top: 52px;
+    height: calc(100vh - 52px);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 40;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 35;
+  }
+
+  .sidebar-overlay.show {
+    display: block;
+  }
+
+  body.sidebar-open {
+    overflow: hidden;
+  }
+
+  .admin-main {
+    margin-left: 0 !important;
+  }
+}
+/* =========================
+   Mobile: hide action buttons in table
+========================= */
+@media (max-width: 768px) {
+  .table td.actions,
+  .table th.actions {
+    display: none;
+  }
 }

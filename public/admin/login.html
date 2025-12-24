@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Login | CryptoX</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+
+  <style>
+/* =========================
+   Admin Login
+========================= */
+body {
+  background: #0f0f0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.login-card {
+  background: #fff;
+  width: 100%;
+  max-width: 360px;
+  padding: 28px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.login-logo {
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.login-sub {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.login-group {
+  margin-bottom: 14px;
+}
+
+.login-group label {
+  font-size: 12px;
+  color: #444;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.login-group input {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+}
+
+.login-error {
+  display: none;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #c00;
+  text-align: center;
+}
+  </style>
+</head>
+
+<body>
+
+<div class="login-card">
+  <div class="login-logo">AX Admin</div>
+  <div class="login-sub">管理者ログイン</div>
+
+  <div class="login-group">
+    <label for="email">メールアドレス</label>
+    <input type="email" id="email" autocomplete="username" />
+  </div>
+
+  <div class="login-group">
+    <label for="password">パスワード</label>
+    <input type="password" id="password" autocomplete="current-password" />
+  </div>
+
+  <button class="login-btn" id="login-btn">ログイン</button>
+
+  <div class="login-error" id="login-error"></div>
+</div>
+
+<script>
+const API_BASE = "https://api.exchange-template.com";
+
+const btn = document.getElementById("login-btn");
+const errorBox = document.getElementById("login-error");
+
+btn.addEventListener("click", login);
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter") login();
+});
+
+async function login() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!email || !password) {
+    showError("メールアドレスとパスワードを入力してください");
+    return;
+  }
+
+  btn.disabled = true;
+  errorBox.style.display = "none";
+
+  try {
+    const res = await fetch(API_BASE + "/auth/login", {
+      method: "POST",
+      credentials: "include",   // ★重要
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!res.ok) {
+      throw new Error("login failed");
+    }
+
+    // ログイン成功
+    location.href = "/admin/index.html";
+
+  } catch {
+    showError("ログインに失敗しました");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function showError(msg) {
+  errorBox.textContent = msg;
+  errorBox.style.display = "block";
+}
+</script>
+
+
+
+
+</body>
+</html>

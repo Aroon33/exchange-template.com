@@ -37,14 +37,21 @@
       border-radius:10px;
       width:400px;
     }
-    .modal-row { margin-bottom:10px; }
-    .modal-row label { font-size:12px; }
+    .modal-row { 
+      margin-bottom:10px; 
+    }
+    .modal-row label { 
+      font-size:12px; 
+    }
     .modal-row input {
       width:100%; padding:7px 8px;
       border:1px solid #ccc;
       border-radius:6px;
     }
-    .modal-actions { text-align:right;margin-top:12px; }
+    .modal-actions { 
+      text-align:right;
+      margin-top:12px; 
+    }
   </style>
 </head>
 
@@ -65,10 +72,30 @@
     <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
     <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
     <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
+    <li class="nav-item"><a href="deposit-bank-accounts.html" class="nav-link active">📜 銀行管理</a></li>
+    <li class="nav-item"><a href="deposit-bank-accounts-edit.html" class="nav-link active">📜 口座登録</a></li>
+    <li class="nav-item"><a href="deposit-crypto-address-form.html" class="nav-link active">📜 アドレス登録</a></li>
   </ul>
 </aside>
 
-<!-- MAIN -->
+<header class="admin-header">
+  <div class="admin-header-left">
+    <div class="admin-logo-badge">AX</div>
+    <div>
+      <div class="admin-logo-text">Admin Console</div>
+      <div class="admin-logo-sub">ダッシュボード</div>
+    </div>
+  </div>
+  <div class="admin-header-right">
+
+<!-- ▼ 追加：サイドバートグル -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button> 
+   <button class="btn btn-outline btn-sm" onclick="doLogout()">ログアウト</button>
+  </div>
+</header>
+
+<!-- overlay -->
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
 <main class="admin-main">
   <div class="admin-main-inner">
 
@@ -114,6 +141,18 @@
       </table>
     </section>
 
+    <!-- ▼ 統計表示するグループを選択 -->
+<section class="card" style="margin-top:25px;">
+  <h2 class="card-title-small">統計を表示するグループを選択</h2>
+
+  <div class="form-row">
+    <label>グループを選択してください</label>
+    <select id="stats-group-select">
+      <option value="">選択してください</option>
+    </select>
+  </div>
+</section>
+
     <!-- ▼ グループ移動 UI -->
 <section class="card" style="margin-top:25px;">
   <h2 class="card-title-small">ユーザーをグループへ移動</h2>
@@ -143,6 +182,29 @@
   <p id="move-message" style="margin-top:8px;" class="muted"></p>
 </section>
 
+<!-- ▼ グループ統計：自動集計 -->
+<section class="card" style="margin-top:25px;">
+  <h2 class="card-title-small">グループ統計</h2>
+
+  <p>ユーザー数：<b id="stat-user-count">-</b></p>
+  <p>合計残高：<b id="stat-total-balance">-</b></p>
+  <p>ポジション数：<b id="stat-positions-count">-</b></p>
+
+  <h3 style="margin-top:15px;">所属ユーザー一覧</h3>
+  <table class="table group-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>名前</th>
+        <th>残高 (JPY)</th>
+        <th>ポジション数</th>
+      </tr>
+    </thead>
+    <tbody id="group-users-body">
+      <tr><td colspan="4" style="text-align:center;">グループを選択してください</td></tr>
+    </tbody>
+  </table>
+</section>
 
   </div>
 </main>
@@ -177,7 +239,9 @@ const countEl = document.getElementById("group-count");
 
 let editId = null;
 
-/* API 基本 */
+/* -----------------------------
+      API UTIL
+----------------------------- */
 async function apiGet(p){
   const r = await fetch(API + p, { credentials:"include" });
   const t = await r.text();
@@ -216,7 +280,10 @@ async function apiDelete(p){
   return JSON.parse(t);
 }
 
-/* ------ 一覧ロード ------ */
+
+/* -----------------------------
+      ▼ グループ一覧表示
+----------------------------- */
 async function loadGroups(){
   const groups = await apiGet("/admin/groups");
 
@@ -263,61 +330,52 @@ async function loadGroups(){
 
   /* 削除 */
   document.querySelectorAll("[data-del]").forEach(btn=>{
-    btn.onclick=async()=>{
-      if(!confirm("削除しますか？\n所属ユーザーは未所属に移動します。")) return;
+    btn.onclick = async () => {
+      if (!confirm("削除しますか？\n所属ユーザーは未所属（groupId:null）になります。")) return;
+
       await apiDelete(`/admin/groups/${btn.dataset.del}`);
       loadGroups();
+      loadGroupOptionsStats();
+      loadGroupOptions();
     };
+  });
+
+  /* 統計用セレクトも更新 */
+  loadGroupOptionsStats();
+}
+
+
+/* -----------------------------
+   ▼ 統計用グループ選択のリストを作成
+----------------------------- */
+async function loadGroupOptionsStats(){
+  const groups = await apiGet("/admin/groups");
+  const sel = document.getElementById("stats-group-select");
+  sel.innerHTML = `<option value="">選択してください</option>`;
+
+  groups.forEach(g=>{
+    sel.innerHTML += `<option value="${g.id}">${g.name}（ID:${g.id}）</option>`;
   });
 }
 
-/* ------ 新規作成 ------ */
-document.getElementById("btn-create").onclick = async ()=>{
-  const name = document.getElementById("new-group-name").value.trim();
-  const msg  = document.getElementById("msg-create");
-  if(!name){
-    msg.textContent="名前を入力してください";
-    msg.style.color="red";
-    return;
-  }
-  const res = await apiPost("/admin/groups/create", { name });
-  msg.textContent="作成しました: " + res.group.name;
-  msg.style.color="green";
 
-  document.getElementById("new-group-name").value="";
-  loadGroups();
-};
-
-/* ------ 編集保存 ------ */
-document.getElementById("m-save").onclick = async ()=>{
-  const name = document.getElementById("m-name").value.trim();
-  const code = document.getElementById("m-code").value.trim();
-
-  await apiPatch(`/admin/groups/${editId}`,{
-    name, code
-  });
-
-  document.getElementById("modal").style.display="none";
-  loadGroups();
-};
-
-document.getElementById("m-cancel").onclick = ()=>{
-  document.getElementById("modal").style.display="none";
-};
-
-
-/* ▼ 1. グループ選択にグループ一覧を流し込む */
+/* -----------------------------
+   ▼ 移動先グループのリスト作成
+----------------------------- */
 async function loadGroupOptions() {
   const groups = await apiGet("/admin/groups");
   const sel = document.getElementById("move-group-select");
   sel.innerHTML = '<option value="">選択してください</option>';
 
-  groups.forEach(g => {
+  groups.forEach(g=>{
     sel.innerHTML += `<option value="${g.id}">${g.name}（${g.code}）</option>`;
   });
 }
 
-/* ▼ 2. ユーザー検索 */
+
+/* -----------------------------
+   ▼ ユーザー検索
+----------------------------- */
 document.getElementById("btn-search-user").onclick = async () => {
   const q = document.getElementById("move-search").value.trim();
   const result = document.getElementById("move-user-result");
@@ -333,8 +391,8 @@ document.getElementById("btn-search-user").onclick = async () => {
 
     const user = users.find(u =>
       String(u.id) === q ||
-      u.email.includes(q) ||
-      u.name.includes(q)
+      (u.email && u.email.includes(q)) ||
+      (u.name && u.name.includes(q))
     );
 
     if (!user) {
@@ -352,7 +410,6 @@ document.getElementById("btn-search-user").onclick = async () => {
     `;
     result.style.color = "#333";
 
-    // 保存
     result.dataset.userId = user.id;
 
   } catch (e) {
@@ -361,7 +418,10 @@ document.getElementById("btn-search-user").onclick = async () => {
   }
 };
 
-/* ▼ 3. グループ移動処理 */
+
+/* -----------------------------
+   ▼ ユーザーをグループへ移動
+----------------------------- */
 document.getElementById("btn-move-group").onclick = async () => {
   const msg = document.getElementById("move-message");
   const userId = document.getElementById("move-user-result").dataset.userId;
@@ -387,8 +447,8 @@ document.getElementById("btn-move-group").onclick = async () => {
     msg.textContent = "グループを移動しました。";
     msg.style.color = "green";
 
-    // グループ一覧を更新
     loadGroups();
+    loadGroupStats(groupId);
 
   } catch (e) {
     msg.textContent = "移動エラー：" + e;
@@ -396,9 +456,94 @@ document.getElementById("btn-move-group").onclick = async () => {
   }
 };
 
-/* ▼ 初期ロードで呼ぶ */
-loadGroupOptions();
+
+/* -----------------------------
+   ▼ 統計表示：人数・残高・ポジション
+----------------------------- */
+async function loadGroupStats(groupId){
+  if (!groupId) return;
+
+  /* 1) 全ユーザー取得 */
+  const users = await apiGet("/admin/users");
+
+  /* 2) このグループ所属ユーザー */
+  const groupUsers = users.filter(u => Number(u.groupId) === Number(groupId));
+
+  /* 3) 合計残高 */
+  const totalBalance = groupUsers.reduce((s, u)=> s + (u.balanceTotal || 0), 0);
+
+  /* 4) ポジション */
+  const pos = await apiGet(`/admin/system/positions/${groupId}`);
+  const parentCount = pos.parent?.length ?? 0;
+  const childCount  = pos.children?.length ?? 0;
+
+/* 5) 表示更新 */
+document.getElementById("stat-user-count").textContent = groupUsers.length;
+document.getElementById("stat-total-balance").textContent =
+  totalBalance.toLocaleString("en-US") + " JPY";
+document.getElementById("stat-positions-count").textContent =
+  parentCount + childCount;
+
+/* 6) 所属ユーザー一覧の描画 */
+const usersTbody = document.getElementById("group-users-body");
+usersTbody.innerHTML = "";
+
+/* グループにユーザーがいない場合 */
+if (!groupUsers.length) {
+  usersTbody.innerHTML = `
+    <tr>
+      <td colspan="4" style="text-align:center;">ユーザーなし</td>
+    </tr>`;
+  return;
+}
+
+/* 子ポジションを userId ごとに集計（どのユーザーが何ポジション持っているか） */
+const posMap = {};
+pos.children?.forEach(p => {
+  posMap[p.userId] = (posMap[p.userId] || 0) + 1;
+});
+
+/* 表生成 */
+groupUsers.forEach(u => {
+  const pc = posMap[u.id] ?? 0; // 子口座のポジション数
+
+  usersTbody.innerHTML += `
+    <tr>
+      <td>${u.id}</td>
+      <td>${u.name}</td>
+      <td>${(u.balanceTotal || 0).toLocaleString("en-US")} JPY</td>
+      <td>${pc}</td>
+    </tr>
+    `;
+
+}); // ← groupUsers.forEach の閉じ
+
+} // ← loadGroupStats() の閉じ
+
+
+/* =================================================
+      ▼ 初期ロード
+   ================================================= */
+loadGroups();
+loadGroupOptions();       // 移動先グループ選択
+loadGroupOptionsStats();  // 統計用グループ選択
+
+/* ▼ 統計グループ変更時 */
+document.getElementById("stats-group-select").addEventListener("change", e=>{
+  const gid = e.target.value;
+  loadGroupStats(gid);
+});
+
+/* ▼ 移動用グループ変更時 */
+document.getElementById("move-group-select").addEventListener("change", e=>{
+  const gid = e.target.value;
+  loadGroupStats(gid);
+});
+
 </script>
+
+<script src="/admin/assets/js/admin-auth.js"></script>
+<script src="/admin/assets/js/header-admin.js"></script>
 
 
 </body>

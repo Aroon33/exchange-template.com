@@ -60,6 +60,72 @@
       color: white;
       cursor: pointer;
     }
+/* ===========================
+   Sidebar Toggle Button
+=========================== */
+
+.sidebar-toggle {
+  display: none;
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 8px;
+}
+
+/* overlay */
+.sidebar-overlay {
+  display: none;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 768px) {
+
+  .sidebar-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .admin-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 260px;
+    height: 100vh;
+    z-index: 1000;
+    transition: left 0.25s ease;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 900;
+  }
+
+  .sidebar-overlay.show {
+    display: block;
+  }
+
+  /* メインは常に全幅 */
+  .admin-main {
+    margin-left: 0 !important;
+  }
+}
+
+
   </style>
 </head>
 
@@ -70,7 +136,7 @@
   <div class="sidebar-title">メニュー</div>
   <ul class="nav-list">
     <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
-    <li class="nav-item"><a href="tickets.html" class="nav-link active">💬 問い合わせ管理</a></li>
+    <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
     <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
     <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
     <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
@@ -78,6 +144,11 @@
     <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
     <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
     <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
+    <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
+    <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
+    <li class="nav-item"><a href="deposit-bank-accounts.html" class="nav-link active">📜 銀行管理</a></li>
+    <li class="nav-item"><a href="deposit-bank-accounts-edit.html" class="nav-link active">📜 口座登録</a></li>
+    <li class="nav-item"><a href="deposit-crypto-address-form.html" class="nav-link active">📜 アドレス登録</a></li>
   </ul>
 </aside>
 
@@ -90,11 +161,15 @@
     </div>
   </div>
   <div class="admin-header-right">
-    <button class="btn btn-outline btn-sm" onclick="doLogout()">ログアウト</button>
+
+<!-- ▼ 追加：サイドバートグル -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button> 
+   <button class="btn btn-outline btn-sm" onclick="doLogout()">ログアウト</button>
   </div>
 </header>
 
-
+<!-- overlay -->
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
 <main class="admin-main">
   <div class="admin-main-inner">
 
@@ -168,68 +243,111 @@
 <script>
 const API_BASE = "https://api.exchange-template.com";
 
-/* ▼ ログアウト処理 */
+/* =========================
+   ログアウト処理
+========================= */
 async function doLogout() {
-  await fetch(API_BASE + "/auth/logout", {
-    method: "POST",
-    credentials: "include",
-  });
-  window.location.href = "../login.html";
+  try {
+    await fetch(API_BASE + "/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+  } finally {
+    window.location.href = "../login.html";
+  }
 }
 
-/* ▼ 過去30日をデフォルト期間に設定 */
-function initDates() {
-  const to = new Date();
-  const from = new Date();
-  from.setDate(to.getDate() - 30);
-
-  document.getElementById("from-date").value = from.toISOString().slice(0, 10);
-  document.getElementById("to-date").value = to.toISOString().slice(0, 10);
-}
-
-/* ▼ API GET */
+/* =========================
+   API GET
+========================= */
 async function apiGet(path) {
   const res = await fetch(API_BASE + path, { credentials: "include" });
+
   if (res.status === 401) {
-    // 認証切れ → ログインへ
+    // 認証切れ
     doLogout();
+    throw new Error("unauthorized");
   }
+
   const txt = await res.text();
   if (!res.ok) throw new Error(txt);
   return JSON.parse(txt);
 }
 
-/* ▼ ダッシュボードデータを読み込み */
-async function loadDashboard() {
-  const from = document.getElementById("from-date").value;
-  const to   = document.getElementById("to-date").value;
+/* =========================
+   ダッシュボード初期化
+========================= */
+function initDates() {
+  const fromInput = document.getElementById("from-date");
+  const toInput   = document.getElementById("to-date");
 
-  const data = await apiGet(`/admin/dashboard?from=${from}&to=${to}`);
+  // ダッシュボード以外では何もしない
+  if (!fromInput || !toInput) return;
 
-  // ===== メイン統計 =====
-  document.getElementById("d-total-users").textContent      = data.totalUsers;
-  document.getElementById("d-total-balance").textContent    = data.totalBalance;
-  document.getElementById("d-new-users").textContent        = data.newUsers;
-  document.getElementById("d-deposit-sum").textContent      = data.depositSum;
-  document.getElementById("d-withdraw-sum").textContent     = data.withdrawSum;
+  const to = new Date();
+  const from = new Date();
+  from.setDate(to.getDate() - 30);
 
-  // ===== PENDING counts =====
-  document.getElementById("d-deposit-pending").textContent  = data.pendingDeposits;
-  document.getElementById("d-withdraw-pending").textContent = data.pendingWithdraws;
-  document.getElementById("d-kyc-pending").textContent      = data.pendingKyc;
-  document.getElementById("d-ticket-pending").textContent   = data.openTickets;
-
-  document.getElementById("dashboard-message").textContent = "最新情報を取得しました。";
+  fromInput.value = from.toISOString().slice(0, 10);
+  toInput.value   = to.toISOString().slice(0, 10);
 }
 
-/* 初期化 */
-initDates();
-loadDashboard();
+/* =========================
+   ダッシュボードデータ取得
+========================= */
+async function loadDashboard() {
+  const fromInput = document.getElementById("from-date");
+  const toInput   = document.getElementById("to-date");
 
-// ▼ 再読み込みイベント
-document.getElementById("btn-refresh").addEventListener("click", loadDashboard);
+  // ダッシュボード以外では実行しない
+  if (!fromInput || !toInput) return;
+
+  const data = await apiGet(
+    `/admin/dashboard?from=${fromInput.value}&to=${toInput.value}`
+  );
+
+  // メイン統計（存在チェック付き）
+  setText("d-total-users",      data.totalUsers);
+  setText("d-total-balance",    data.totalBalance);
+  setText("d-new-users",        data.newUsers);
+  setText("d-deposit-sum",      data.depositSum);
+  setText("d-withdraw-sum",     data.withdrawSum);
+
+  // PENDING counts
+  setText("d-deposit-pending",  data.pendingDeposits);
+  setText("d-withdraw-pending", data.pendingWithdraws);
+  setText("d-kyc-pending",      data.pendingKyc);
+  setText("d-ticket-pending",   data.openTickets);
+
+  setText("dashboard-message", "最新情報を取得しました。");
+}
+
+/* =========================
+   ユーティリティ
+========================= */
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+/* =========================
+   初期化（DOM 読み込み後）
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  initDates();
+  loadDashboard();
+
+  const refreshBtn = document.getElementById("btn-refresh");
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", loadDashboard);
+  }
+});
 </script>
 
 
+<script src="/admin/assets/js/admin-auth.js"></script>
+<script src="/admin/assets/js/header-admin.js"></script>
+
+<script src="/admin/assets/js/admin.js"></script>
 </body>
 </html>

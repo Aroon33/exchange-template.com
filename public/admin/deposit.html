@@ -5,193 +5,383 @@
   <title>CryptoX Admin - 入金申請管理</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- CSS -->
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/admin.css">
+
+  <style>
+/* =========================
+   Responsive (Deposit)
+========================= */
+@media (max-width: 768px) {
+
+  .thead-pc {
+    display: none;
+  }
+
+  .thead-sp {
+    display: table-header-group;
+  }
+
+  .pc-only {
+    display: none;
+  }
+
+  .table td.actions,
+  .table th.actions {
+    display: none;
+  }
+
+  .deposit-row td {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  /* ===== Modal ===== */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+
+  .modal-content {
+    background: #fff;
+    margin: 10% auto;
+    width: 92%;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .modal-footer {
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+  }
+
+  .modal-body {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+  }
+}
+
+/* PC only */
+@media (min-width: 769px) {
+  .thead-sp {
+    display: none;
+  }
+}
+.admin-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: #111;
+  color: #fff;
+  z-index: 1001;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+}
+
+.hamburger {
+  font-size: 22px;
+  background: none;
+  border: none;
+  color: #fff;
+}
+
+.sidebar {
+  width: 240px;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    display: flex;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -240px;
+    height: 100%;
+    transition: left 0.3s ease;
+    z-index: 1002;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .sidebar-overlay.show {
+    display: block;
+  }
+
+  .admin-main {
+    margin-top: 56px;
+  }
+}
+
+  </style>
 </head>
+
 <body>
-
-  <!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sidebar-title">メニュー</div>
-  <ul class="nav-list">
-    <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
-    <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
-    <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
-    <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
-    <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
-    <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
-    <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
-    <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
-    <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
-    <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
-    <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
-  </ul>
-</aside>
+ 
 
 
-  <!-- HEADER -->
-  <header class="admin-header">
-    <div class="admin-header-left">
-      <div class="admin-logo-badge">AX</div>
-      <div>
-        <div class="admin-logo-text">Admin Console</div>
-        <div class="admin-logo-sub">入金申請管理</div>
-      </div>
+<main class="admin-main">
+  <div class="admin-main-inner">
+
+    <div class="page-title">入金申請一覧</div>
+
+    <div style="margin:12px 0;">
+      <select id="status-filter" class="btn-sm">
+        <option value="ALL">すべて</option>
+        <option value="PENDING">申請中</option>
+        <option value="CONFIRMING">確認中</option>
+        <option value="COMPLETED">完了</option>
+        <option value="CANCELED">キャンセル</option>
+      </select>
+      <button class="btn-sm" id="reload-btn">再読み込み</button>
     </div>
-    <div class="admin-header-right">
-      <span id="admin-user-label">管理者</span>
-      <button class="btn btn-outline btn-sm" onclick="location.href='../login.html'">ログアウト</button>
+
+    <div class="card">
+      <table class="table" style="width:100%; font-size:13px;">
+
+        <!-- PC -->
+        <thead class="thead-pc">
+          <tr>
+            <th>ID</th>
+            <th>申請日時</th>
+            <th>名前</th>
+            <th>種別</th>
+            <th>通貨</th>
+            <th>申請金額</th>
+            <th>入金額</th>
+            <th>更新日時</th>
+            <th>ステータス</th>
+            <th class="actions">操作</th>
+          </tr>
+        </thead>
+
+        <!-- SP -->
+        <thead class="thead-sp">
+          <tr>
+            <th>入金</th>
+          </tr>
+        </thead>
+
+        <tbody id="deposit-table-body">
+          <tr>
+            <td colspan="100%" style="text-align:center;">読み込み中...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-  </header>
 
-  <!-- MAIN -->
-  <main class="admin-main">
-    <div class="admin-main-inner">
+  </div>
+</main>
 
-      <div class="page-title">入金申請一覧（PENDING）</div>
-
-      <!-- フィルター -->
-      <div style="margin:12px 0;">
-        <select id="status-filter" class="btn-sm">
-          <option value="ALL">すべて</option>
-          <option value="PENDING">申請中</option>
-          <option value="COMPLETED">完了</option>
-          <option value="CANCELED">キャンセル</option>
-        </select>
-        <button class="btn-sm" id="reload-btn">再読み込み</button>
-      </div>
-
-      <!-- TABLE -->
-      <div class="card" style="margin-top:16px;">
-        <table class="table" style="width:100%; font-size:13px;">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>申請日時</th>
-              <th>名前</th>
-              <th>method</th>
-              <th>currency</th>
-              <th>金額</th>
-              <th>更新日時</th>
-              <th>ステータス</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="deposit-table-body">
-            <tr><td colspan="9" style="text-align:center;color:#777;">読み込み中...</td></tr>
-          </tbody>
-        </table>
-      </div>
-
+<!-- =========================
+   Modal (Mobile)
+========================= -->
+<div id="deposit-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>入金詳細</span>
+      <button class="modal-close" onclick="closeDepositModal()">×</button>
     </div>
-  </main>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
 
-  <div class="toast" id="toast"></div>
+<div class="toast" id="toast"></div>
+<script>
+const API_BASE = "https://api.exchange-template.com";
 
-  <!-- SCRIPT -->
-  <script>
-    const API_BASE = "https://api.exchange-template.com";
+/* =========================
+   Utils
+========================= */
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
 
-    function showToast(msg) {
-      const t = document.getElementById("toast");
-      t.textContent = msg;
-      t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 2000);
-    }
+function formatDate(v) {
+  return v ? new Date(v).toLocaleString("ja-JP", { hour12:false }) : "-";
+}
 
-    function formatDate(iso) {
-      if (!iso) return "-";
-      return new Date(iso).toLocaleString("ja-JP", { hour12:false });
-    }
+function formatAmount(v, type="JPY") {
+  const n = Number(v);
+  if (isNaN(n)) return "-";
+  return type === "CRYPTO" ? n.toFixed(4) : Math.floor(n).toLocaleString("ja-JP");
+}
 
-    function formatAmount(a) {
-      const num = Number(a);
-      if (isNaN(num)) return a;
-      return num.toLocaleString("en-US", { minimumFractionDigits:2, maximumFractionDigits:8 });
-    }
+/* =========================
+   API
+========================= */
+async function apiGet(path) {
+  const r = await fetch(API_BASE + path, { credentials:"include" });
+  if (!r.ok) throw new Error();
+  return r.json();
+}
 
-    // GET wrapper
-    async function apiGet(path) {
-      const res = await fetch(API_BASE + path, {
-        credentials: "include",
-      });
-      const txt = await res.text();
-      if (!res.ok) throw new Error(txt);
-      return JSON.parse(txt);
-    }
+async function apiPost(path, body) {
+  const r = await fetch(API_BASE + path, {
+    method:"POST",
+    credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error();
+}
 
-    // POST wrapper
-    async function apiPost(path, body) {
-      const res = await fetch(API_BASE + path, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const txt = await res.text();
-      if (!res.ok) throw new Error(txt);
-      return JSON.parse(txt);
-    }
+/* =========================
+   Actions
+========================= */
+async function approveDeposit(id) {
+  await apiPost("/deposit/approve", { id });
+  showToast("承認しました");
+  loadDeposits();
+}
 
-    // 承認処理
-    async function approveDeposit(id) {
-      try {
-        await apiPost("/deposit/approve", { id });
-        showToast("承認しました");
-        loadDeposits();
-      } catch (e) {
-        console.error(e);
-        showToast("承認に失敗しました");
-      }
-    }
+async function sendDepositAddress(id) {
+  if (!confirm("入金アドレスを送信しますか？")) return;
+  await apiPost("/deposit/assign-crypto", { id });
+  showToast("入金アドレスを送信しました");
+  loadDeposits();
+}
 
-    // 描画
-    function renderTable(list) {
-      const tbody = document.getElementById("deposit-table-body");
-      tbody.innerHTML = "";
+function openChat(userId) {
+  location.href = `tickets.html?user=${userId}`;
+}
 
-      if (!list.length) {
-        tbody.innerHTML =
-          '<tr><td colspan="9" style="text-align:center;color:#777;">申請なし</td></tr>';
-        return;
-      }
+/* =========================
+   Modal
+========================= */
+function openDepositModal(t) {
+  document.getElementById("modal-body").innerHTML = `
+    <div>ID：${t.id}</div>
+    <div>ユーザー：${t.user?.name ?? "-"}</div>
+    <div>通貨：${t.currency}</div>
+    <div>金額：${t.cryptoAmount ?? t.amount}</div>
+    <div>状態：${t.status}</div>
+    <div>${formatDate(t.createdAt)}</div>
+  `;
 
-      list.forEach(t => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${t.id}</td>
-          <td>${formatDate(t.createdAt)}</td>
-          <td>${t.user?.name ?? "-"}</td>
-          <td>${t.method ?? "-"}</td>
-          <td>${t.currency ?? "-"}</td>
-          <td>${formatAmount(t.amount)}</td>
-          <td>${formatDate(t.updatedAt)}</td>
-          <td>${t.status}</td>
-          <td>
-            <button class="btn-xs btn-xs-primary" onclick="approveDeposit(${t.id})">
-              承認
-            </button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+  document.getElementById("modal-footer").innerHTML = `
+    ${t.status==="PENDING" && t.method==="CRYPTO"
+      ? `<button class="btn" onclick="sendDepositAddress(${t.id})">アドレス送信</button>` : ""}
+    ${t.status==="CONFIRMING"
+      ? `<button class="btn" onclick="approveDeposit(${t.id})">着金確認</button>` : ""}
+    <button class="btn" onclick="openChat(${t.user?.id})">チャット</button>
+  `;
 
-    // データ取得
-    async function loadDeposits() {
-      try {
-        const list = await apiGet("/deposit/pending");
-        renderTable(list);
-      } catch (e) {
-        console.error(e);
-        showToast("取得に失敗しました");
-      }
-    }
+  document.getElementById("deposit-modal").style.display="block";
+}
 
-    // 初期化
-    loadDeposits();
-  </script>
+function closeDepositModal() {
+  document.getElementById("deposit-modal").style.display="none";
+}
+
+/* =========================
+   Render
+========================= */
+function renderTable(list) {
+  const tbody = document.getElementById("deposit-table-body");
+  tbody.innerHTML = "";
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="100%" style="text-align:center;">申請なし</td></tr>`;
+    return;
+  }
+
+  list.forEach(t => {
+    const isCrypto = t.cryptoAmount && Number(t.cryptoAmount) > 0;
+    const currency = isCrypto ? t.currency : "JPY";
+    const amount = isCrypto
+      ? `${formatAmount(t.cryptoAmount,"CRYPTO")} ${currency}`
+      : `${formatAmount(t.amount)} JPY`;
+
+    tbody.insertAdjacentHTML("beforeend", `
+<tr class="deposit-row"
+    onclick="if(window.innerWidth<=900){openDepositModal(${JSON.stringify(t)})}"
+    style="cursor:pointer;">
+
+  <td>
+    <div>ID:${t.id}</div>
+    <div>${t.user?.name ?? "-"}</div>
+    <div>${currency}</div>
+    <div>${amount}</div>
+    <div>${t.status}</div>
+  </td>
+
+  <td class="pc-only">${formatDate(t.createdAt)}</td>
+  <td class="pc-only">${t.user?.name ?? "-"}</td>
+  <td class="pc-only">${t.method}</td>
+  <td class="pc-only">${currency}</td>
+  <td class="pc-only">${formatAmount(t.amount)} JPY</td>
+  <td class="pc-only">${amount}</td>
+  <td class="pc-only">${formatDate(t.updatedAt)}</td>
+  <td class="pc-only">${t.status}</td>
+
+  <td class="actions pc-only">
+    ${t.status==="PENDING" && t.method==="CRYPTO"
+      ? `<button onclick="event.stopPropagation();sendDepositAddress(${t.id})">送信</button>` : ""}
+    ${t.status==="CONFIRMING"
+      ? `<button onclick="event.stopPropagation();approveDeposit(${t.id})">確認</button>` : ""}
+    <button onclick="event.stopPropagation();openChat(${t.user?.id})">💬</button>
+  </td>
+</tr>
+`);
+  });
+}
+
+/* =========================
+   Load
+========================= */
+async function loadDeposits() {
+  const status = document.getElementById("status-filter").value;
+  let list = await apiGet("/deposit/all");
+  if (status === "PENDING") list = await apiGet("/deposit/pending");
+  else if (status !== "ALL") list = list.filter(t=>t.status===status);
+  renderTable(list);
+}
+
+document.getElementById("status-filter").addEventListener("change", loadDeposits);
+document.getElementById("reload-btn").addEventListener("click", loadDeposits);
+loadDeposi
+</script>
+
+<script src="/admin/assets/js/admin-auth.js"></script>
+<script src="/admin/assets/js/header-admin.js"></script>
+
+
 
 </body>
 </html>

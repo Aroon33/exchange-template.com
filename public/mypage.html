@@ -7,6 +7,76 @@
   <link rel="stylesheet" href="assets/css/style.css">
 
   <style>
+    /* ハンバーガーボタン（スマホのみ表示） */
+.hamburger {
+  display: none;
+  font-size: 26px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  /* PC ナビをスマホでは非表示 */
+  .site-nav {
+    display: none;
+  }
+}
+
+/* サイドメニュー */
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  left: -260px;
+  width: 240px;
+  height: 100%;
+  background: #fff;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+  padding: 20px;
+  transition: left 0.3s ease;
+  z-index: 9999;
+}
+
+.mobile-menu.open {
+  left: 0;
+}
+
+.mobile-menu a {
+  display: block;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  float: right;
+  cursor: pointer;
+}
+
+/* 背景の黒幕 */
+.menu-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 9998;
+}
+
+.menu-overlay.show {
+  display: block;
+}
+
     /* -----------------------------
           カード（統一UI）
     ------------------------------*/
@@ -110,36 +180,46 @@
 }
 .input-text:focus {
   outline: 2px solid var(--primary-light);
+
+}
+
+/* ============================
+   モバイルメニューのリンクを縦並びに強制
+============================ */
+.mobile-menu a {
+  display: block !important;     /* 絶対に縦表示 */
+  width: 100%;
+  background: #f8fafc;           /* 背景色 */
+  border: 1px solid #e5e7eb;     /* 薄い枠 */
+  padding: 12px 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #333;
+}
+
+/* ホバーエフェクト */
+.mobile-menu a:hover {
+  background: #eef2ff;
+  border-color: var(--primary);
+}
+
+/* market-tabs（スマホ用タブ）の CSS が
+   mobile-menu に干渉しないよう明示的に制限 */
+.mobile-menu .market-tab,
+.mobile-menu .market-tabs {
+  display: none !important;
 }
 
   </style>
+
+  
 </head>
 
 <body>
 
-<!-- HEADER -->
-<header class="site-header">
-  <div class="logo">
-    <div class="logo-badge">CX</div>
-    CryptoX Exchange
-  </div>
-
-  <nav class="site-nav">
-    <a href="index.html" class="nav-link">TOP</a>
-    <a href="exchange.html" class="nav-link">トレード</a>
-    <a href="wallet.html" class="nav-link">ウォレット</a>
-    <a href="system-trade.html" class="nav-link">システム取引</a>
-    <a href="support.html" class="nav-link">サポート</a>
-    <a href="mypage.html" class="nav-link active">マイページ</a>
-    <a href="kyc.html" class="nav-link">KYC</a>
-    <a href="history.html" class="nav-link">取引履歴</a>
-  </nav>
-
-  <div class="header-actions">
-    <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
-    <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
-  </div>
-</header>
+<!-- 共通ヘッダー差し込み口（これだけ） -->
+<div id="header"></div>
 
 <!-- MAIN -->
 <main>
@@ -282,218 +362,13 @@
 
 </main>
 
+<!-- 共通JS -->
+<script type="module" src="/assets/js/header-user.js"></script>
 
-<!-- =============================
-      API Script
-================================= -->
-<script>
-const API_BASE_URL = "https://api.exchange-template.com";
-
-const elMsg   = document.getElementById("mypage-message");
-
-const elEmail = document.getElementById("my-email");
-const elName  = document.getElementById("my-name");
-const elGroup = document.getElementById("my-group");
-const elSys   = document.getElementById("my-system-status");
-
-const elKycPill = document.getElementById("my-kyc-pill");
-
-const elBalTotal = document.getElementById("my-balance-total");
-const elBalAvail = document.getElementById("my-balance-available");
-const elBalLock  = document.getElementById("my-balance-locked");
-
-async function apiGet(path) {
-  const res = await fetch(API_BASE_URL + path, { credentials:"include" });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
-
-function fmtAmount(n){
-  if(!n) return "0";
-  return Number(n).toLocaleString("en-US", { minimumFractionDigits: 2 });
-}
-
-/* ----------------------------
-      Load Me
------------------------------ */
-async function loadMe() {
-  const data = await apiGet("/auth/me");
-  const u = data.user || data;
-
-  elEmail.textContent = u.email ?? "-";
-  elName.textContent  = u.name  ?? "-";
-  elGroup.textContent = u.groupId ?? "-";
- }
-
-/* ----------------------------
-      KYC
------------------------------ */
-async function loadKyc() {
-  try {
-    const k = await apiGet("/kyc/status");
-    const lv = Number(k.level ?? 0);
-
-    elKycPill.textContent = `レベル ${lv}`;
-    elKycPill.className = `kyc-pill kyc-${lv}`;
-  } catch {
-    elKycPill.textContent = "取得エラー";
-  }
-}
-
-/* ----------------------------
-      Wallet
------------------------------ */
-async function loadWallet() {
-  const d = await apiGet("/wallet");
-  const w = d.wallet || {};
-
-  elBalTotal.textContent = fmtAmount(w.balanceTotal ?? 0);
-  elBalAvail.textContent = fmtAmount(w.balanceAvailable ?? 0);
-  elBalLock.textContent  = fmtAmount(w.balanceLocked ?? 0);
-}
-async function loadBankInfo() {
-  try {
-    const res = await fetch(API_BASE_URL + "/user/bank-account", {
-      credentials: "include",
-    });
-    if (!res.ok) return; // 未設定なら無視
-
-    const bank = await res.json();
-
-    document.getElementById("bank-name").value   = bank.bankName || "";
-    document.getElementById("bank-branch").value = bank.branchName || "";
-    document.getElementById("bank-type").value   = bank.accountType || "普通";
-    document.getElementById("bank-number").value = bank.accountNumber || "";
-    document.getElementById("bank-holder").value = bank.accountHolder || "";
-
-  } catch (e) {
-    console.warn("銀行口座情報の取得に失敗:", e);
-  }
-}
-
-/* ----------------------------
-      Init
------------------------------ */
-(async function init(){
-  try {
-    await loadMe();
-    await loadKyc();
-    await loadWallet();
-    await loadBankInfo();
-
-    elMsg.textContent = "最新情報を取得しました。";
-    elMsg.style.color = "green";
-  } catch (e) {
-    console.error(e);
-    elMsg.textContent = "情報取得に失敗しました。ログイン状態を確認してください。";
-    elMsg.style.color = "red";
-  }
-})();
-
-const API_BASE = "https://api.exchange-template.com";
-
-async function updateHeaderUserState() {
-  const loginBtn = document.querySelector(".header-actions a[href='login.html']");
-  const signupBtn = document.querySelector(".header-actions a[href='signup.html']");
-
-  if (!loginBtn || !signupBtn) return;
-
-  try {
-    const res = await fetch(API_BASE + "/auth/me", { credentials: "include" });
-    if (!res.ok) return; // 未ログインなら何もしない
-
-    const data = await res.json();
-    const user = data.user || data;
-
-    // 既存ボタンをクリア
-    const headerActions = document.querySelector(".header-actions");
-    headerActions.innerHTML = "";
-
-    // マイページボタン
-    const mp = document.createElement("a");
-    mp.href = "mypage.html";
-    mp.className = "btn btn-outline btn-sm";
-    mp.textContent = user.name + " さん";
-    headerActions.appendChild(mp);
-
-    // ログアウトボタン
-    const lo = document.createElement("a");
-    lo.href = "#";
-    lo.className = "btn btn-primary btn-sm";
-    lo.textContent = "ログアウト";
-    lo.addEventListener("click", async () => {
-      await fetch(API_BASE + "/auth/logout", {
-        method: "POST",
-        credentials: "include"
-      });
-      location.href = "login.html";
-    });
-    headerActions.appendChild(lo);
-
-  } catch (e) {
-    console.warn("Not logged in");
-  }
-}
-document.getElementById("save-bank").onclick = async () => {
-  const body = {
-    bankName: document.getElementById("bank-name").value,
-    branchName: document.getElementById("bank-branch").value,
-    accountType: document.getElementById("bank-type").value,
-    accountNumber: document.getElementById("bank-number").value,
-    accountHolder: document.getElementById("bank-holder").value,
-  };
-
-  try {
-    const res = await fetch(API_BASE_URL + "/user/bank-account", {
-  method: "POST",
-  credentials: "include",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(body),
-});
+<!-- マイページ専用JS -->
+<script type="module" src="/assets/js/mypage.js"></script>
 
 
-    if (!res.ok) throw new Error(await res.text());
-
-    document.getElementById("bank-msg").textContent = "銀行情報を保存しました";
-    document.getElementById("bank-msg").style.color = "green";
-
-  } catch (err) {
-    document.getElementById("bank-msg").textContent = "保存に失敗しました";
-    document.getElementById("bank-msg").style.color = "red";
-  }
-};
-document.getElementById("save-crypto").onclick = async () => {
-  const addresses = [
-    { currency: "BTC",  address: document.getElementById("crypto-btc").value },
-    { currency: "ETH",  address: document.getElementById("crypto-eth").value },
-    { currency: "USDT", address: document.getElementById("crypto-usdt").value },
-  ];
-
-  try {
-    const res = await fetch(API_BASE_URL + "/user/crypto-address", {   // ★ 修正
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ addresses }),   // 送信形式はそのままでOK
-    });
-
-    if (!res.ok) throw new Error(await res.text());
-
-    const msg = document.getElementById("crypto-msg");
-    msg.textContent = "アドレスを保存しました";
-    msg.style.color = "green";
-
-  } catch (err) {
-    const msg = document.getElementById("crypto-msg");
-    msg.textContent = "保存に失敗しました";
-    msg.style.color = "red";
-  }
-};
-
-
-// ページ読込後に実行
-document.addEventListener("DOMContentLoaded", updateHeaderUserState);
-</script>
 
 </body>
 </html>

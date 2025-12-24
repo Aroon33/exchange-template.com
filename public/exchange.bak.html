@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - トレード画面</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- TradingView -->
+  <script src="https://s3.tradingview.com/tv.js"></script>
+
+  <!-- 共通CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+/* ===========================================
+      PC / 基本レイアウト
+=========================================== */
+.exchange-grid {
+  display: grid;
+  grid-template-columns: 260px 1fr 320px;
+  gap: 14px;
+  padding: 16px;
+}
+
+@media (max-width: 900px) {
+  .exchange-grid {
+    grid-template-columns: 1fr;
+    padding: 8px;
+    gap: 12px;
+  }
+}
+
+/* ===========================================
+      マーケット（PC）
+=========================================== */
+#market-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.market-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.market-item.active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+.market-item:hover {
+  background: #f5f7fa;
+}
+
+/* ===========================================
+      スマホ用マーケットタブ
+=========================================== */
+.market-tabs {
+  display: none;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: 10px 5px;
+  gap: 6px;
+}
+
+.market-tab {
+  display: inline-block;
+  padding: 8px 14px;
+  background: #f3f4f6;
+  border-radius: 20px;
+  margin-right: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.market-tab.active {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: bold;
+}
+
+@media (max-width:900px){
+  .market-tabs {
+    display: flex;
+  }
+  #market-list {
+    display: none !important;
+  }
+}
+
+/* ===========================================
+      チャート
+=========================================== */
+#tv_chart {
+  width: 100%;
+  height: 420px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+@media(max-width:768px){
+  #tv_chart {
+    height: 340px;
+  }
+}
+
+/* ===========================================
+      注文板 / 約定
+=========================================== */
+.orderbook-list,
+.recent-trades {
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.orderbook-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 2px;
+  font-size: 13px;
+}
+.orderbook-row.sell { color: #dc2626; }
+.orderbook-row.buy  { color: #059669; }
+
+.trade-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 2px;
+  font-size: 13px;
+}
+
+/* ===========================================
+      折りたたみ（スマホ）
+=========================================== */
+.collapse-toggle {
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+.collapse-content { display: none; }
+
+@media(min-width:901px){
+  .collapse-toggle { display:none; }
+  .collapse-content { display:block !important; }
+}
+
+/* ===========================================
+      注文パネル
+=========================================== */
+.order-panel select,
+.order-panel input {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+}
+
+.order-btn-buy,
+.order-btn-sell {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 16px;
+}
+
+.order-btn-buy { background: var(--success); }
+.order-btn-sell { background: var(--danger); }
+
+/* ===========================================
+      スマホUI最適化
+=========================================== */
+@media(max-width:768px){
+  .order-panel input,
+  .order-panel select {
+    font-size: 16px;
+    padding: 12px;
+  }
+  .order-btn-buy,
+  .order-btn-sell {
+    padding: 14px;
+    font-size: 18px;
+  }
+}
+
+/* ===========================================
+      ハンバーガーメニュー
+=========================================== */
+.hamburger {
+  display: none;
+  font-size: 30px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
+}
+@media(max-width:768px){
+  .hamburger { display:block; }
+  .site-nav { display:none; }
+}
+
+/* モバイルメニュー */
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  left: -260px;
+  width: 240px;
+  height: 100%;
+  background: #fff;
+  padding: 20px;
+  z-index: 9999;
+  transition: 0.3s;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+}
+.mobile-menu.open { left: 0; }
+
+.menu-overlay {
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.4);
+  z-index:9998;
+}
+/* ============================
+   モバイルメニューのリンクを縦並びに強制
+============================ */
+.mobile-menu a {
+  display: block !important;     /* 絶対に縦表示 */
+  width: 100%;
+  background: #f8fafc;           /* 背景色 */
+  border: 1px solid #e5e7eb;     /* 薄い枠 */
+  padding: 12px 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #333;
+}
+
+/* ホバーエフェクト */
+.mobile-menu a:hover {
+  background: #eef2ff;
+  border-color: var(--primary);
+}
+
+/* market-tabs（スマホ用タブ）の CSS が
+   mobile-menu に干渉しないよう明示的に制限 */
+.mobile-menu .market-tab,
+.mobile-menu .market-tabs {
+  display: none !important;
+}
+
+.menu-overlay.show { display:block; }
+
+  </style>
+</head>
+
+<body>
+
+<!-- =====================
+      HEADER
+===================== -->
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-badge">CX</div> CryptoX Exchange
+  </div>
+
+  <button id="menu-toggle" class="hamburger">☰</button>
+
+
+  <nav class="site-nav">
+    <a href="index.html" class="nav-link">TOP</a>
+    <a href="exchange.html" class="nav-link">トレード</a>
+    <a href="wallet.html" class="nav-link">ウォレット</a>
+    <a href="system-trade.html" class="nav-link active">システム取引</a>
+    <a href="support.html" class="nav-link">サポート</a>
+    <a href="mypage.html" class="nav-link">マイページ</a>
+    <a href="kyc.html" class="nav-link">KYC</a>
+    <a href="history.html" class="nav-link">取引履歴</a>
+  </nav>
+
+
+  <div class="header-actions">
+    <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+    <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+  </div>
+
+</header>
+
+<!-- モバイルメニュー -->
+<div id="mobile-menu" class="mobile-menu">
+  <button id="menu-close" class="close-btn">×</button>
+
+
+  <a href="index.html">TOP</a>
+  <a href="exchange.html">トレード</a>
+  <a href="wallet.html">ウォレット</a>
+  <a href="system-trade.html">システム取引</a>
+  <a href="support.html">サポート</a>
+  <a href="mypage.html">マイページ</a>
+  <a href="kyc.html">KYC</a>
+  <a href="history.html">取引履歴</a>
+  <a href="logout.html">ログアウト</a>
+</div>
+<div id="menu-overlay" class="menu-overlay"></div>
+
+
+
+<!-- ===========================
+      MAIN
+=========================== -->
+<main class="exchange-grid">
+
+  <!-- ========== スマホ用マーケットタブ ========== -->
+  <div id="market-tabs" class="market-tabs"></div>
+
+  <!-- ========== PC用マーケットリスト ========== -->
+  <section class="card">
+    <div class="card-header"><div class="card-title">マーケット</div></div>
+    <div id="market-list"></div>
+  </section>
+
+  <!-- ========== チャート ========== -->
+  <section class="chart-area">
+    <div class="chart-header">
+      <div>
+        <div id="chartSymbolMain" class="chart-main-symbol">BTC / USD</div>
+        <div id="chartSymbolSub" class="chart-sub-symbol">Bitcoin · 現物</div>
+      </div>
+    </div>
+    <div id="tv_chart"></div>
+  </section>
+
+  <!-- ========== 注文 & 板 / 約定 ========== -->
+  <section class="order-side">
+
+    <div class="collapse-toggle" onclick="toggleCollapse('orderbookWrap')">📉 注文板（タップで開閉）</div>
+    <div id="orderbookWrap" class="collapse-content">
+      <div class="card">
+        <div class="card-header"><div class="card-title">注文板</div></div>
+        <div class="orderbook-list" id="orderbook"></div>
+      </div>
+    </div>
+
+    <div class="card order-panel">
+      <div class="card-header"><div class="card-title">注文</div></div>
+
+      <select id="order-type">
+        <option value="market">成行注文</option>
+        <option value="limit">指値注文</option>
+      </select>
+
+      <input type="number" id="order-price" placeholder="価格 (指値時)" disabled>
+      <input type="number" id="order-amount" placeholder="数量">
+
+      <button class="order-btn-buy">買い</button>
+      <button class="order-btn-sell">売り</button>
+
+      <div class="order-note">※ デモ版のため実際には注文されません。</div>
+    </div>
+
+    <div class="collapse-toggle" onclick="toggleCollapse('recentWrap')">📈 最新の約定（タップで開閉）</div>
+    <div id="recentWrap" class="collapse-content">
+      <div class="card">
+        <div class="card-header"><div class="card-title">最新の約定</div></div>
+        <div class="recent-trades" id="recent-trades"></div>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<script>
+/* ===============================
+      MARKET DATA
+================================ */
+const API_BASE = "https://api.exchange-template.com";
+
+const markets = [
+  { symbol:"BTC/USD", tv:"BINANCE:BTCUSDT", name:"Bitcoin", price:67420 },
+  { symbol:"ETH/USD", tv:"BINANCE:ETHUSDT", name:"Ethereum", price:3120 },
+  { symbol:"SOL/USD", tv:"BINANCE:SOLUSDT", name:"Solana", price:178 },
+  { symbol:"DOGE/USD", tv:"BINANCE:DOGEUSDT", name:"Dogecoin", price:0.18 },
+  { symbol:"XRP/USD", tv:"BINANCE:XRPUSDT", name:"XRP", price:0.55 },
+  { symbol:"ADA/USD", tv:"BINANCE:ADAUSDT", name:"Cardano", price:0.42 }
+];
+
+let currentMarket = markets[0];
+
+/* ===============================
+      Market Tabs (スマホ)
+================================ */
+function renderMarketTabs(){
+  const wrap = document.getElementById("market-tabs");
+  wrap.innerHTML = "";
+
+  markets.forEach(m => {
+    const tab = document.createElement("div");
+    tab.className = "market-tab" + (m.symbol === currentMarket.symbol ? " active":"");
+    tab.textContent = m.symbol.replace("/USD","");
+
+    tab.addEventListener("click",()=>{
+      currentMarket = m;
+
+      // 見た目更新
+      document.querySelectorAll(".market-tab").forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+
+      updateMarketInfo();
+      renderMarketList();
+      initTradingView(m.tv);
+      generateOrderbook();
+      generateTrades();
+    });
+
+    wrap.appendChild(tab);
+  });
+}
+
+/* ===============================
+      Market List (PC)
+================================ */
+function renderMarketList(){
+  const list = document.getElementById("market-list");
+  list.innerHTML = "";
+
+  markets.forEach(m => {
+    const item = document.createElement("div");
+    item.className = "market-item" + (m.symbol === currentMarket.symbol ? " active" : "");
+    item.innerHTML = `
+      <div>
+        <div>${m.symbol}</div>
+        <div>${m.name}</div>
+      </div>
+      <div>${m.price}</div>
+    `;
+    item.addEventListener("click",()=>{
+      currentMarket = m;
+      updateMarketInfo();
+      renderMarketList();
+      renderMarketTabs();
+      initTradingView(m.tv);
+      generateOrderbook();
+      generateTrades();
+    });
+    list.appendChild(item);
+  });
+}
+
+/* ===============================
+      Chart & Info Update
+================================ */
+function updateMarketInfo(){
+  document.getElementById("chartSymbolMain").textContent =
+    currentMarket.symbol.replace("/", " / ");
+  document.getElementById("chartSymbolSub").textContent =
+    `${currentMarket.name} · 現物`;
+}
+
+function initTradingView(symbol){
+  document.getElementById("tv_chart").innerHTML = "";
+  new TradingView.widget({
+    container_id:"tv_chart",
+    symbol: symbol,
+    interval:"15",
+    timezone:"Asia/Tokyo",
+    theme:"light",
+    style:"1",
+    locale:"ja",
+    autosize:true
+  });
+}
+
+/* ===============================
+      Orderbook / Trades
+================================ */
+function generateOrderbook(){
+  const el = document.getElementById("orderbook");
+  el.innerHTML = "";
+  for(let i=0;i<12;i++){
+    const price = (currentMarket.price + (Math.random()-0.5)*40).toFixed(2);
+    const amount = (Math.random()*2).toFixed(3);
+    const row = document.createElement("div");
+    row.className = "orderbook-row " + (i<6 ? "sell":"buy");
+    row.innerHTML = `<span>${price}</span><span>${amount}</span>`;
+    el.appendChild(row);
+  }
+}
+
+function generateTrades(){
+  const el = document.getElementById("recent-trades");
+  el.innerHTML = "";
+  for(let i=0;i<14;i++){
+    const price = (currentMarket.price + (Math.random()-0.5)*40).toFixed(2);
+    const amount = (Math.random()*2).toFixed(3);
+    const buy = Math.random() > 0.5;
+    const row = document.createElement("div");
+    row.className = "trade-row";
+    row.style.color = buy ? "var(--success)" : "var(--danger)";
+    row.innerHTML = `<span>${price}</span><span>${amount}</span>`;
+    el.appendChild(row);
+  }
+}
+
+/* ===============================
+      UI : 折りたたみ（スマホ）
+================================ */
+function toggleCollapse(id){
+  const box = document.getElementById(id);
+  box.style.display = box.style.display === "block" ? "none" : "block";
+}
+
+/* ===============================
+      INIT
+================================ */
+document.addEventListener("DOMContentLoaded",()=>{
+  renderMarketList();
+  renderMarketTabs();
+  updateMarketInfo();
+  initTradingView(currentMarket.tv);
+  generateOrderbook();
+  generateTrades();
+});
+
+/* ===============================
+      注文タイプ切替
+================================ */
+document.getElementById("order-type").addEventListener("change",e=>{
+  document.getElementById("order-price").disabled = e.target.value === "market";
+});
+
+/* ===============================
+      ハンバーガー
+================================ */
+const toggle = document.getElementById("menu-toggle");
+const menu   = document.getElementById("mobile-menu");
+const overlay= document.getElementById("menu-overlay");
+const closeB = document.getElementById("menu-close");
+
+toggle.onclick = ()=>{ menu.classList.add("open"); overlay.classList.add("show"); };
+closeB.onclick = ()=>{ menu.classList.remove("open"); overlay.classList.remove("show"); };
+overlay.onclick= ()=>{ menu.classList.remove("open"); overlay.classList.remove("show"); };
+
+
+/* =========================
+   システム取引専用アラート
+========================= */
+function showSystemTradeAlert() {
+  alert(
+    "この画面はシステム取引専用口座です。\n" +
+    "手動での売買はできません。"
+  );
+}
+
+/* =========================
+   注文ボタンの挙動上書き
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  const buyBtn  = document.querySelector(".order-btn-buy");
+  const sellBtn = document.querySelector(".order-btn-sell");
+
+  if (buyBtn) {
+    buyBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      showSystemTradeAlert();
+    });
+  }
+
+  if (sellBtn) {
+    sellBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      showSystemTradeAlert();
+    });
+  }
+});
+
+
+
+/* =========================
+   ヘッダー：ログイン状態反映
+========================= */
+async function updateHeaderUserState() {
+  const headerActions = document.querySelector(".header-actions");
+  if (!headerActions) return;
+
+  try {
+    const res = await fetch(API_BASE + "/auth/me", {
+      credentials: "include",
+    });
+    if (!res.ok) return; // 未ログイン
+
+    const data = await res.json();
+    const user = data.user || data;
+
+    // ヘッダー右側を差し替え
+    headerActions.innerHTML = "";
+
+    const userBtn = document.createElement("a");
+    userBtn.href = "users.html";
+    userBtn.className = "btn btn-outline btn-sm";
+    userBtn.textContent = user.name + " さん";
+    headerActions.appendChild(userBtn);
+
+    const logoutBtn = document.createElement("a");
+    logoutBtn.href = "#";
+    logoutBtn.className = "btn btn-primary btn-sm";
+    logoutBtn.textContent = "ログアウト";
+    logoutBtn.onclick = async () => {
+      await fetch(API_BASE + "/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      location.href = "../login.html";
+    };
+    headerActions.appendChild(logoutBtn);
+
+  } catch (e) {
+    console.warn("ログイン状態取得失敗", e);
+  }
+}
+
+/* 初期化 */
+document.addEventListener("DOMContentLoaded", updateHeaderUserState);
+</script>
+
+</body>
+</html>

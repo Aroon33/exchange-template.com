@@ -1,0 +1,12 @@
+Selector: .site-nav
+Occurrences: 2
+Duplicated Properties: display (2 times)
+----------------------------------------
+Selector: @media(max-width:900px)
+Occurrences: 4
+Duplicated Properties: none
+----------------------------------------
+Selector: .menu-toggle
+Occurrences: 2
+Duplicated Properties: display (2 times)
+----------------------------------------

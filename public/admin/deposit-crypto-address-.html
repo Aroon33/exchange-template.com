@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - クリプト入金アドレス登録 / 編集</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+
+  <style>
+    /* ===== レイアウト（銀行口座と同一） ===== */
+    .form-card {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-row.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-row label {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 4px;
+    }
+
+    .form-row input,
+    .form-row select {
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    /* ===== スマホ対応 ===== */
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ★ header / sidebar は JS が生成 -->
+
+<main class="admin-main">
+  <div class="admin-main-inner">
+
+    <div class="page-title" id="page-title">
+      クリプト入金アドレス登録
+    </div>
+
+    <div class="card form-card">
+
+      <div class="form-grid">
+
+        <div class="form-row">
+          <label>通貨</label>
+          <select id="currency">
+            <option value="BTC">BTC</option>
+            <option value="ETH">ETH</option>
+          </select>
+        </div>
+
+        <div class="form-row full">
+          <label>アドレス</label>
+          <input
+            type="text"
+            id="address"
+            placeholder="ウォレットアドレス"
+          />
+        </div>
+
+        <div class="form-row full">
+          <label>MEMO / TAG（任意）</label>
+          <input
+            type="text"
+            id="memo"
+            placeholder="必要な場合のみ入力"
+          />
+        </div>
+
+        <div class="form-row">
+          <label>ユーザーID（任意）</label>
+          <input
+            type="number"
+            id="userId"
+            placeholder="未指定なら空欄"
+          />
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="save-btn">
+          保存
+        </button>
+        <button class="btn btn-outline"
+                onclick="location.href='deposit-bank-accounts.html'">
+          キャンセル
+        </button>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = "https://api.exchange-template.com";
+
+/* ===== Utils ===== */
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+function getId() {
+  const p = new URLSearchParams(location.search);
+  return p.get("id");
+}
+
+/* ===== Load（編集時） ===== */
+async function load() {
+  const id = getId();
+  if (!id) return;
+
+  document.getElementById("page-title").textContent =
+    "クリプト入金アドレス編集";
+
+  const res = await fetch(
+    `${API_BASE}/admin/deposit/crypto-addresses/${id}`,
+    { credentials:"include" }
+  );
+
+  if (!res.ok) {
+    toast("データ取得に失敗しました");
+    return;
+  }
+
+  const d = await res.json();
+
+  currency.value = d.currency;
+  address.value  = d.address;
+  memo.value     = d.memoTag ?? "";
+  userId.value   = d.userId ?? "";
+}
+
+/* ===== Save ===== */
+document.getElementById("save-btn").addEventListener("click", async () => {
+  if (!address.value.trim()) {
+    toast("アドレスは必須です");
+    return;
+  }
+
+  const id = getId();
+
+  const body = {
+    currency: currency.value,
+    address: address.value.trim(),
+    memoTag: memo.value.trim() || null,
+    userId: userId.value ? Number(userId.value) : null,
+  };
+
+  const url = id
+    ? `/admin/deposit/crypto-addresses/${id}`
+    : `/admin/deposit/crypto-addresses`;
+
+  const res = await fetch(API_BASE + url, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    toast("保存に失敗しました");
+    return;
+  }
+
+  toast("保存しました");
+  setTimeout(() => {
+    location.href = "deposit-bank-accounts.html";
+  }, 800);
+});
+
+load();
+</script>
+
+<!-- ★ 共通JS -->
+<script src="/admin/assets/js/admin-auth.js"></script>
+<script src="/admin/assets/js/header-admin.js"></script>
+
+</body>
+</html>

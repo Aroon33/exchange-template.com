@@ -1,20 +1,48 @@
 <header class="site-header">
-  <div class="logo">
-    <div class="logo-badge">CX</div>
-    CryptoX Exchange
+
+  <div class="site-header-inner">
+
+    <div class="logo" data-link="/">
+      <div class="logo-badge">CX</div>
+      CryptoX Exchange
+    </div>
+
+    <!-- ハンバーガー -->
+    <button class="hamburger" id="menu-toggle">☰</button>
+
+    <nav class="site-nav">
+      <a href="/index.html">TOP</a>
+      <a href="/exchange.html">トレード</a>
+      <a href="/wallet.html">ウォレット</a>
+      <a href="/system-trade.html">システム取引</a>
+      <a href="/support.html">サポート</a>
+      <a href="/mypage.html">マイページ</a>
+      <a href="/kyc.html">KYC</a>
+      <a href="/history.html">取引履歴</a>
+      <a href="/campaign.html">キャンペーン</a>
+    </nav>
+
+    <div class="header-actions" id="header-actions">
+      <a href="/login.html" class="btn btn-outline btn-sm">ログイン</a>
+      <a href="/signup.html" class="btn btn-primary btn-sm">無料口座開設</a>
+    </div>
+
   </div>
 
-  <nav class="site-nav">
-    <a href="index.html" class="nav-link" data-nav="top">TOP</a>
-    <a href="exchange.html" class="nav-link" data-nav="trade">トレード</a>
-    <a href="wallet.html" class="nav-link" data-nav="wallet">ウォレット</a>
-    <a href="system-trade.html" class="nav-link" data-nav="system">システム取引</a>
-    <a href="support.html" class="nav-link" data-nav="support">サポート</a>
-    <a href="mypage.html" class="nav-link" data-nav="mypage">マイページ</a>
-  </nav>
-
-  <div>
-    <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
-    <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
-  </div>
 </header>
+
+<!-- モバイルメニュー -->
+<div class="mobile-menu" id="mobile-menu">
+  <button id="menu-close" class="close-btn">×</button>
+  <a href="/index.html">TOP</a>
+  <a href="/exchange.html">トレード</a>
+  <a href="/wallet.html">ウォレット</a>
+  <a href="/system-trade.html">システム取引</a>
+  <a href="/support.html">サポート</a>
+  <a href="/mypage.html">マイページ</a>
+  <a href="/kyc.html">KYC</a>
+  <a href="/history.html">取引履歴</a>
+  <a href="/campaign.html">キャンペーン</a>
+</div>
+
+<div class="menu-overlay" id="menu-overlay"></div>

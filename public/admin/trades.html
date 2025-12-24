@@ -7,45 +7,9 @@
 
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="../assets/css/admin.css">
-
-  <style>
-    /* ===== モーダル ===== */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 999;
-    }
-    .modal {
-      background: #fff;
-      border-radius: 8px;
-      padding: 20px;
-      width: 420px;
-    }
-    .modal-header {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 12px;
-    }
-    .modal-row { margin-bottom: 10px; }
-    .modal-row label { font-size: 13px; display:block; margin-bottom:4px; }
-    .modal-row input {
-      width: 100%;
-      padding: 7px 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    .modal-actions { text-align: right; margin-top: 12px; }
-  </style>
 </head>
 
 <body>
-
-<!-- 省略：サイドバー（あなたの既存HTMLと同じでOK） -->
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -62,350 +26,178 @@
     <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
     <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
     <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
+    <li class="nav-item"><a href="deposit-bank-accounts.html" class="nav-link active">📜 銀行管理</a></li>
+    <li class="nav-item"><a href="deposit-bank-accounts-edit.html" class="nav-link active">📜 口座登録</a></li>
+    <li class="nav-item"><a href="deposit-crypto-address-form.html" class="nav-link active">📜 アドレス登録</a></li>
   </ul>
 </aside>
 
-  <!-- ヘッダー -->
-  <header class="admin-header">
-    <div class="admin-header-left">
-      <div class="admin-logo-badge">AX</div>
-      <div>
-        <div class="admin-logo-text">Admin Console</div>
-        <div class="admin-logo-sub">ユーザー一覧</div>
-      </div>
+<header class="admin-header">
+  <div class="admin-header-left">
+    <div class="admin-logo-badge">AX</div>
+    <div>
+      <div class="admin-logo-text">Admin Console</div>
+      <div class="admin-logo-sub">ダッシュボード</div>
     </div>
-    <div class="admin-header-right">
-      <button class="btn btn-outline btn-sm" onclick="location.href='../login.html'">ログアウト</button>
-    </div>
-  </header>
+  </div>
+  <div class="admin-header-right">
 
+<!-- ▼ 追加：サイドバートグル -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button> 
+   <button class="btn btn-outline btn-sm" onclick="doLogout()">ログアウト</button>
+  </div>
+</header>
+
+<!-- overlay -->
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
 <main class="admin-main">
-<div class="admin-main-inner">
+  <div class="admin-main-inner">
 
-  <div class="page-title">取引管理</div>
+<div class="page-title">取引管理</div>
 
-  <!-- ▼ フィルター -->
-  <section class="filters-card">
-    <div class="filters-grid">
+<!-- ===== フィルター ===== -->
+<section class="filters-card">
+  <div class="filters-grid">
 
-      <div class="field">
-        <label>グループID</label>
-        <select id="f-group">
-          <option value="">全て</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>ユーザーID</label>
-        <input type="number" id="f-userId" />
-      </div>
-
-      <div class="field">
-        <label>銘柄</label>
-        <select id="f-symbol">
-          <option value="">全て</option>
-          <option value="BTCUSDT">BTCUSDT</option>
-          <option value="ETHUSDT">ETHUSDT</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>売買</label>
-        <select id="f-side">
-          <option value="">全て</option>
-          <option value="BUY">BUY</option>
-          <option value="SELL">SELL</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>決済日 FROM</label>
-        <input type="date" id="f-from"/>
-      </div>
-
-      <div class="field">
-        <label>決済日 TO</label>
-        <input type="date" id="f-to"/>
-      </div>
-
+    <div class="field">
+      <label>状態</label>
+      <select id="f-status">
+        <option value="">全て</option>
+        <option value="OPEN">保有中</option>
+        <option value="CLOSED">決済済み</option>
+      </select>
     </div>
 
-    <div class="filter-actions">
-      <button class="btn-xs" id="btn-clear">クリア</button>
-      <button class="btn-xs btn-primary" id="btn-search">検索</button>
+    <div class="field">
+      <label>ユーザー名</label>
+      <input id="f-userName" />
     </div>
-  </section>
 
-  <!-- ▼ ボタン（CSV / 一括削除） -->
-  <div style="margin:10px 0; display:flex; gap:10px;">
-    <button class="btn-xs" id="btn-refresh">再読み込み</button>
-    <button class="btn-xs btn-danger" id="btn-delete-selected">選択削除</button>
-    <button class="btn-xs btn-primary" id="btn-export">CSVエクスポート</button>
+    <div class="field">
+      <label>グループ名</label>
+      <input id="f-groupName" />
+    </div>
+
+    <div class="field">
+      <label>銘柄</label>
+      <select id="f-symbol">
+        <option value="">全て</option>
+        <option value="BTCUSDT">BTC</option>
+        <option value="ETHUSDT">ETH</option>
+      </select>
+    </div>
+
   </div>
 
-  <!-- ▼ テーブル -->
-  <section class="table-card">
-    <div class="card-header-row">
-      <div>
-        <div class="card-title-small">取引一覧</div>
-        <div class="card-sub-small" id="trade-count">0件</div>
-      </div>
-    </div>
+  <div class="filter-actions">
+    <button class="btn-xs" id="btn-clear">クリア</button>
+    <button class="btn-xs btn-primary" id="btn-search">検索</button>
+  </div>
+</section>
 
-    <table class="table">
-      <thead>
-        <tr>
-          <th><input type="checkbox" id="check-all"></th>
-          <th>ID</th>
-          <th>ユーザー</th>
-          <th>銘柄</th>
-          <th>売買</th>
-          <th>数量</th>
-          <th>建値</th>
-          <th>決済値</th>
-          <th>損益</th>
-          <th>決済日</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody id="trade-body"></tbody>
-    </table>
-  </section>
+<!-- ===== テーブル ===== -->
+<section class="table-card">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>ユーザー</th>
+        <th>グループ</th>
+        <th>銘柄</th>
+        <th>売買</th>
+        <th>数量</th>
+        <th>建値</th>
+        <th>決済値</th>
+        <th>損益</th>
+        <th>エントリー</th>
+        <th>決済</th>
+      </tr>
+    </thead>
+    <tbody id="trade-body"></tbody>
+  </table>
+</section>
 
 </div>
 </main>
 
-<!-- ===== 編集モーダル ===== -->
-<div class="modal-overlay" id="trade-modal">
-  <div class="modal">
-    <div class="modal-header">取引編集</div>
-
-    <div class="modal-row">
-      <label>数量</label>
-      <input id="m-size" />
-    </div>
-
-    <div class="modal-row">
-      <label>建値</label>
-      <input id="m-entry"/>
-    </div>
-
-    <div class="modal-row">
-      <label>決済値</label>
-      <input id="m-close"/>
-    </div>
-
-    <div class="modal-row">
-      <label>損益</label>
-      <input id="m-profit"/>
-    </div>
-
-    <div class="modal-row">
-      <label>決済日時</label>
-      <input id="m-closedAt" type="datetime-local"/>
-    </div>
-
-    <div class="modal-actions">
-      <button id="modal-cancel">閉じる</button>
-      <button class="btn-primary" id="modal-save">保存</button>
-    </div>
-  </div>
-</div>
-
 <script>
 const API = "https://api.exchange-template.com";
 
-let cacheTrades = [];
-let editingId = null;
-
-/* ------------------------------
-  API 共通関数
------------------------------- */
-async function apiGet(path) {
-  const r = await fetch(API + path, { credentials:"include" });
-  const t = await r.text();
-  if (!r.ok) throw new Error(t);
-  return JSON.parse(t);
+/* ===== 表示用ユーティリティ ===== */
+function fmt4(v){
+  if(v === null || v === undefined) return "-";
+  const n = Number(v);
+  if(isNaN(n)) return "-";
+  return n.toFixed(4);
 }
-async function apiPost(path, body) {
-  const r = await fetch(API + path, {
-    method:"POST",
-    credentials:"include",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(body)
-  });
-  const t = await r.text();
-  if (!r.ok) throw new Error(t);
-  return JSON.parse(t);
+function fDate(v){
+  if(!v) return "-";
+  return new Date(v).toLocaleString("ja-JP",{hour12:false});
+}
+function symbolLabel(s){
+  return s ? s.replace("USDT","") : "-";
 }
 
-function fDate(v){ return new Date(v).toLocaleString("ja-JP",{hour12:false}); }
+/* ===== API ===== */
+async function apiGet(path){
+  const r = await fetch(API + path,{credentials:"include"});
+  if(!r.ok) throw new Error();
+  return r.json();
+}
 
-/* ------------------------------
-  取引一覧 読み込み
------------------------------- */
-async function loadTrades() {
+/* ===== 取引ロード ===== */
+async function loadTrades(){
 
   const q = [];
-  const g = document.getElementById("f-group").value;
-  const u = document.getElementById("f-userId").value;
-  const s = document.getElementById("f-symbol").value;
-  const side = document.getElementById("f-side").value;
-  const from = document.getElementById("f-from").value;
-  const to = document.getElementById("f-to").value;
+  const status = document.getElementById("f-status").value;
+  const userName = document.getElementById("f-userName").value;
+  const groupName = document.getElementById("f-groupName").value;
+  const symbol = document.getElementById("f-symbol").value;
 
-  if(g) q.push(`group=${g}`);
-  if(u) q.push(`userId=${u}`);
-  if(s) q.push(`symbol=${s}`);
-  if(side) q.push(`side=${side}`);
-  if(from) q.push(`from=${from}`);
-  if(to) q.push(`to=${to}`);
+  if(status) q.push(`status=${status}`);
+  if(userName) q.push(`userName=${encodeURIComponent(userName)}`);
+  if(groupName) q.push(`groupName=${encodeURIComponent(groupName)}`);
+  if(symbol) q.push(`symbol=${symbol}`);
 
-  const res = await apiGet("/admin/trades" + (q.length ? "?" + q.join("&") : ""));
-
-  cacheTrades = res;
+  const list = await apiGet("/admin/trades" + (q.length ? "?" + q.join("&") : ""));
 
   const tbody = document.getElementById("trade-body");
   tbody.innerHTML = "";
 
-  res.forEach(t => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><input type="checkbox" class="row-check" data-id="${t.id}"></td>
-      <td>${t.id}</td>
-      <td>${t.user.email}</td>
-      <td>${t.symbol}</td>
-      <td>${t.side}</td>
-      <td>${t.size}</td>
-      <td>${t.entryPrice}</td>
-      <td>${t.closePrice}</td>
-      <td>${t.profit}</td>
-      <td>${fDate(t.closedAt)}</td>
-      <td>
-        <button class="btn-xs" data-edit="${t.id}">編集</button>
-        <button class="btn-xs btn-danger" data-del="${t.id}">削除</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  document.getElementById("trade-count").textContent = res.length + "件";
-
-  // イベント付与
-  document.querySelectorAll("[data-edit]").forEach(btn=>{
-    btn.onclick = ()=> openModal(btn.dataset.edit);
-  });
-  document.querySelectorAll("[data-del]").forEach(btn=>{
-    btn.onclick = ()=> deleteTrade(btn.dataset.del);
+  list.forEach(t=>{
+    tbody.insertAdjacentHTML("beforeend",`
+      <tr>
+        <td>${t.id}</td>
+        <td>${t.user.name}</td>
+        <td>${t.user.group?.name ?? "-"}</td>
+        <td>${symbolLabel(t.symbol)}</td>
+        <td>${t.side}</td>
+        <td>${fmt4(t.size)}</td>
+        <td>${fmt4(t.entryPrice)}</td>
+        <td>${fmt4(t.closePrice)}</td>
+        <td>${fmt4(t.profit)}</td>
+        <td>${fDate(t.openedAt)}</td>
+        <td>${fDate(t.closedAt)}</td>
+      </tr>
+    `);
   });
 }
 
-/* ------------------------------
-  編集モーダル
------------------------------- */
-async function openModal(id){
-  editingId = id;
-  const t = await apiGet("/admin/trades?id=" + id);
-  const trade = t[0];
-
-  document.getElementById("m-size").value     = trade.size;
-  document.getElementById("m-entry").value    = trade.entryPrice;
-  document.getElementById("m-close").value    = trade.closePrice;
-  document.getElementById("m-profit").value   = trade.profit;
-  document.getElementById("m-closedAt").value = trade.closedAt.slice(0,16);
-
-  document.getElementById("trade-modal").style.display = "flex";
-}
-document.getElementById("modal-cancel").onclick = () =>
-  document.getElementById("trade-modal").style.display = "none";
-
-document.getElementById("modal-save").onclick = async () => {
-  await apiPost(`/admin/trades/${editingId}/edit`, {
-    size:      document.getElementById("m-size").value,
-    entryPrice:document.getElementById("m-entry").value,
-    closePrice:document.getElementById("m-close").value,
-    profit:    document.getElementById("m-profit").value,
-    closedAt:  document.getElementById("m-closedAt").value,
-  });
-
-  document.getElementById("trade-modal").style.display = "none";
-  loadTrades();
-};
-
-/* ------------------------------
-  削除
------------------------------- */
-async function deleteTrade(id){
-  if(!confirm("削除しますか？")) return;
-  await apiPost(`/admin/trades/${id}/delete`, {});
-  loadTrades();
-}
-
-/* ------------------------------
-  一括削除
------------------------------- */
-document.getElementById("btn-delete-selected").onclick = async () => {
-  const ids = [...document.querySelectorAll(".row-check:checked")]
-              .map(cb => Number(cb.dataset.id));
-
-  if(!ids.length){ alert("選択されていません"); return; }
-
-  if(!confirm(ids.length+"件削除しますか？")) return;
-
-  await apiPost("/admin/trades/bulk-delete", { ids });
-  loadTrades();
-};
-
-/* ------------------------------
-  CSV 出力
------------------------------- */
-document.getElementById("btn-export").onclick = ()=>{
-
-  if(!cacheTrades.length){
-    alert("データなし"); return;
-  }
-
-  let csv = "id,userId,email,symbol,side,size,entryPrice,closePrice,profit,openedAt,closedAt\n";
-  cacheTrades.forEach(t=>{
-    csv += `${t.id},${t.userId},${t.user.email},${t.symbol},${t.side},${t.size},${t.entryPrice},${t.closePrice},${t.profit},${t.openedAt},${t.closedAt}\n`;
-  });
-
-  const blob = new Blob([csv],{type:"text/csv"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "trades.csv";
-  a.click();
-  URL.revokeObjectURL(url);
-};
-
-/* ------------------------------
-  全選択
------------------------------- */
-document.getElementById("check-all").onclick = e=>{
-  const on = e.target.checked;
-  document.querySelectorAll(".row-check").forEach(cb=> cb.checked = on);
-};
-
-/* ------------------------------
-  イベント
------------------------------- */
-document.getElementById("btn-refresh").onclick = loadTrades;
-document.getElementById("btn-search").onclick  = loadTrades;
-
+/* ===== イベント ===== */
+document.getElementById("btn-search").onclick = loadTrades;
 document.getElementById("btn-clear").onclick = ()=>{
-  ["f-group","f-userId","f-symbol","f-side","f-from","f-to"].forEach(id=>{
-    document.getElementById(id).value = "";
+  ["f-status","f-userName","f-groupName","f-symbol"].forEach(id=>{
+    document.getElementById(id).value="";
   });
   loadTrades();
 };
 
-/* 初期ロード */
+/* 初期表示 */
 loadTrades();
-
 </script>
+
+<script src="/admin/assets/js/admin-auth.js"></script>
+<script src="/admin/assets/js/header-admin.js"></script>
 
 </body>
 </html>

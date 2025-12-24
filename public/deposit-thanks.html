@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>入金申請完了 | CryptoX Exchange</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+    .thanks-card {
+      max-width: 720px;
+      margin: 24px auto;
+      background: #fff;
+      padding: 22px;
+      border-radius: 14px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .thanks-card h2 {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .thanks-note {
+      color: #555;
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+
+    .block {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .block h3 {
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .row span {
+      font-weight: bold;
+    }
+
+    .copy-btn {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover {
+      background: #eef2ff;
+    }
+
+    .actions {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .actions button {
+      padding: 10px 18px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<main class="thanks-card">
+  <h2>入金申請を受け付けました</h2>
+  <p class="thanks-note">
+    下記の口座またはアドレスへご入金ください。<br>
+    入金確認後、残高に反映されます。
+  </p>
+
+  <!-- 日本円 -->
+  <div class="block">
+    <h3>日本円 入金先</h3>
+
+    <div class="row">銀行名：<span id="bank-name"></span></div>
+    <div class="row">支店名：<span id="bank-branch"></span></div>
+    <div class="row">口座種別：<span id="bank-type"></span></div>
+
+    <div class="row">
+      口座番号：<span id="bank-number"></span>
+      <button class="copy-btn" onclick="copyText('bank-number')">コピー</button>
+    </div>
+
+    <div class="row">
+      口座名義：<span id="bank-holder"></span>
+      <button class="copy-btn" onclick="copyText('bank-holder')">コピー</button>
+    </div>
+  </div>
+
+  
+  <!-- 注意文言 -->
+  <p class="thanks-note" id="deposit-note"></p>
+
+  <div class="actions">
+    <button class="btn btn-primary" onclick="location.href='wallet.html'">
+      ウォレットへ戻る
+    </button>
+  </div>
+</main>
+
+<script>
+const API_BASE_URL = "https://api.exchange-template.com";
+
+/* -----------------------------
+   入金先情報取得
+----------------------------- */
+fetch(API_BASE_URL + "/deposit/config", { credentials: "include" })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("bank-name").textContent   = data.bank.name;
+    document.getElementById("bank-branch").textContent= data.bank.branch;
+    document.getElementById("bank-type").textContent  = data.bank.type;
+    document.getElementById("bank-number").textContent= data.bank.number;
+    document.getElementById("bank-holder").textContent= data.bank.holder;
+
+    document.getElementById("deposit-note").textContent= data.note;
+  })
+  .catch(() => {
+    alert("入金先情報の取得に失敗しました");
+  });
+
+/* -----------------------------
+   コピー
+----------------------------- */
+function copyText(id){
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text);
+  alert("コピーしました");
+}
+</script>
+
+</body>
+</html>

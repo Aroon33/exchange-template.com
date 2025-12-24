@@ -10,7 +10,7 @@
 </head>
 <body>
 
-  <!-- SIDEBAR -->
+<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-title">メニュー</div>
   <ul class="nav-list">
@@ -19,192 +19,279 @@
     <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
     <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
     <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
-    <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
+    <li class="nav-item"><a href="deposit.html" class="nav-link active">➕ 入金申請</a></li>
     <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
     <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
     <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
     <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
-    <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
+    <li class="nav-item"><a href="system-history.html" class="nav-link">📜 システム履歴</a></li>
+    <li class="nav-item"><a href="deposit-bank-account-edit.html" class="nav-link">📜 入金口座管理</a></li>
   </ul>
 </aside>
 
-
-  <!-- HEADER -->
-  <header class="admin-header">
-    <div class="admin-header-left">
-      <div class="admin-logo-badge">AX</div>
-      <div>
-        <div class="admin-logo-text">Admin Console</div>
-        <div class="admin-logo-sub">出金申請管理</div>
-      </div>
+<!-- HEADER -->
+<header class="admin-header">
+  <div class="admin-header-left">
+    <div class="admin-logo-badge">AX</div>
+    <div>
+      <div class="admin-logo-text">Admin Console</div>
+      <div class="admin-logo-sub">出金申請管理</div>
     </div>
-  </header>
+  </div>
+</header>
 
-  <!-- MAIN -->
-  <main class="admin-main">
-    <div class="admin-main-inner">
+<!-- MAIN -->
+<main class="admin-main">
+  <div class="admin-main-inner">
 
-      <div class="page-title">出金申請一覧</div>
+    <div class="page-title">出金申請一覧</div>
 
-      <!-- フィルター -->
-      <div style="margin:12px 0;">
-        <select id="status-filter" class="btn-sm">
-          <option value="ALL">すべて</option>
-          <option value="PENDING">申請中</option>
-          <option value="COMPLETED">完了</option>
-          <option value="CANCELED">キャンセル</option>
-        </select>
-        <button class="btn-sm" id="reload-btn">再読み込み</button>
-      </div>
-
-      <!-- TABLE -->
-      <div class="card">
-        <table class="table" style="width:100%; font-size:13px;">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>申請日時</th>
-              <th>名前</th>
-              <th>method</th>
-              <th>currency</th>
-              <th>金額</th>
-              <th>更新日時</th>
-              <th>ステータス</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody id="withdraw-table-body">
-            <tr><td colspan="9" style="text-align:center;color:#777;">読み込み中...</td></tr>
-          </tbody>
-        </table>
-      </div>
-
+    <!-- ▼ フィルター -->
+    <div style="margin:12px 0;">
+      <select id="status-filter" class="btn-sm">
+        <option value="ALL">すべて</option>
+        <option value="PENDING">申請中</option>
+        <option value="COMPLETED">完了</option>
+        <option value="CANCELED">キャンセル</option>
+      </select>
+      <button class="btn-sm" id="reload-btn">再読み込み</button>
     </div>
-  </main>
 
-  <div class="toast" id="toast"></div>
+    <!-- ▼ TABLE -->
+    <div class="card">
+      <table class="table" style="width:100%; font-size:13px;">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>申請日時</th>
+            <th>名前</th>
+            <th>種別</th>
+            <th>通貨</th>
+            <th>申請金額</th>
+            <th>入金額</th>
+            <th>更新日時</th>
+            <th>ステータス</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="withdraw-table-body">
+          <tr><td colspan="9" style="text-align:center;color:#777;">読み込み中...</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-  <script>
-    const API_BASE = "https://api.exchange-template.com";
-    let allWithdraws = [];
+  </div>
+</main>
 
-    function showToast(msg) {
-      const t = document.getElementById("toast");
-      t.textContent = msg;
-      t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 2000);
-    }
+<div class="toast" id="toast"></div>
 
-    function formatDate(s) {
-      if (!s) return "-";
-      return new Date(s).toLocaleString("ja-JP", { hour12: false });
-    }
+<!-- SCRIPT -->
+<script>
+const API_BASE = "https://api.exchange-template.com";
+let allWithdraws = [];
 
-    function formatAmount(a) {
-      const n = Number(a);
-      if (isNaN(n)) return a;
-      return n.toLocaleString("en-US", { minimumFractionDigits:2 });
-    }
+/* ----------------------
+      Utility
+---------------------- */
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
 
-    async function apiGet(path) {
-      const res = await fetch(API_BASE + path, { credentials:"include" });
-      const txt = await res.text();
-      if (!res.ok) throw new Error(txt);
-      return JSON.parse(txt);
-    }
+function formatDate(s) {
+  if (!s) return "-";
+  return new Date(s).toLocaleString("ja-JP", { hour12:false });
+}
 
-    async function apiPost(path, body) {
-      const res = await fetch(API_BASE + path, {
-        method:"POST",
-        credentials:"include",
-        headers:{ "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      const txt = await res.text();
-      if (!res.ok) throw new Error(txt);
-      return JSON.parse(txt);
-    }
+function formatAmount(a) {
+  const n = Number(a);
+  if (isNaN(n)) return a;
+  return n.toLocaleString("en-US", { minimumFractionDigits:2 });
+}
 
-    async function approve(id) {
-      try {
-        await apiPost("/withdraw/approve", { transferId:id });
-        showToast("承認しました");
-        loadWithdraws();
-      } catch(e) {
-        showToast("承認失敗");
-      }
-    }
+/* ----------------------
+      API WRAPPER
+---------------------- */
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path, { credentials:"include" });
+  const txt = await res.text();
+  if (!res.ok) throw new Error(txt);
+  return JSON.parse(txt);
+}
 
-    async function cancel(id) {
-      try {
-        await apiPost("/withdraw/cancel", { transferId:id });
-        showToast("キャンセルしました");
-        loadWithdraws();
-      } catch(e) {
-        showToast("キャンセル失敗");
-      }
-    }
+async function apiPost(path, body) {
+  const res = await fetch(API_BASE + path, {
+    method:"POST",
+    credentials:"include",
+    headers:{ "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const txt = await res.text();
+  if (!res.ok) throw new Error(txt);
+  return JSON.parse(txt);
+}
 
-    function renderTable(list) {
-      const tbody = document.getElementById("withdraw-table-body");
-      tbody.innerHTML = "";
-
-      if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#777;">なし</td></tr>`;
-        return;
-      }
-
-      list.forEach(t => {
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-          <td>${t.id}</td>
-          <td>${formatDate(t.createdAt)}</td>
-          <td>${t.user?.name ?? "-"}</td>
-          <td>${t.method ?? "-"}</td>
-          <td>${t.currency ?? "-"}</td>
-          <td>${formatAmount(t.amount)}</td>
-          <td>${formatDate(t.updatedAt)}</td>
-          <td>${t.status}</td>
-          <td>
-            ${
-              t.status === "PENDING"
-                ? `
-                  <button class="btn-xs btn-xs-primary" onclick="approve(${t.id})">承認</button>
-                  <button class="btn-xs btn-xs-danger" onclick="cancel(${t.id})">取消</button>
-                `
-                : "-"
-            }
-          </td>
-        `;
-
-        tbody.appendChild(tr);
-      });
-    }
-
-    function applyFilter() {
-      const f = document.getElementById("status-filter").value;
-      if (f === "ALL") {
-        renderTable(allWithdraws);
-      } else {
-        renderTable(allWithdraws.filter(t => t.status === f));
-      }
-    }
-
-    async function loadWithdraws() {
-      try {
-        allWithdraws = await apiGet("/withdraw/all");
-        applyFilter();
-      } catch(e) {
-        showToast("取得失敗");
-      }
-    }
-
-    document.getElementById("status-filter").addEventListener("change", applyFilter);
-    document.getElementById("reload-btn").addEventListener("click", loadWithdraws);
-
+/* ----------------------
+      承認・取消
+---------------------- */
+async function approve(id) {
+  try {
+    await apiPost("/withdraw/approve", { transferId:id });
+    showToast("承認しました");
     loadWithdraws();
-  </script>
+  } catch(e) {
+    showToast("承認失敗");
+  }
+}
+
+async function cancel(id) {
+  try {
+    await apiPost("/withdraw/cancel", { transferId:id });
+    showToast("キャンセルしました");
+    loadWithdraws();
+  } catch(e) {
+    showToast("キャンセル失敗");
+  }
+}
+
+/* ----------------------
+      チャット遷移
+---------------------- */
+function openChat(userId) {
+  if (!userId) {
+    showToast("ユーザー不明");
+    return;
+  }
+  location.href = `tickets.html?user=${userId}`;
+}
+
+/* ----------------------
+      TABLE RENDERING
+---------------------- */
+function renderTable(list) {
+  const tbody = document.getElementById("withdraw-table-body");
+  tbody.innerHTML = "";
+
+  if (!list.length) {
+    tbody.innerHTML =
+      `<tr><td colspan="10" style="text-align:center;color:#777;">申請なし</td></tr>`;
+    return;
+  }
+
+  list.forEach(t => {
+    const isCrypto =
+      t.cryptoAmount !== null &&
+      !isNaN(Number(t.cryptoAmount)) &&
+      Number(t.cryptoAmount) > 0;
+
+    const methodLabel = isCrypto ? "暗号資産" : "日本円";
+    const currency = isCrypto ? t.currency : "JPY";
+
+    const requestAmount = `${formatAmount(t.amount)} JPY`;
+    const depositAmount = isCrypto
+      ? `${formatAmount(t.cryptoAmount)} ${currency}`
+      : `${formatAmount(t.amount)} JPY`;
+
+    const statusJP =
+      t.status === "PENDING" ? "申請中" :
+      t.status === "COMPLETED" ? "完了" :
+      "キャンセル";
+
+    tbody.insertAdjacentHTML("beforeend", `
+      <tr>
+        <td>${t.id}</td>
+        <td>${formatDate(t.createdAt)}</td>
+        <td>${t.user?.name ?? "-"}</td>
+        <td>${methodLabel}</td>
+        <td>${currency}</td>
+        <td>${requestAmount}</td>
+        <td>${depositAmount}</td>
+        <td>${formatDate(t.updatedAt)}</td>
+        <td>${statusJP}</td>
+        <td>
+          ${
+            t.status === "PENDING"
+              ? `<button class="btn-xs btn-xs-primary btn-approve"
+                         data-id="${t.id}">承認</button>`
+              : ""
+          }
+          <button class="btn-xs btn-xs-danger btn-cancel"
+                  data-id="${t.id}">取消</button>
+          <button class="btn-xs btn-warning btn-chat"
+                  data-user-id="${t.user?.id ?? ""}">チャット</button>
+        </td>
+      </tr>
+    `);
+  });
+
+  /* ===== ここでイベント付与 ===== */
+
+  // 承認
+  tbody.querySelectorAll(".btn-approve").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = Number(btn.dataset.id);
+      await approve(id);
+    });
+  });
+
+  // 取消
+  tbody.querySelectorAll(".btn-cancel").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = Number(btn.dataset.id);
+      await cancel(id);
+    });
+  });
+
+  // チャット
+  tbody.querySelectorAll(".btn-chat").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const userId = Number(btn.dataset.userId);
+      openChat(userId);
+    });
+  });
+}
+
+
+
+  
+
+/* ----------------------
+      FILTER APPLY
+---------------------- */
+function applyFilter() {
+  const f = document.getElementById("status-filter").value;
+  if (f === "ALL") {
+    renderTable(allWithdraws);
+  } else {
+    renderTable(allWithdraws.filter(t => t.status === f));
+  }
+}
+
+/* ----------------------
+      LOAD WITHDRAWS
+---------------------- */
+async function loadWithdraws() {
+  try {
+    allWithdraws = await apiGet("/withdraw/all");
+    applyFilter();
+  } catch(e) {
+    showToast("取得失敗");
+  }
+}
+
+/* ----------------------
+      INIT
+---------------------- */
+document.getElementById("status-filter").addEventListener("change", applyFilter);
+document.getElementById("reload-btn").addEventListener("click", loadWithdraws);
+
+loadWithdraws();
+</script>
+
+<script src="/admin/assets/js/admin-auth.js"></script>
+<script src="/admin/assets/js/header-admin.js"></script>
 
 </body>
 </html>

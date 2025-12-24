@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ログアウト | CryptoX Exchange</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+    .section-card {
+      background: #fff;
+      margin: 40px auto;
+      padding: 22px;
+      border-radius: 12px;
+      max-width: 520px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .logout-msg {
+      margin-top: 10px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-badge">CX</div> CryptoX Exchange
+  </div>
+</header>
+
+<main>
+  <section class="section-card">
+    <h1 class="card-title">ログアウトしています…</h1>
+    <p id="logout-status" class="logout-msg">処理中です</p>
+  </section>
+</main>
+
+<script>
+const API_BASE = "https://api.exchange-template.com";
+
+async function logoutUser() {
+  try {
+    // ★ サーバー側セッションを破棄（最重要）
+    await fetch(API_BASE + "/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    document.getElementById("logout-status").textContent =
+      "ログアウトしました。ログイン画面へ移動します。";
+
+  } catch (e) {
+    console.warn("logout api error", e);
+    document.getElementById("logout-status").textContent =
+      "ログアウトしました。ログイン画面へ移動します。";
+  } finally {
+    // ★ 必ずログイン画面へ
+    setTimeout(() => {
+      location.href = "login.html";
+    }, 1200);
+  }
+}
+
+// ページ表示と同時に実行
+logoutUser();
+</script>
+
+</body>
+</html>

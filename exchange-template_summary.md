@@ -437,13 +437,31 @@ app.enableCors({ origin: ['https://exchange-template.com','https://www.exchange-
 ■ DB 接続情報
 
 
-DB名: exchange_api
+DB名: USER exchange_api;
 
 
 Prisma schema: /var/www/exchange-api/prisma/schema.prisma
 
 
 接続文字列: .env に DATABASE_URL="mysql://exchange_user:StrongPassword123!@localhost:3306/exchange_api"
+
+mysql -u exchange_user -p
+
+StrongPassword123!
+
+USE exchange_api;
+
+# schema の整形（推奨）
+npx prisma format
+
+# Prisma Client 再生成
+npx prisma generate
+
+# ビルド & 再起動
+npm run build
+
+pm2 restart exchange-api
+
 
 
 ■ 主なモデル（概略）

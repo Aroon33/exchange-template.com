@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - KYC（本人確認）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+    /* ------- カード全体 ------- */
+    .section-card {
+      background: #fff;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      max-width: 760px;
+    }
+    h1.card-title { font-size:22px; margin-bottom:16px; }
+    
+    /* ------- KYC レベルピル ------- */
+    .kyc-pill {
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: inline-block;
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .kyc-0 { background:#fee2e2; color:#b91c1c; }
+    .kyc-1 { background:#fef3c7; color:#92400e; }
+    .kyc-2 { background:#fef9c3; color:#854d0e; }
+    .kyc-3 { background:#d9f99d; color:#365314; }
+    .kyc-4 { background:#bbf7d0; color:#166534; }
+    .kyc-5 { background:#86efac; color:#065f46; }
+
+    /* ------- BOX ------- */
+    .kyc-box {
+      padding: 16px;
+      border: 1px solid var(--border-soft);
+      background: #fafbfd;
+      border-radius: 10px;
+    }
+
+    .upload-section {
+      margin-top: 14px;
+    }
+    .upload-section label {
+      display: block;
+      font-size: 13px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid var(--border-soft);
+      width: 100%;
+    }
+
+    .btn-submit {
+      margin-top: 18px;
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+    }
+
+    .note {
+      font-size: 12px;
+      margin-top: 8px;
+      color: var(--text-muted);
+    }
+
+    /* スマホ対応 */
+    @media (max-width:600px){
+      h1.card-title { font-size:20px; }
+      .btn-submit { font-size:14px; }
+    }
+    /* ハンバーガーボタン（スマホのみ表示） */
+.hamburger {
+  display: none;
+  font-size: 26px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  /* PC ナビをスマホでは非表示 */
+  .site-nav {
+    display: none;
+  }
+}
+
+/* サイドメニュー */
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  left: -260px;
+  width: 240px;
+  height: 100%;
+  background: #fff;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+  padding: 20px;
+  transition: left 0.3s ease;
+  z-index: 9999;
+}
+
+.mobile-menu.open {
+  left: 0;
+}
+
+.mobile-menu a {
+  display: block;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  float: right;
+  cursor: pointer;
+}
+
+/* 背景の黒幕 */
+.menu-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 9998;
+}
+/* ============================
+   モバイルメニューのリンクを縦並びに強制
+============================ */
+.mobile-menu a {
+  display: block !important;     /* 絶対に縦表示 */
+  width: 100%;
+  background: #f8fafc;           /* 背景色 */
+  border: 1px solid #e5e7eb;     /* 薄い枠 */
+  padding: 12px 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #333;
+}
+
+/* ホバーエフェクト */
+.mobile-menu a:hover {
+  background: #eef2ff;
+  border-color: var(--primary);
+}
+
+/* market-tabs（スマホ用タブ）の CSS が
+   mobile-menu に干渉しないよう明示的に制限 */
+.mobile-menu .market-tab,
+.mobile-menu .market-tabs {
+  display: none !important;
+}
+
+
+.menu-overlay.show {
+  display: block;
+}
+
+  </style>
+</head>
+<body>
+
+<!-- HEADER（1つだけ残す） -->
+<header class="site-header" id="header-area">
+
+
+  <div class="logo">
+    <div class="logo-badge">CX</div> 
+    CryptoX Exchange
+  </div>
+
+  <!-- スマホ用ハンバーガー（ロゴ右） -->
+  <button id="menu-toggle" class="hamburger">☰</button>
+
+  <nav class="site-nav">
+    <a href="index.html" class="nav-link">TOP</a>
+    <a href="exchange.html" class="nav-link">トレード</a>
+    <a href="wallet.html" class="nav-link">ウォレット</a>
+    <a href="system-trade.html" class="nav-link">システム取引</a>
+    <a href="support.html" class="nav-link">サポート</a>
+    <a href="mypage.html" class="nav-link">マイページ</a>
+    <a href="kyc.html" class="nav-link active">KYC</a>
+    <a href="history.html" class="nav-link">取引履歴</a>
+  </nav>
+
+  <div class="header-actions">
+    <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
+    <a href="signup.html" class="btn btn-primary btn-sm">口座開設</a>
+  </div>
+
+</header>
+
+<!-- モバイルメニュー -->
+<div id="mobile-menu" class="mobile-menu">
+  <button id="menu-close" class="close-btn">×</button>
+  <a href="index.html">TOP</a>
+  <a href="exchange.html">トレード</a>
+  <a href="wallet.html">ウォレット</a>
+  <a href="system-trade.html">システム取引</a>
+  <a href="support.html">サポート</a>
+  <a href="mypage.html">マイページ</a>
+  <a href="kyc.html">KYC</a>
+  <a href="history.html">取引履歴</a>
+  <a href="logout.html">ログアウト</a>
+</div>
+
+<div id="menu-overlay" class="menu-overlay"></div>
+
+
+
+<main>
+  <section class="section-card">
+
+    <h1 class="card-title">本人確認（KYC）</h1>
+    <p class="muted" id="kyc-msg"></p>
+
+    <!-- KYC レベル表示  -->
+    <div id="kyc-level-pill" class="kyc-pill kyc-0">
+      レベル - （取得中）
+    </div>
+
+    <div class="kyc-box">
+
+      <div id="kyc-status" style="font-size:15px; margin-bottom:10px; font-weight:bold;">
+        ステータス取得中...
+      </div>
+
+      <!-- KYC フォーム -->
+      <div id="kyc-form">
+
+        <div class="upload-section">
+          <label>本人確認書類（表）</label>
+          <input type="file" id="front-file" accept="image/*">
+        </div>
+
+        <div class="upload-section">
+          <label>本人確認書類（裏）</label>
+          <input type="file" id="back-file" accept="image/*">
+        </div>
+
+        <button class="btn btn-primary btn-submit" id="submit-kyc">
+          KYCを提出する
+        </button>
+
+        <p class="note">
+          JPG / PNG などの画像ファイルをアップロードしてください。
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+</main>
+
+<script>
+const API_BASE = "https://api.exchange-template.com";
+
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path, { credentials:"include" });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function apiPostForm(path, form) {
+  const res = await fetch(API_BASE + path, {
+    method:"POST",
+    credentials:"include",
+    body: form,
+  });
+  const txt = await res.text();
+  if (!res.ok) throw new Error(txt);
+  return JSON.parse(txt);
+}
+
+/* -------------------------
+    KYC ステータス読み込み
+--------------------------*/
+async function loadKycStatus(){
+  const data = await apiGet("/kyc/status");
+  const status = data.status;
+  const level  = data.level ?? 0;
+
+  const pill = document.getElementById("kyc-level-pill");
+  pill.textContent = `レベル ${level}`;
+  pill.className = `kyc-pill kyc-${level}`;
+
+  const statusEl = document.getElementById("kyc-status");
+  const msgEl    = document.getElementById("kyc-msg");
+  const formEl   = document.getElementById("kyc-form");
+
+  switch(status){
+    case 0:
+      statusEl.textContent = "ステータス：未提出";
+      msgEl.textContent = "下記より本人確認書類を提出してください。";
+      formEl.style.display = "block";
+      break;
+
+    case 1:
+      statusEl.textContent = "ステータス：提出済み（確認待ち）";
+      msgEl.textContent = "審査中です。";
+      formEl.style.display = "none";
+      break;
+
+    case 2:
+      statusEl.textContent = "ステータス：審査中";
+      msgEl.textContent = "審査結果をお待ちください。";
+      formEl.style.display = "none";
+      break;
+
+    case 3:
+      statusEl.textContent = "ステータス：承認（一次）";
+      msgEl.textContent = "最終確認中です。";
+      formEl.style.display = "none";
+      break;
+
+    case 4:
+      statusEl.textContent = "ステータス：否認";
+      msgEl.textContent = "問題がありました。書類を再提出してください。";
+      formEl.style.display = "block";
+      break;
+
+    case 5:
+      statusEl.textContent = "ステータス：KYC 完了";
+      msgEl.textContent = "本人確認が完了しました。すべての機能が利用できます。";
+      formEl.style.display = "none";
+      break;
+
+    default:
+      statusEl.textContent = "ステータス";
+      formEl.style.display = "block";
+  }
+}
+
+/* -------------------------
+       KYC 提出
+--------------------------*/
+document.getElementById("submit-kyc").onclick = async ()=>{
+
+  const front = document.getElementById("front-file").files[0];
+  const back  = document.getElementById("back-file").files[0];
+  const msg   = document.getElementById("kyc-msg");
+
+  const header = document.getElementById("header-area");
+if (!header) return;
+
+
+  if(!front || !back){
+    msg.textContent = "両方の画像を選択してください。";
+    msg.style.color = "red";
+    return;
+  }
+
+  const form = new FormData();
+  form.append("files", front);
+  form.append("files", back);
+
+  try{
+    await apiPostForm("/kyc/submit", form);
+    msg.textContent = "提出しました。審査中です。";
+    msg.style.color = "green";
+    loadKycStatus();
+  } catch(e){
+    msg.textContent = "提出に失敗しました。";
+    msg.style.color = "red";
+  }
+};
+
+/* -------------------------
+       初期ロード
+--------------------------*/
+loadKycStatus().catch(()=>{
+  document.getElementById("kyc-msg").textContent = "KYC情報の取得に失敗しました。";
+});
+
+  const toggle = document.getElementById("menu-toggle");
+  const menu = document.getElementById("mobile-menu");
+  const overlay = document.getElementById("menu-overlay");
+  const closeBtn = document.getElementById("menu-close");
+
+  toggle.onclick = () => {
+    menu.classList.add("open");
+    overlay.classList.add("show");
+  };
+
+  closeBtn.onclick = () => {
+    menu.classList.remove("open");
+    overlay.classList.remove("show");
+  };
+
+  overlay.onclick = () => {
+    menu.classList.remove("open");
+    overlay.classList.remove("show");
+  };
+
+
+
+/* =========================
+   ヘッダー：ログイン状態反映
+========================= */
+async function updateHeaderUserState() {
+  const headerActions = document.querySelector(".header-actions");
+  if (!headerActions) return;
+
+  try {
+    const res = await fetch(API_BASE + "/auth/me", {
+      credentials: "include",
+    });
+    if (!res.ok) return; // 未ログイン
+
+    const data = await res.json();
+    const user = data.user || data;
+
+    // ヘッダー右側を差し替え
+    headerActions.innerHTML = "";
+
+    const userBtn = document.createElement("a");
+    userBtn.href = "users.html";
+    userBtn.className = "btn btn-outline btn-sm";
+    userBtn.textContent = user.name + " さん";
+    headerActions.appendChild(userBtn);
+
+    const logoutBtn = document.createElement("a");
+    logoutBtn.href = "#";
+    logoutBtn.className = "btn btn-primary btn-sm";
+    logoutBtn.textContent = "ログアウト";
+    logoutBtn.onclick = async () => {
+      await fetch(API_BASE + "/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      location.href = "../login.html";
+    };
+    headerActions.appendChild(logoutBtn);
+
+  } catch (e) {
+    console.warn("ログイン状態取得失敗", e);
+  }
+}
+
+/* 初期化 */
+document.addEventListener("DOMContentLoaded", updateHeaderUserState);
+</script>
+
+</body>
+</html>
