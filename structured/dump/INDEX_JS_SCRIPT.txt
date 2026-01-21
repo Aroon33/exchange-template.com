@@ -1,0 +1,399 @@
+=============================================
+ JS SCRIPT STRUCTURE
+=============================================
+
+FILE: admin/logout/script.js
+  QUERY_ID: logout-btn
+  API_PATH: /admin/login.html
+  API_PATH: /auth/logout
+
+FILE: admin/withdraw-detail/script.js
+
+FILE: admin/deposit-bank-account-edit/script.js
+  QUERY_ID: page-title
+  QUERY_ID: save-btn
+  QUERY_ID: toast
+
+FILE: admin/deposit/script.js
+  QUERY_ID: deposit-modal
+  QUERY_ID: deposit-table-body
+  QUERY_ID: modal-body
+  QUERY_ID: modal-footer
+  QUERY_ID: reload-btn
+  QUERY_ID: status-filter
+  QUERY_ID: toast
+  API_PATH: /deposit/all
+  API_PATH: /deposit/approve
+  API_PATH: /deposit/assign-crypto
+  API_PATH: /deposit/pending
+
+FILE: admin/index/script.js
+  QUERY_ID: btn-refresh
+  QUERY_ID: from-date
+  QUERY_ID: to-date
+  API_PATH: /auth/logout
+
+FILE: admin/deposit-bank-accounts/script.js
+  QUERY_ID: bank-account-table
+  QUERY_ID: crypto-address-table
+  QUERY_ID: date-from
+  QUERY_ID: date-to
+  QUERY_ID: reload-btn
+  QUERY_ID: status-filter
+  API_PATH: /admin/deposit/bank-accounts?
+  API_PATH: /admin/deposit/crypto-addresses
+
+FILE: admin/kyc/script.js
+  QUERY_ID: kyc-table-body
+  QUERY_ID: reload-btn
+  QUERY_ID: status-filter
+  QUERY_ID: toast
+  QUERY: .header-actions
+  API_PATH: /auth/logout
+  API_PATH: /auth/me
+  API_PATH: /kyc/admin/list
+  API_PATH: /kyc/admin/set-status
+
+FILE: admin/system-positions/script.js
+  QUERY_ID: childBody
+  QUERY_ID: groupSelect
+  QUERY_ID: metaChildren
+  QUERY_ID: metaParent
+  QUERY_ID: parentBody
+  QUERY_ID: toast
+  QUERY_ID: toast-text
+  API_PATH: /admin/groups
+
+FILE: admin/users/script.js
+  QUERY_ID: btn-clear
+  QUERY_ID: btn-search
+  QUERY_ID: f-from
+  QUERY_ID: f-group
+  QUERY_ID: f-text
+  QUERY_ID: f-to
+  QUERY_ID: table-body
+  QUERY_ID: table-meta
+  API_PATH: /admin/users
+  API_PATH: /auth/logout
+
+FILE: admin/login/script.js
+
+FILE: admin/system-history/script.js
+  QUERY_ID: childBody
+  QUERY_ID: fStatus
+  QUERY_ID: fSymbol
+  QUERY_ID: fUserId
+  QUERY_ID: groupSelect
+  QUERY_ID: metaChildren
+  QUERY_ID: metaParent
+  QUERY_ID: parentBody
+  QUERY_ID: toast
+  QUERY_ID: toast-text
+  API_PATH: /admin/groups
+
+FILE: admin/deposit-crypto-address-edit/script.js
+  QUERY_ID: page-title
+  QUERY_ID: save-btn
+  QUERY_ID: toast
+
+FILE: admin/group/script.js
+  QUERY_ID: btn-bulk-move
+  QUERY_ID: check-all
+  QUERY_ID: filter-group
+  QUERY_ID: group-body
+  QUERY_ID: group-count
+  QUERY_ID: move-group-select
+  QUERY_ID: stat-positions-count
+  QUERY_ID: stat-total-balance
+  QUERY_ID: stat-user-count
+  QUERY_ID: user-body
+  QUERY: #user-body input[type=checkbox]
+  API_PATH: /admin/groups
+  API_PATH: /admin/users
+
+FILE: admin/trades/script.js
+  QUERY_ID: btn-clear
+  QUERY_ID: btn-search
+  QUERY_ID: f-groupName
+  QUERY_ID: f-status
+  QUERY_ID: f-symbol
+  QUERY_ID: f-userName
+  QUERY_ID: trade-body
+  API_PATH: /admin/trades
+
+FILE: admin/user-detail/script.js
+  QUERY_ID: btn-update-group
+  QUERY_ID: btn-update-status
+  QUERY_ID: msg
+  QUERY_ID: p-address
+  QUERY_ID: p-birth
+  QUERY_ID: p-phone
+  QUERY_ID: trade-body
+  QUERY_ID: transfer-body
+  QUERY_ID: u-created
+  QUERY_ID: u-email
+  QUERY_ID: u-group
+  QUERY_ID: u-id
+  QUERY_ID: u-kyc
+  QUERY_ID: u-name
+  QUERY_ID: u-status
+  QUERY_ID: w-avail
+  QUERY_ID: w-lock
+  QUERY_ID: w-total
+
+FILE: admin/settings/script.js
+  QUERY_ID: btn-save
+  QUERY_ID: group-select
+  QUERY_ID: runLoopBtn
+  QUERY_ID: sys-body
+  QUERY_ID: sys-msg
+  QUERY: [data-field]
+  API_PATH: /admin/groups
+  API_PATH: /system/trade-loop
+
+FILE: admin/tickets/script.js
+  QUERY_ID: btn-send
+  QUERY_ID: chat-input
+  QUERY_ID: chat-input-area
+  QUERY_ID: chat-panel
+  QUERY_ID: chat-title
+  QUERY_ID: chat-window
+  QUERY_ID: ticket-list-mobile
+  QUERY_ID: ticket-table-body
+  QUERY_ID: toast
+  API_PATH: /tickets/admin/all
+
+FILE: admin/withdraw/script.js
+  QUERY_ID: reload-btn
+  QUERY_ID: status-filter
+  QUERY_ID: toast
+  QUERY_ID: withdraw-table-body
+  QUERY: .btn-approve
+  QUERY: .btn-cancel
+  QUERY: .btn-chat
+  API_PATH: /withdraw/all
+  API_PATH: /withdraw/approve
+  API_PATH: /withdraw/cancel
+
+FILE: backup/index.bak/script.js
+  QUERY_ID: mobileNav
+
+FILE: backup/exchange.bak/script.js
+  QUERY_ID: chartSymbolMain
+  QUERY_ID: chartSymbolSub
+  QUERY_ID: market-list
+  QUERY_ID: market-tabs
+  QUERY_ID: menu-close
+  QUERY_ID: menu-overlay
+  QUERY_ID: menu-toggle
+  QUERY_ID: mobile-menu
+  QUERY_ID: orderbook
+  QUERY_ID: order-price
+  QUERY_ID: order-type
+  QUERY_ID: recent-trades
+  QUERY_ID: tv_chart
+  QUERY: .header-actions
+  QUERY: .market-tab
+  QUERY: .order-btn-buy
+  QUERY: .order-btn-sell
+  API_PATH: /auth/logout
+  API_PATH: /auth/me
+  API_PATH: /USD
+
+FILE: backup/test/script.js
+  QUERY_ID: login-button
+  QUERY_ID: login-email
+  QUERY_ID: login-message
+  QUERY_ID: login-password
+  API_PATH: /auth/login
+
+FILE: backup/support.bak/script.js
+  QUERY_ID: btn-create-thread
+  QUERY_ID: btn-send-msg
+  QUERY_ID: chat-input
+  QUERY_ID: chat-input-area
+  QUERY_ID: chat-title
+  QUERY_ID: chat-window
+  QUERY_ID: menu-overlay
+  QUERY_ID: menu-toggle
+  QUERY_ID: mobile-menu
+  QUERY_ID: new-body
+  QUERY_ID: new-title
+  QUERY_ID: thread-count
+  QUERY_ID: thread-list
+  QUERY: .header-actions
+  API_PATH: /auth/logout
+  API_PATH: /auth/me
+  API_PATH: /tickets
+
+FILE: backup/kyc.bak/script.js
+  QUERY_ID: back-file
+  QUERY_ID: front-file
+  QUERY_ID: header-area
+  QUERY_ID: kyc-form
+  QUERY_ID: kyc-level-pill
+  QUERY_ID: kyc-msg
+  QUERY_ID: kyc-status
+  QUERY_ID: menu-close
+  QUERY_ID: menu-overlay
+  QUERY_ID: menu-toggle
+  QUERY_ID: mobile-menu
+  QUERY_ID: submit-kyc
+  QUERY: .header-actions
+  API_PATH: /auth/logout
+  API_PATH: /auth/me
+  API_PATH: /kyc/status
+  API_PATH: /kyc/submit
+
+FILE: backup/common-header/script.js
+
+FILE: backup/history.bak/script.js
+  QUERY_ID: btn-loadmore
+  QUERY_ID: history-message
+  QUERY_ID: menu-close
+  QUERY_ID: menu-overlay
+  QUERY_ID: menu-toggle
+  QUERY_ID: mobile-menu
+  QUERY_ID: trade-history-body
+  QUERY: .header-actions
+  API_PATH: /auth/logout
+  API_PATH: /auth/me
+  API_PATH: /trades/history
+
+FILE: backup/mypage.bak/script.js
+  QUERY_ID: bank-branch
+  QUERY_ID: bank-holder
+  QUERY_ID: bank-msg
+  QUERY_ID: bank-name
+  QUERY_ID: bank-number
+  QUERY_ID: bank-type
+  QUERY_ID: crypto-btc
+  QUERY_ID: crypto-eth
+  QUERY_ID: crypto-msg
+  QUERY_ID: crypto-usdt
+  QUERY_ID: menu-close
+  QUERY_ID: menu-overlay
+  QUERY_ID: menu-toggle
+  QUERY_ID: mobile-menu
+  QUERY_ID: my-balance-available
+  QUERY_ID: my-balance-locked
+  QUERY_ID: my-balance-total
+  QUERY_ID: my-email
+  QUERY_ID: my-group
+  QUERY_ID: my-kyc-pill
+  QUERY_ID: my-name
+  QUERY_ID: mypage-message
+  QUERY_ID: my-system-status
+  QUERY_ID: save-bank
+  QUERY_ID: save-crypto
+  QUERY: .header-actions
+  API_PATH: /auth/logout
+  API_PATH: /auth/me
+  API_PATH: /kyc/status
+  API_PATH: /user/bank-account
+  API_PATH: /user/crypto
+  API_PATH: /wallet
+
+FILE: backup/wallet.bak/script.js
+  QUERY_ID: crypto-amount
+  QUERY_ID: crypto-currency
+  QUERY_ID: crypto-form
+  QUERY_ID: crypto-jpy
+  QUERY_ID: crypto-submit
+  QUERY_ID: jpy-amount
+  QUERY_ID: jpy-form
+  QUERY_ID: jpy-submit
+  QUERY_ID: menu-close
+  QUERY_ID: menu-overlay
+  QUERY_ID: menu-toggle
+  QUERY_ID: mobile-menu
+  QUERY_ID: tab-crypto
+  QUERY_ID: tab-jpy
+  QUERY_ID: tab-withdraw-crypto
+  QUERY_ID: tab-withdraw-jpy
+  QUERY_ID: toast
+  QUERY_ID: wallet-available
+  QUERY_ID: wallet-history
+  QUERY_ID: wallet-locked
+  QUERY_ID: wallet-message
+  QUERY_ID: wallet-total
+  QUERY_ID: withdraw-crypto-amount
+  QUERY_ID: withdraw-crypto-currency
+  QUERY_ID: withdraw-crypto-form
+  QUERY_ID: withdraw-crypto-jpy
+  QUERY_ID: withdraw-crypto-submit
+  QUERY_ID: withdraw-jpy-amount
+  QUERY_ID: withdraw-jpy-form
+  QUERY_ID: withdraw-jpy-submit
+  QUERY_ID: withdraw-message
+  QUERY_ID: withdraw-rate-info
+  QUERY: .header-actions
+  API_PATH: /auth/logout
+  API_PATH: /auth/me
+  API_PATH: /deposit/request
+  API_PATH: /user/bank-account
+  API_PATH: /user/crypto
+  API_PATH: /wallet
+  API_PATH: /withdraw/request
+
+FILE: backup/system-trade.bak/script.js
+  QUERY_ID: logoutBtn
+  QUERY_ID: menu-close
+  QUERY_ID: menu-overlay
+  QUERY_ID: menu-toggle
+  QUERY_ID: mobile-menu
+  QUERY_ID: sys-balance-total
+  QUERY_ID: sys-group-id
+  QUERY_ID: sys-message
+  QUERY_ID: sys-positions-body
+  QUERY_ID: sys-status-pill
+  QUERY_ID: sys-stop-btn
+  QUERY_ID: toast
+  QUERY_ID: toast-text
+  QUERY: .header-actions
+  API_PATH: /auth/logout
+  API_PATH: /auth/me
+  API_PATH: /system/overview
+  API_PATH: /system/stop
+
+FILE: user/logout/script.js
+  QUERY_ID: logout-status
+  API_PATH: /auth/logout
+
+FILE: user/signup/script.js
+
+FILE: user/crypto-thanks/script.js
+  QUERY_ID: btc-address
+  QUERY_ID: deposit-note
+  QUERY_ID: eth-address
+  API_PATH: /deposit/config
+
+FILE: user/mypage/script.js
+
+FILE: user/index/script.js
+  QUERY_ID: mobileNav
+
+FILE: user/kyc/script.js
+
+FILE: user/support/script.js
+
+FILE: user/wallet/script.js
+
+FILE: user/campaign/script.js
+
+FILE: user/system-trade/script.js
+
+FILE: user/exchange/script.js
+
+FILE: user/login/script.js
+
+FILE: user/history/script.js
+
+FILE: user/deposit-thanks/script.js
+  QUERY_ID: bank-branch
+  QUERY_ID: bank-holder
+  QUERY_ID: bank-name
+  QUERY_ID: bank-number
+  QUERY_ID: bank-type
+  QUERY_ID: deposit-note
+  API_PATH: /deposit/config

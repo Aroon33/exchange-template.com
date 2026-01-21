@@ -1,0 +1,16 @@
+    /* 口座開設カード強調 */
+    .hero-right {
+      transform: scale(1.15);
+      transform-origin: top right;
+    }
+    .hero-right h3 {
+      font-size: 1.4rem;
+    }
+    .hero-list li {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    .btn-primary {
+      font-size: 1.15rem;
+      padding: 12px 20px;
+    }

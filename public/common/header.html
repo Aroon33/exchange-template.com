@@ -1,48 +1,52 @@
 <header class="site-header">
-
   <div class="site-header-inner">
 
-    <div class="logo" data-link="/">
+    <!-- 左：ロゴ -->
+    <a href="/" class="logo">
       <div class="logo-badge">CX</div>
       CryptoX Exchange
-    </div>
+    </a>
 
-    <!-- ハンバーガー -->
-    <button class="hamburger" id="menu-toggle">☰</button>
+    <!-- 右：主要メニュー -->
+    <div class="header-right">
 
-    <nav class="site-nav">
-      <a href="/index.html">TOP</a>
-      <a href="/exchange.html">トレード</a>
-      <a href="/wallet.html">ウォレット</a>
-      <a href="/system-trade.html">システム取引</a>
-      <a href="/support.html">サポート</a>
-      <a href="/mypage.html">マイページ</a>
-      <a href="/kyc.html">KYC</a>
-      <a href="/history.html">取引履歴</a>
-      <a href="/campaign.html">キャンペーン</a>
-    </nav>
+      <!-- PC用ナビ -->
+      <nav class="site-nav">
+        <a href="/exchange.html">トレード</a>
+        <a href="/wallet.html">ウォレット</a>
+        <a href="/mypage.html">マイページ</a>
+      </nav>
 
-    <div class="header-actions" id="header-actions">
-      <a href="/login.html" class="btn btn-outline btn-sm">ログイン</a>
-      <a href="/signup.html" class="btn btn-primary btn-sm">無料口座開設</a>
+      <!-- ログイン / ログアウト -->
+      <div class="header-actions"></div>
+
+      <!-- ハンバーガー -->
+      <button
+        class="hamburger"
+        id="menu-toggle"
+        aria-label="メニューを開く"
+        aria-expanded="false"
+      >
+        ☰
+      </button>
     </div>
 
   </div>
-
 </header>
 
-<!-- モバイルメニュー -->
-<div class="mobile-menu" id="mobile-menu">
-  <button id="menu-close" class="close-btn">×</button>
-  <a href="/index.html">TOP</a>
+<!-- Drawer -->
+<div class="drawer-menu" id="drawer-menu">
+  <div class="drawer-auth" id="drawer-auth"></div>
+
   <a href="/exchange.html">トレード</a>
   <a href="/wallet.html">ウォレット</a>
-  <a href="/system-trade.html">システム取引</a>
-  <a href="/support.html">サポート</a>
   <a href="/mypage.html">マイページ</a>
+  <a href="/support.html">サポート</a>
+  <a href="/system-trade.html">システム取引</a>
   <a href="/kyc.html">KYC</a>
   <a href="/history.html">取引履歴</a>
   <a href="/campaign.html">キャンペーン</a>
+  <a href="/logout.html">ログアウト</a>
 </div>
 
-<div class="menu-overlay" id="menu-overlay"></div>
+<div class="drawer-overlay" id="drawer-overlay"></div>

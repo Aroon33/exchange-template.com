@@ -12,17 +12,39 @@ import {
 ========================= */
 const elTotal = document.getElementById("wallet-total");
 const elAvail = document.getElementById("wallet-available");
-const elLock = document.getElementById("wallet-locked");
+const elLock  = document.getElementById("wallet-locked");
 const elHistBody = document.getElementById("wallet-history");
 const toast = document.getElementById("wallet-message");
+
+/* =========================
+   History State
+========================= */
+let allTransfers = [];
+let historyFilter = "ALL"; // ALL | DEPOSIT | WITHDRAW
+let visibleCount = 10;
 
 /* =========================
    util
 ========================= */
 function showToast(msg, color = "green") {
-  if (!toast) return;
-  toast.textContent = msg;
-  toast.style.color = color;
+  const targets = [
+    "wallet-message",
+    "jpy-message",
+    "crypto-message",
+    "withdraw-jpy-message",
+    "withdraw-crypto-message",
+  ];
+
+  for (const id of targets) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = msg;
+      el.style.color = color;
+      return;
+    }
+  }
+
+  alert(msg);
 }
 
 function formatJPY(v) {
@@ -30,36 +52,56 @@ function formatJPY(v) {
 }
 
 function typeJP(type) {
-  return type === "DEPOSIT" ? "入金" :
-         type === "WITHDRAW" ? "出金" : "-";
+  return type === "DEPOSIT" ? "入金"
+       : type === "WITHDRAW" ? "出金"
+       : "-";
 }
 
 function statusJP(status) {
-  return status === "PENDING" ? "申請中" :
-         status === "COMPLETED" ? "完了" :
-         status === "CANCELED" ? "キャンセル" : "-";
+  return status === "PENDING"   ? "申請中"
+       : status === "COMPLETED" ? "完了"
+       : status === "CANCELED"  ? "キャンセル"
+       : "-";
 }
 
 /* =========================
-   Wallet 表示
+   Wallet Load
 ========================= */
 async function loadWalletPage() {
   const data = await getWallet();
   const w = data.wallet || {};
-  const trs = data.transfers || [];
 
   elTotal.textContent = formatJPY(w.balanceTotal);
   elAvail.textContent = formatJPY(w.balanceAvailable);
-  elLock.textContent = formatJPY(w.balanceLocked);
+  elLock.textContent  = formatJPY(w.balanceLocked);
 
+  // ★ 全履歴を保存
+  allTransfers = data.transfers || [];
+
+  renderHistory();
+}
+
+/* =========================
+   History Render
+========================= */
+function renderHistory() {
   elHistBody.innerHTML = "";
-  if (!trs.length) {
+
+  let list = allTransfers;
+
+  if (historyFilter !== "ALL") {
+    list = list.filter(t => t.type === historyFilter);
+  }
+
+  const sliced = list.slice(0, visibleCount);
+
+  if (!sliced.length) {
     elHistBody.innerHTML =
       `<tr><td colspan="6" style="text-align:center;">履歴はありません</td></tr>`;
     return;
   }
 
-  trs.forEach(t => {
+  sliced.forEach(t => {
     elHistBody.insertAdjacentHTML("beforeend", `
       <tr>
         <td>${t.id}</td>
@@ -71,7 +113,63 @@ async function loadWalletPage() {
       </tr>
     `);
   });
+
+  // もっと見る表示制御
+  const btn = document.getElementById("history-load-more");
+  if (btn) {
+    btn.style.display = list.length > visibleCount ? "block" : "none";
+  }
 }
+
+/* =========================
+   History Tabs
+========================= */
+document.getElementById("tab-history-all")?.addEventListener("click", () => {
+  historyFilter = "ALL";
+  visibleCount = 10;
+  setActiveTab("all");
+  renderHistory();
+});
+
+document.getElementById("tab-history-deposit")?.addEventListener("click", () => {
+  historyFilter = "DEPOSIT";
+  visibleCount = 10;
+  setActiveTab("deposit");
+  renderHistory();
+});
+
+document.getElementById("tab-history-withdraw")?.addEventListener("click", () => {
+  historyFilter = "WITHDRAW";
+  visibleCount = 10;
+  setActiveTab("withdraw");
+  renderHistory();
+});
+
+function setActiveTab(type) {
+  ["all", "deposit", "withdraw"].forEach(t => {
+    document
+      .getElementById(`tab-history-${t}`)
+      ?.classList.remove("active");
+  });
+
+  document
+    .getElementById(`tab-history-${type}`)
+    ?.classList.add("active");
+}
+
+/* =========================
+   Load More
+========================= */
+document.getElementById("history-load-more")?.addEventListener("click", () => {
+  visibleCount += 10;
+  renderHistory();
+});
+
+/* =========================
+   Init
+========================= */
+loadWalletPage();
+
 
 /* =========================
    出金前チェック
@@ -90,9 +188,14 @@ async function checkWithdrawDestination(method) {
   if (method === "CRYPTO") {
     try {
       const list = await getCryptoAddresses();
-      if (!list.length) throw new Error();
+      const currency = normalizeCurrency(
+        document.getElementById("withdraw-crypto-currency").value
+      );
+
+      const hasAddress = list.some(a => a.currency === currency);
+      if (!hasAddress) throw new Error();
     } catch {
-      showToast("暗号資産アドレスが未登録です。マイページで登録してください。", "red");
+      showToast("選択した暗号資産の出金アドレスが未登録です。", "red");
       setTimeout(() => location.href = "/mypage.html", 1500);
       return false;
     }
@@ -101,13 +204,14 @@ async function checkWithdrawDestination(method) {
   return true;
 }
 
+
 /* =========================
    入金タブ切替
 ========================= */
-const tabJPY = document.getElementById("tab-jpy");
-const tabCRYPTO = document.getElementById("tab-crypto");
-const formJPY = document.getElementById("jpy-form");
-const formCRYPTO = document.getElementById("crypto-form");
+const tabJPY = document.getElementById("tab-deposit-jpy");
+const tabCRYPTO = document.getElementById("tab-deposit-crypto");
+const formJPY = document.getElementById("deposit-jpy-form");
+const formCRYPTO = document.getElementById("deposit-crypto-form");
 
 if (tabJPY && tabCRYPTO) {
   tabJPY.onclick = () => {
@@ -149,14 +253,13 @@ if (tabWithdrawJPY && tabWithdrawCrypto) {
   };
 }
 
-
 /* =========================
    Init
 ========================= */
 (async function init() {
   try {
     await loadWalletPage();
-  } catch (e) {
+  } catch {
     showToast("ウォレット情報の取得に失敗しました", "red");
   }
 })();
@@ -164,12 +267,11 @@ if (tabWithdrawJPY && tabWithdrawCrypto) {
 /* =========================================================
    入金（日本円）
 ========================================================= */
-const btnJpySubmit = document.getElementById("jpy-submit");
+const btnJpySubmit = document.getElementById("deposit-jpy-submit");
 
 if (btnJpySubmit) {
   btnJpySubmit.onclick = async () => {
-    const amount = Number(document.getElementById("jpy-amount").value);
-
+    const amount = Number(document.getElementById("deposit-jpy-amount").value);
     if (!amount || amount <= 0) {
       showToast("入金金額を入力してください", "red");
       return;
@@ -183,7 +285,7 @@ if (btnJpySubmit) {
       });
 
       location.href = "/deposit-thanks.html";
-    } catch (e) {
+    } catch {
       showToast("入金申請に失敗しました", "red");
     }
   };
@@ -192,41 +294,61 @@ if (btnJpySubmit) {
 /* =========================================================
    入金（暗号資産）：レート計算
 ========================================================= */
-const cryptoJPY = document.getElementById("crypto-jpy");
-const cryptoCurrency = document.getElementById("crypto-currency");
-const cryptoAmountEl = document.getElementById("crypto-amount");
-
+const cryptoJPY = document.getElementById("deposit-crypto-jpy");
+const cryptoCurrency = document.getElementById("deposit-crypto-currency");
+const cryptoAmountEl = document.getElementById("deposit-crypto-amount");
 const depositRateInfo = document.getElementById("deposit-rate-info");
 
-depositRateInfo.textContent =
-  `${cryptoCurrency.value} レート: ${price.toLocaleString()} JPY`;
+/* === FIX START : レート & 通貨正規化 === */
+let rateCache = { BTC: null, ETH: null, updatedAt: 0 };
+const RATE_EXPIRE = 60 * 1000;
 
+function normalizeCurrency(v) {
+  if (v === "bitcoin" || v === "BTC") return "BTC";
+  if (v === "ethereum" || v === "ETH") return "ETH";
+  return null;
+}
 
+async function getRates() {
+  const now = Date.now();
+  if (now - rateCache.updatedAt < RATE_EXPIRE) return rateCache;
 
+  const res = await fetch(
+    "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=jpy"
+  );
+  if (!res.ok) throw new Error();
 
+  const r = await res.json();
+  rateCache = {
+    BTC: r.bitcoin.jpy,
+    ETH: r.ethereum.jpy,
+    updatedAt: now,
+  };
+  return rateCache;
+}
+/* === FIX END === */
 
 async function updateDepositRate() {
   const jpy = Number(cryptoJPY.value);
 
   if (!jpy || jpy <= 0) {
     cryptoAmountEl.value = "";
+    depositRateInfo.textContent = "";
     return;
   }
 
   try {
-    const res = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=jpy"
-    );
-    const r = await res.json();
-
-    const price =
-      cryptoCurrency.value === "BTC"
-        ? r.bitcoin.jpy
-        : r.ethereum.jpy;
+    const rates = await getRates();
+    const key = normalizeCurrency(cryptoCurrency.value);
+    const price = rates[key];
+    if (!price) throw new Error();
 
     cryptoAmountEl.value = (jpy / price).toFixed(8);
+    depositRateInfo.textContent =
+      `${key} レート: ${price.toLocaleString()} JPY`;
   } catch {
     cryptoAmountEl.value = "";
+    depositRateInfo.textContent = "";
   }
 }
 
@@ -236,7 +358,7 @@ if (cryptoCurrency) cryptoCurrency.onchange = updateDepositRate;
 /* =========================================================
    入金（暗号資産）：申請
 ========================================================= */
-const btnCryptoSubmit = document.getElementById("crypto-submit");
+const btnCryptoSubmit = document.getElementById("deposit-crypto-submit");
 
 if (btnCryptoSubmit) {
   btnCryptoSubmit.onclick = async () => {
@@ -251,7 +373,7 @@ if (btnCryptoSubmit) {
     try {
       await requestDeposit({
         method: "CRYPTO",
-        currency: cryptoCurrency.value,
+        currency: normalizeCurrency(cryptoCurrency.value),
         amount: jpy,
         cryptoAmount,
       });
@@ -277,14 +399,14 @@ if (btnWithdrawJPY) {
       return;
     }
 
-    // 出金先（銀行口座）チェック
     if (!(await checkWithdrawDestination("JPY"))) return;
 
     try {
       await requestWithdraw({
-        method: "JPY",
-        amount,
-      });
+  method: "JPY",
+  amount: String(amount), // ★
+});
+
 
       showToast("出金申請を受け付けました");
       loadWalletPage();
@@ -300,36 +422,29 @@ if (btnWithdrawJPY) {
 const withdrawCryptoJPY = document.getElementById("withdraw-crypto-jpy");
 const withdrawCryptoCurrency = document.getElementById("withdraw-crypto-currency");
 const withdrawCryptoAmount = document.getElementById("withdraw-crypto-amount");
-
 const withdrawRateInfo = document.getElementById("withdraw-rate-info");
-
-withdrawRateInfo.textContent =
-  `${withdrawCryptoCurrency.value} レート: ${price.toLocaleString()} JPY`;
-
-
 
 async function updateWithdrawRate() {
   const jpy = Number(withdrawCryptoJPY.value);
 
   if (!jpy || jpy <= 0) {
     withdrawCryptoAmount.value = "";
+    withdrawRateInfo.textContent = "";
     return;
   }
 
   try {
-    const res = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=jpy"
-    );
-    const r = await res.json();
-
-    const price =
-      withdrawCryptoCurrency.value === "BTC"
-        ? r.bitcoin.jpy
-        : r.ethereum.jpy;
+    const rates = await getRates();
+    const key = normalizeCurrency(withdrawCryptoCurrency.value);
+    const price = rates[key];
+    if (!price) throw new Error();
 
     withdrawCryptoAmount.value = (jpy / price).toFixed(8);
+    withdrawRateInfo.textContent =
+      `${key} レート: ${price.toLocaleString()} JPY`;
   } catch {
     withdrawCryptoAmount.value = "";
+    withdrawRateInfo.textContent = "";
   }
 }
 
@@ -351,16 +466,16 @@ if (btnWithdrawCrypto) {
       return;
     }
 
-    // 出金先（暗号資産アドレス）チェック
     if (!(await checkWithdrawDestination("CRYPTO"))) return;
 
     try {
       await requestWithdraw({
-        method: "CRYPTO",
-        currency: withdrawCryptoCurrency.value,
-        amount: jpy,
-        cryptoAmount,
-      });
+  method: "CRYPTO",
+  currency: normalizeCurrency(withdrawCryptoCurrency.value),
+  amount: String(jpy),                 // ★ 文字列化
+  cryptoAmount: String(cryptoAmount),  // ★ 文字列化
+});
+
 
       showToast("出金申請を受け付けました");
       loadWalletPage();
@@ -369,5 +484,3 @@ if (btnWithdrawCrypto) {
     }
   };
 }
-
-

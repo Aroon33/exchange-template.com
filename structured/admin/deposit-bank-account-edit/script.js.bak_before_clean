@@ -1,0 +1,83 @@
+import { CONFIG } from "../config.js";
+
+// [DEPRECATED] was: const API_BASE = "https://api.exchange-template.com";
+
+/* ===== Utils ===== */
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+function getId() {
+  const p = new URLSearchParams(location.search);
+  return p.get("id");
+}
+
+/* ===== Load (edit mode) ===== */
+async function load() {
+  const id = getId();
+  if (!id) return;
+
+  document.getElementById("page-title").textContent = "入金先編集";
+
+  const res = await fetch(
+    `${API_BASE}/admin/deposit/bank-accounts/${id}`,
+    { credentials:"include" }
+  );
+  if (!res.ok) {
+    toast("データ取得に失敗しました");
+    return;
+  }
+
+  const data = await res.json();
+
+  bank_name.value      = data.bankName ?? "";
+  branch_name.value    = data.branchName ?? "";
+  account_type.value   = data.accountType ?? "普通";
+  account_number.value = data.accountNumber ?? "";
+  account_holder.value = data.accountHolder ?? "";
+}
+
+/* ===== Save ===== */
+document.getElementById("save-btn").addEventListener("click", async () => {
+  const id = getId();
+
+  const body = {
+    bankName: bank_name.value.trim(),
+    branchName: branch_name.value.trim(),
+    accountType: account_type.value,
+    accountNumber: account_number.value.trim(),
+    accountHolder: account_holder.value.trim(),
+  };
+
+  if (!body.bankName || !body.branchName ||
+      !body.accountNumber || !body.accountHolder) {
+    toast("すべて入力してください");
+    return;
+  }
+
+  const url = id
+    ? `/admin/deposit/bank-accounts/${id}`
+    : `/admin/deposit/bank-accounts`;
+
+  const res = await fetch(CONFIG.API_BASE_URL + url, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    toast("保存に失敗しました");
+    return;
+  }
+
+  toast("保存しました");
+  setTimeout(() => {
+    location.href = "deposit-bank-accounts.html";
+  }, 800);
+});
+
+load();

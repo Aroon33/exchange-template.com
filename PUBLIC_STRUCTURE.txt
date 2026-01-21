@@ -1,0 +1,97 @@
+public
+├── admin
+│   ├── assets
+│   │   ├── css
+│   │   │   ├── admin.css
+│   │   │   ├── style.css
+│   │   │   └── tickets.css
+│   │   └── js
+│   │       ├── admin-auth.js
+│   │       ├── admin.deposit.js
+│   │       ├── admin-guard.js
+│   │       ├── admin-header.js
+│   │       ├── admin.js
+│   │       ├── admin-login.js
+│   │       ├── admin-utils.js
+│   │       └── f
+│   ├── deposit-bank-account-edit.html
+│   ├── deposit-bank-accounts.html
+│   ├── deposit-crypto-address-edit.html
+│   ├── deposit.html
+│   ├── group.html
+│   ├── index.html
+│   ├── kyc.html
+│   ├── login.html
+│   ├── logout.html
+│   ├── settings.html
+│   ├── system-history.html
+│   ├── system-positions.html
+│   ├── tickets.html
+│   ├── trades.html
+│   ├── user-detail.html
+│   ├── users.html
+│   ├── withdraw-detail.html
+│   └── withdraw.html
+├── assets
+│   ├── css
+│   │   ├── admin.css
+│   │   ├── style.c
+│   │   └── style.css
+│   ├── js
+│   │   ├── api
+│   │   │   ├── apiClient.js
+│   │   │   ├── auth.api.js
+│   │   │   ├── deposit.api.js
+│   │   │   ├── exchange.api.js
+│   │   │   ├── history.api.js
+│   │   │   ├── kyc.api.js
+│   │   │   ├── profile.api.js
+│   │   │   ├── signup.api.js
+│   │   │   ├── support.api.js
+│   │   │   ├── system-trade.api.js
+│   │   │   ├── trade.api.js
+│   │   │   ├── user.api.js
+│   │   │   ├── wallet.api.js
+│   │   │   └── withdraw.api.js
+│   │   ├── auth
+│   │   │   ├── login.js
+│   │   │   ├── logout.js
+│   │   │   └── signup.js
+│   │   ├── config.js
+│   │   ├── exchange.js
+│   │   ├── header-loader.js
+│   │   ├── header-ui.js
+│   │   ├── header-user.js
+│   │   ├── history.js
+│   │   ├── kyc.js
+│   │   ├── layout.js
+│   │   ├── mypage.js
+│   │   ├── support.js
+│   │   ├── system-trade.js
+│   │   └── wallet.js
+│   └── tools
+│       ├── css-duplicate-check.js
+│       ├── css-duplicate-report.json
+│       └── css-duplicate-report.txt
+├── campaign.html
+├── common
+│   ├── footer.html
+│   └── header.html
+├── crypto-thanks.html
+├── deposit-thanks.html
+├── exchange.html
+├── history.html
+├── index.html
+├── js
+│   └── api.js
+├── kyc.html
+├── login.html
+├── logout.html
+├── mypage.html
+├── signup.html
+├── support.html
+├── system-trade.html
+├── uploads -> /var/www/exchange-api/uploads
+└── wallet.html
+
+13 directories, 81 files

@@ -1,0 +1,71 @@
+  <div class="admin-main-inner">
+
+    <h1 class="page-title">ユーザー詳細</h1>
+    <p id="msg" class="muted"></p>
+
+    <section class="card">
+      <h2 class="card-title">基本情報</h2>
+      <div class="info-grid">
+        <div class="info-row"><span class="info-label">ユーザーID</span><span id="u-id">-</span></div>
+        <div class="info-row"><span class="info-label">名前</span><span id="u-name">-</span></div>
+        <div class="info-row"><span class="info-label">メール</span><span id="u-email">-</span></div>
+        <div class="info-row"><span class="info-label">開設日</span><span id="u-created">-</span></div>
+        <div class="info-row"><span class="info-label">KYCレベル</span><span id="u-kyc">-</span></div>
+        <div class="info-row"><span class="info-label">グループ</span>
+          <select id="u-group" class="input-sm">
+            <option value="">-</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+          </select>
+          <button class="btn-xs" id="btn-update-group">変更</button>
+        </div>
+        <div class="info-row">
+          <span class="info-label">システム状態</span>
+          <select id="u-status" class="input-sm">
+            <option value="RUNNING">RUNNING</option>
+            <option value="STOPPED">STOPPED</option>
+          </select>
+          <button class="btn-xs" id="btn-update-status">更新</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">プロフィール情報</h2>
+      <div class="info-grid">
+        <div class="info-row"><span class="info-label">生年月日</span><span id="p-birth">-</span></div>
+        <div class="info-row"><span class="info-label">住所</span><span id="p-address">-</span></div>
+        <div class="info-row"><span class="info-label">電話番号</span><span id="p-phone">-</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">口座残高</h2>
+      <div class="info-grid">
+        <div class="info-row"><span class="info-label">総残高</span><span id="w-total">-</span></div>
+        <div class="info-row"><span class="info-label">利用可能</span><span id="w-avail">-</span></div>
+        <div class="info-row"><span class="info-label">ロック</span><span id="w-lock">-</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">入出金履歴</h2>
+      <table class="table">
+        <thead>
+          <tr><th>ID</th><th>種別</th><th>金額</th><th>ステータス</th><th>日時</th></tr>
+        </thead>
+        <tbody id="transfer-body"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">取引履歴（Trade）</h2>
+      <table class="table">
+        <thead>
+          <tr><th>ID</th><th>通貨</th><th>方向</th><th>サイズ</th><th>利益</th><th>日時</th></tr>
+        </thead>
+        <tbody id="trade-body"></tbody>
+      </table>
+    </section>
+
+  </div>

@@ -1,40 +1,42 @@
 // ========================================
-// Signup Page Script
+// Signup Page Script（FINAL / User + Profile）
 // ========================================
 
 // ---------- Import ----------
 import { signup } from "../api/auth.api.js";
-import { API_BASE_URL } from "../config.js";
+import { createUserProfile } from "../api/profile.api.js";
 
-// ---------- DOM Elements ----------
+// ---------- DOM ----------
 const btnSignup = document.getElementById("signup-button");
 const messageEl = document.getElementById("signup-message");
 
-// ---------- Event Binding ----------
+// ---------- Event ----------
 btnSignup.addEventListener("click", handleSignup);
 
 // ========================================
-// Event Handlers
+// Main Handler
 // ========================================
+async function handleSignup(e) {
+  if (e) e.preventDefault();
 
-/**
- * サインアップボタン押下時のメイン処理
- */
-async function handleSignup() {
   clearMessage();
 
-  const payload = collectSignupForm();
-
-  if (!validateSignup(payload)) return;
+  const form = collectSignupForm();
+  if (!validateSignup(form)) return;
 
   setLoading(true);
 
   try {
-    await registerUser(payload);
-    showSuccess("登録成功！ログイン画面へ移動します。");
+    // ① User 登録
+    await signup(buildUserPayload(form));
+
+    // ② UserProfile 作成（ログインCookieが付く前提）
+    await createUserProfile(buildProfilePayload(form));
+
+    showSuccess("登録が完了しました。ログイン画面へ移動します。");
     redirectToLogin();
   } catch (err) {
-    showError(err.message);
+    showError(err.message || "登録に失敗しました");
   } finally {
     setLoading(false);
   }
@@ -43,40 +45,38 @@ async function handleSignup() {
 // ========================================
 // Form Handling
 // ========================================
-
-/**
- * フォームの入力値をまとめて取得
- */
 function collectSignupForm() {
   const lastname  = document.getElementById("signup-lastname").value.trim();
   const firstname = document.getElementById("signup-firstname").value.trim();
 
   return {
+    // account
     email: document.getElementById("signup-email").value.trim(),
     password: document.getElementById("signup-password").value.trim(),
     name: `${lastname} ${firstname}`.trim(),
-    country: document.getElementById("signup-country").value,
-    refcode: document.getElementById("signup-refcode").value.trim(),
-    tosOK: document.getElementById("signup-tos").checked,
-    referral: getReferralFromURL(),
+
+    // profile
+    dateOfBirth: document.getElementById("profile-dob").value,
+    gender: document.getElementById("profile-gender").value,
+    postalCode: document.getElementById("profile-postal").value.trim(),
+    city: document.getElementById("profile-city").value.trim(),
+    address: document.getElementById("profile-address").value.trim(),
+    country: document.getElementById("profile-country").value.trim(),
+    phone: document.getElementById("profile-phone").value.trim(),
   };
 }
 
 // ========================================
 // Validation
 // ========================================
-
-/**
- * 入力チェック
- */
-function validateSignup({ email, password, tosOK }) {
-  if (!email || !password) {
-    showError("メールアドレスとパスワードは必須です。");
+function validateSignup(form) {
+  if (!form.email || !form.password || !form.name) {
+    showError("必須項目が入力されていません。");
     return false;
   }
 
-  if (!tosOK) {
-    showError("利用規約に同意してください。");
+  if (!form.dateOfBirth || !form.gender) {
+    showError("プロフィール情報を入力してください。");
     return false;
   }
 
@@ -84,37 +84,31 @@ function validateSignup({ email, password, tosOK }) {
 }
 
 // ========================================
-// API Communication
+// Payload Builders
 // ========================================
-
-/**
- * サインアップAPI呼び出し
- */
-async function registerUser(data) {
-  const payload = {
-    email: data.email,
-    password: data.password,
-    name: data.name,
-    country: data.country,
-    referral: data.referral,
-    code: data.refcode || null,
+function buildUserPayload(form) {
+  return {
+    email: form.email,
+    password: form.password,
+    name: form.name,
   };
+}
 
-  const res = await fetch(API_BASE_URL + "/auth/register", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.message || "登録に失敗しました");
+function buildProfilePayload(form) {
+  return {
+    dateOfBirth: form.dateOfBirth,
+    gender: form.gender,
+    address: form.address,
+    city: form.city,
+    postalCode: form.postalCode,
+    country: form.country,
+    phone: form.phone,
+  };
 }
 
 // ========================================
 // UI Helpers
 // ========================================
-
 function showError(text) {
   messageEl.textContent = text;
   messageEl.style.color = "red";
@@ -131,21 +125,16 @@ function clearMessage() {
 
 function setLoading(isLoading) {
   btnSignup.disabled = isLoading;
-  btnSignup.textContent = isLoading ? "送信中..." : "口座開設を申し込む";
+  btnSignup.textContent = isLoading
+    ? "送信中..."
+    : "口座開設を申し込む";
 }
 
 // ========================================
-// Utilities
+// Navigation
 // ========================================
-
-function getReferralFromURL() {
-  const url = new URL(window.location.href);
-  const ref = url.searchParams.get("ref");
-  return ref ? Number(ref) : null;
-}
-
 function redirectToLogin() {
   setTimeout(() => {
-    window.location.href = "login.html";
+    window.location.href = "/login.html";
   }, 1500);
 }

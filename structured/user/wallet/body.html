@@ -1,0 +1,159 @@
+
+
+  <section class="section-card" style="max-width:760px; margin:auto;">
+
+    <h1 class="card-title">ウォレット</h1>
+    <p id="wallet-message" class="muted"></p>
+
+    <!-- ------------------------
+        残高表示
+    ------------------------- -->
+    <h2 class="card-sub">残高</h2>
+    <div class="balance-boxes">
+      <div class="balance-item">
+        <div class="balance-label">総残高</div>
+        <div class="balance-value" id="wallet-total">0</div>
+      </div>
+      <div class="balance-item">
+        <div class="balance-label">利用可能残高</div>
+        <div class="balance-value" id="wallet-available">0</div>
+      </div>
+      <div class="balance-item">
+        <div class="balance-label">ロック残高</div>
+        <div class="balance-value" id="wallet-locked">0</div>
+      </div>
+    </div>
+
+    <!-- ------------------------
+        入金（Deposit）
+    ------------------------- -->
+    <h2 class="card-sub">入金（Deposit）</h2>
+
+    <div class="tab-buttons">
+      <button class="tab-btn active" id="tab-jpy">日本円で入金</button>
+      <button class="tab-btn" id="tab-crypto">暗号通貨で入金</button>
+    </div>
+
+    <!-- ▼ 日本円入金 -->
+    <div id="jpy-form" class="form-section">
+      <div class="form-row">
+        <label>入金金額（JPY）</label>
+        <input type="number" id="jpy-amount" placeholder="15000" />
+      </div>
+      <button class="btn btn-primary btn-sm" id="jpy-submit">入金申請する</button>
+      <div id="bank-info" class="bank-info">銀行振込先情報…</div>
+      <p id="jpy-message" class="muted"></p>
+    </div>
+
+    <!-- ▼ Crypto 入金 -->
+    <div id="crypto-form" class="form-section" style="display:none;">
+      <div class="form-row">
+        <label>入金金額（JPY）</label>
+        <input type="number" id="crypto-jpy" placeholder="100000" />
+      </div>
+
+      <div class="form-row">
+        <label>送金通貨</label>
+        <select id="crypto-currency">
+          <option value="BTC">BTC</option>
+          <option value="ETH">ETH</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>暗号通貨の枚数</label>
+        <input type="text" id="crypto-amount" readonly />
+      </div>
+
+      <p id="rate-info" class="muted" style="font-size:12px;"></p>
+
+  
+      <button class="btn btn-primary btn-sm" id="crypto-submit">暗号通貨で入金申請する</button>
+      <p id="crypto-message" class="muted"></p>
+    </div>
+
+    <!-- ------------------------
+        出金（Withdraw）
+    ------------------------- -->
+    <h2 class="card-sub">出金（Withdraw）</h2>
+
+    <div class="tab-buttons">
+  <button class="tab-btn active" id="tab-withdraw-jpy">日本円で出金</button>
+  <button class="tab-btn" id="tab-withdraw-crypto">暗号資産で出金</button>
+</div>
+
+
+
+    <!-- ▼ 日本円出金 -->
+<div id="withdraw-jpy-form" class="form-section">
+  <div class="form-row">
+    <label>出金金額（JPY）</label>
+    <input type="number" id="withdraw-jpy-amount" placeholder="10000" />
+  </div>
+  <button class="btn btn-primary btn-sm" id="withdraw-jpy-submit">
+    日本円で出金申請
+  </button>
+  <p id="withdraw-jpy-message" class="muted"></p>
+</div>
+
+<!-- ▼ 暗号資産出金 -->
+<div id="withdraw-crypto-form" class="form-section" style="display:none;">
+  <div class="form-row">
+    <label>出金金額（JPY）</label>
+    <input type="number" id="withdraw-crypto-jpy" placeholder="100000" />
+  </div>
+
+  <div class="form-row">
+    <label>出金通貨</label>
+    <select id="withdraw-crypto-currency">
+      <option value="BTC">BTC</option>
+      <option value="ETH">ETH</option>
+    </select>
+  </div>
+
+  <div class="form-row">
+    <label>暗号資産の枚数</label>
+    <input type="text" id="withdraw-crypto-amount" readonly />
+  </div>
+
+  <p id="withdraw-rate-info" class="muted" style="font-size:12px;"></p>
+
+
+
+  <button class="btn btn-primary btn-sm" id="withdraw-crypto-submit">
+    暗号資産で出金申請
+  </button>
+
+  <p id="withdraw-crypto-message" class="muted"></p>
+</div>
+
+
+
+    <!-- ------------------------
+        入出金履歴
+    ------------------------- -->
+    <h2 class="card-sub">入出金履歴</h2>
+
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>種別</th>
+            <th>通貨</th>
+            <th>金額</th>
+            <th>ステータス</th>
+            <th>日時</th>
+          </tr>
+        </thead>
+        <tbody id="wallet-history">
+          <tr>
+            <td colspan="6" style="text-align:center; color:#888; padding:12px;">
+              入出金履歴はありません。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>

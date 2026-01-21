@@ -1,0 +1,59 @@
+  <div class="admin-main-inner">
+
+    <div class="page-title" id="page-title">
+      クリプト入金アドレス登録
+    </div>
+
+    <div class="card form-card">
+
+      <div class="form-grid">
+
+        <div class="form-row">
+          <label>通貨</label>
+          <select id="currency">
+            <option value="BTC">BTC</option>
+            <option value="ETH">ETH</option>
+          </select>
+        </div>
+
+        <div class="form-row full">
+          <label>アドレス</label>
+          <input
+            type="text"
+            id="address"
+            placeholder="ウォレットアドレス"
+          />
+        </div>
+
+        <div class="form-row full">
+          <label>MEMO / TAG（任意）</label>
+          <input
+            type="text"
+            id="memo"
+            placeholder="必要な場合のみ入力"
+          />
+        </div>
+
+        <div class="form-row">
+          <label>ユーザーID（任意）</label>
+          <input
+            type="number"
+            id="userId"
+            placeholder="未指定なら空欄"
+          />
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="save-btn">
+          保存
+        </button>
+        <button class="btn btn-outline"
+                onclick="location.href='deposit-bank-accounts.html'">
+          キャンセル
+        </button>
+      </div>
+
+    </div>
+  </div>

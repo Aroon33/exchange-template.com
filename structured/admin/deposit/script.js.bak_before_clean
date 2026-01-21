@@ -1,0 +1,158 @@
+import { CONFIG } from "../config.js";
+
+// [DEPRECATED] was: const API_BASE = "https://api.exchange-template.com";
+
+/* =========================
+   Utils
+========================= */
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+function formatDate(v) {
+  return v ? new Date(v).toLocaleString("ja-JP", { hour12:false }) : "-";
+}
+
+function formatAmount(v, type="JPY") {
+  const n = Number(v);
+  if (isNaN(n)) return "-";
+  return type === "CRYPTO" ? n.toFixed(4) : Math.floor(n).toLocaleString("ja-JP");
+}
+
+/* =========================
+   API
+========================= */
+async function apiGet(path) {
+  const r = await fetch(CONFIG.API_BASE_URL + path, { credentials:"include" });
+  if (!r.ok) throw new Error();
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await fetch(CONFIG.API_BASE_URL + path, {
+    method:"POST",
+    credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error();
+}
+
+/* =========================
+   Actions
+========================= */
+async function approveDeposit(id) {
+  await apiPost("/deposit/approve", { id });
+  showToast("承認しました");
+  loadDeposits();
+}
+
+async function sendDepositAddress(id) {
+  if (!confirm("入金アドレスを送信しますか？")) return;
+  await apiPost("/deposit/assign-crypto", { id });
+  showToast("入金アドレスを送信しました");
+  loadDeposits();
+}
+
+function openChat(userId) {
+  location.href = `tickets.html?user=${userId}`;
+}
+
+/* =========================
+   Modal
+========================= */
+function openDepositModal(t) {
+  document.getElementById("modal-body").innerHTML = `
+    <div>ID：${t.id}</div>
+    <div>ユーザー：${t.user?.name ?? "-"}</div>
+    <div>通貨：${t.currency}</div>
+    <div>金額：${t.cryptoAmount ?? t.amount}</div>
+    <div>状態：${t.status}</div>
+    <div>${formatDate(t.createdAt)}</div>
+  `;
+
+  document.getElementById("modal-footer").innerHTML = `
+    ${t.status==="PENDING" && t.method==="CRYPTO"
+      ? `<button class="btn" onclick="sendDepositAddress(${t.id})">アドレス送信</button>` : ""}
+    ${t.status==="CONFIRMING"
+      ? `<button class="btn" onclick="approveDeposit(${t.id})">着金確認</button>` : ""}
+    <button class="btn" onclick="openChat(${t.user?.id})">チャット</button>
+  `;
+
+  document.getElementById("deposit-modal").style.display="block";
+}
+
+function closeDepositModal() {
+  document.getElementById("deposit-modal").style.display="none";
+}
+
+/* =========================
+   Render
+========================= */
+function renderTable(list) {
+  const tbody = document.getElementById("deposit-table-body");
+  tbody.innerHTML = "";
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="100%" style="text-align:center;">申請なし</td></tr>`;
+    return;
+  }
+
+  list.forEach(t => {
+    const isCrypto = t.cryptoAmount && Number(t.cryptoAmount) > 0;
+    const currency = isCrypto ? t.currency : "JPY";
+    const amount = isCrypto
+      ? `${formatAmount(t.cryptoAmount,"CRYPTO")} ${currency}`
+      : `${formatAmount(t.amount)} JPY`;
+
+    tbody.insertAdjacentHTML("beforeend", `
+<tr class="deposit-row"
+    onclick="if(window.innerWidth<=900){openDepositModal(${JSON.stringify(t)})}"
+    style="cursor:pointer;">
+
+  <td>
+    <div>ID:${t.id}</div>
+    <div>${t.user?.name ?? "-"}</div>
+    <div>${currency}</div>
+    <div>${amount}</div>
+    <div>${t.status}</div>
+  </td>
+
+  <td class="pc-only">${formatDate(t.createdAt)}</td>
+  <td class="pc-only">${t.user?.name ?? "-"}</td>
+  <td class="pc-only">${t.method}</td>
+  <td class="pc-only">${currency}</td>
+  <td class="pc-only">${formatAmount(t.amount)} JPY</td>
+  <td class="pc-only">${amount}</td>
+  <td class="pc-only">${formatDate(t.updatedAt)}</td>
+  <td class="pc-only">${t.status}</td>
+
+  <td class="actions pc-only">
+    ${t.status==="PENDING" && t.method==="CRYPTO"
+      ? `<button onclick="event.stopPropagation();sendDepositAddress(${t.id})">送信</button>` : ""}
+    ${t.status==="CONFIRMING"
+      ? `<button onclick="event.stopPropagation();approveDeposit(${t.id})">確認</button>` : ""}
+    <button onclick="event.stopPropagation();openChat(${t.user?.id})">💬</button>
+  </td>
+</tr>
+`);
+  });
+}
+
+/* =========================
+   Load
+========================= */
+async function loadDeposits() {
+  const status = document.getElementById("status-filter").value;
+  let list = await apiGet("/deposit/all");
+  if (status === "PENDING") list = await apiGet("/deposit/pending");
+  else if (status !== "ALL") list = list.filter(t=>t.status===status);
+  renderTable(list);
+}
+
+document.getElementById("status-filter").addEventListener("change", loadDeposits);
+document.getElementById("reload-btn").addEventListener("click", loadDeposits);
+loadDeposits().catch(console.error);

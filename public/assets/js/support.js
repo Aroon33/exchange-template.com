@@ -27,27 +27,45 @@ let currentTicketId = null;
 async function loadTickets() {
   const tickets = await apiFetch("/tickets");
 
-  threadListEl.innerHTML = "";
-  threadCountEl.textContent = `${tickets.length}件`;
+  // CLOSED は非表示
+  const visible = tickets.filter(t => t.status !== "CLOSED");
 
-  tickets.forEach(t => {
+  threadListEl.innerHTML = "";
+  threadCountEl.textContent = `${visible.length}件`;
+
+  if (!visible.length) {
+    threadListEl.innerHTML =
+      `<div style="padding:12px;color:#888;">問い合わせはありません</div>`;
+    return;
+  }
+
+  visible.forEach(t => {
     const row = document.createElement("div");
-    row.className = "thread-row";
+    row.className = "thread-row" + (t.unread ? " unread" : "");
+
     row.innerHTML = `
-      <div class="thread-title">${t.title}</div>
+      <div class="thread-title">
+        ${t.title}
+        ${t.unread ? `<span class="unread-badge">NEW</span>` : ""}
+      </div>
       <div class="thread-meta">
-        ID:${t.id} ／ ${new Date(t.createdAt).toLocaleString("ja-JP")}
+        ID:${t.id} ／ ${new Date(t.updatedAt).toLocaleString("ja-JP")}
       </div>
     `;
 
-    row.onclick = () => {
+    row.onclick = async () => {
       currentTicketId = t.id;
-      loadMessages();
+      await loadMessages();
+
+      // UI上でも即既読
+      row.classList.remove("unread");
+      row.querySelector(".unread-badge")?.remove();
     };
 
     threadListEl.appendChild(row);
   });
 }
+
 
 /* =========================
    Messages

@@ -1,14 +1,18 @@
-// admin-auth.js
-(async function () {
-  try {
-    const res = await fetch(
-      "https://api.exchange-template.com/auth/me",
-      { credentials: "include" }
-    );
+import { CONFIG } from "/assets/js/config.js";
 
-    if (!res.ok) throw new Error();
 
-  } catch {
-    location.href = "/admin/login.html";
+export async function signupApi(payload) {
+  const res = await fetch(CONFIG.API_BASE_URL + "/auth/register", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.message || "登録に失敗しました");
   }
-})();
+
+  return json;
+}

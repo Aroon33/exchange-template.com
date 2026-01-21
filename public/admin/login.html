@@ -5,8 +5,8 @@
   <title>Admin Login | CryptoX</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="/admin/assets/css/style.css">
+  <link rel="stylesheet" href="/admin/assets/css/admin.css">
 
   <style>
 /* =========================
@@ -108,57 +108,8 @@ body {
   <div class="login-error" id="login-error"></div>
 </div>
 
-<script>
-const API_BASE = "https://api.exchange-template.com";
 
-const btn = document.getElementById("login-btn");
-const errorBox = document.getElementById("login-error");
-
-btn.addEventListener("click", login);
-document.addEventListener("keydown", e => {
-  if (e.key === "Enter") login();
-});
-
-async function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  if (!email || !password) {
-    showError("メールアドレスとパスワードを入力してください");
-    return;
-  }
-
-  btn.disabled = true;
-  errorBox.style.display = "none";
-
-  try {
-    const res = await fetch(API_BASE + "/auth/login", {
-      method: "POST",
-      credentials: "include",   // ★重要
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!res.ok) {
-      throw new Error("login failed");
-    }
-
-    // ログイン成功
-    location.href = "/admin/index.html";
-
-  } catch {
-    showError("ログインに失敗しました");
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-function showError(msg) {
-  errorBox.textContent = msg;
-  errorBox.style.display = "block";
-}
-</script>
-
+<script type="module" src="/admin/assets/js/admin-login.js"></script>
 
 
 

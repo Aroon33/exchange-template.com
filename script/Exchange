@@ -1,0 +1,363 @@
+フロントエンド構成規定（ユーザー・管理画面共通）
+1. 全体方針
+
+本プロジェクトのフロントエンドは、
+「1ページ = 1ドメイン」 を基本単位とし、
+以下の責務分離を前提に構築する。
+
+HTML：画面の構造（見た目の入れ物）
+
+ページJS：画面の振る舞い（イベント・DOM操作）
+
+APIラッパー：APIの呼び出し定義
+
+共通通信：fetch / 認証 / エラーハンドリング
+
+バックエンド：ビジネスロジックとデータ管理
+
+この構成により、
+保守性・可読性・拡張性 を確保する。
+
+2. ディレクトリ全体構成
+public/
+├── index.html              # ユーザートップ
+├── login.html              # ユーザーログイン
+├── mypage.html             # ユーザーマイページ
+├── kyc.html                # KYCページ
+│
+├── admin/
+│   ├── login.html          # 管理者ログイン
+│   ├── index.html          # 管理者トップ
+│   └── tickets.html        # 管理画面ページ群
+│
+├── assets/
+│   ├── css/
+│   │   ├── style.css       # 全体共通スタイル
+│   │   ├── admin.css       # 管理画面共通
+│   │   └── tickets.css     # ページ固有CSS
+│   │
+│   └── js/
+│       ├── api/
+│       │   ├── apiClient.js
+│       │   ├── auth.api.js
+│       │   ├── kyc.api.js
+│       │   └── tickets.api.js
+│       │
+│       ├── login.js        # ユーザーログインページJS
+│       ├── kyc.js          # KYCページJS
+│       ├── mypage.js       # マイページJS
+│       │
+│       └── admin/
+│           ├── admin-auth.js
+│           └── admin-login.js
+
+3. レイヤーごとの役割定義
+3.1 HTML（画面）
+
+役割
+
+UI構造のみを定義する
+
+ロジックは一切書かない
+
+ルール
+
+<script type="module"> でページJSを読み込む
+
+admin と user の JS は混在させない
+
+例：
+
+<script type="module" src="/assets/js/kyc.js"></script>
+
+3.2 ページJS（画面ロジック）
+
+例：
+
+/assets/js/kyc.js
+/assets/js/login.js
+
+
+役割
+
+DOM操作
+
+イベントハンドリング
+
+API呼び出しのトリガー
+
+表示切り替え
+
+やらないこと
+
+fetch の直接呼び出し
+
+API URL の直書き
+
+認証ロジックの実装
+
+3.3 APIラッパー（ドメイン別）
+
+例：
+
+/assets/js/api/kyc.api.js
+/assets/js/api/auth.api.js
+
+
+役割
+
+各機能ごとの API 定義
+
+エンドポイントの隠蔽
+
+payload / response の整理
+
+例：
+
+export function getKycStatus() {
+  return apiFetch("/kyc/status");
+}
+
+3.4 共通通信（apiClient）
+/assets/js/api/apiClient.js
+
+
+役割
+
+API_BASE_URL 管理
+
+credentials: include
+
+共通エラーハンドリング
+
+未認証時の処理（401）
+
+位置づけ
+
+通信レイヤー（Transport）
+
+業務知識を持たない
+
+3.5 認証API（auth.api.js）
+/assets/js/api/auth.api.js
+
+
+役割
+
+login / signup / logout / me
+
+認証に関する API を集約
+
+例：
+
+export async function login(email, password) {
+  return apiFetch("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+4. 認証とロール設計
+4.1 ログインAPI
+
+/auth/login は USER / ADMIN 共通
+
+role はレスポンスで返す
+
+{
+  "id": 123,
+  "role": "USER"
+}
+
+4.2 USER ログインページ
+/login.html
+/assets/js/login.js
+
+
+ルール
+
+USER としてログインすることのみを保証
+
+ADMIN 判定は行わない
+
+ログイン後は必ず mypage.html へ遷移
+
+4.3 ADMIN ログインページ
+/admin/login.html
+/admin/assets/js/admin-login.js
+
+
+ルール
+
+ログイン後に role === "ADMIN" を必ず確認
+
+ADMIN 以外は即拒否
+
+admin-auth.js は admin 配下でのみ使用
+
+4.4 /auth/me の役割
+
+目的
+
+現在ログイン中のユーザーを確認する
+
+ページ直接アクセスやリロード対策
+
+使いどころ
+
+mypage 初期表示
+
+admin ページの権限チェック
+
+5. ページとAPIの接続イメージ
+
+例：KYCページ
+
+kyc.html
+  ↓
+kyc.js
+  ↓
+kyc.api.js
+  ↓
+apiClient.js
+  ↓
+/exchange-api/src/kyc
+
+
+1ページ = 1フロー が成立する。
+
+6. この構成のメリット
+
+どこを直すべきか迷わない
+
+機能追加・削除が容易
+
+認証事故が起きにくい
+
+管理画面とユーザー画面が完全分離
+
+実務・チーム開発に耐える
+
+7. まとめ（設計思想）
+
+画面は画面の責務
+APIはAPIの責務
+認証は認証の責務
+それぞれを混ぜない
+
+この規定に従って構築することで、
+安全で拡張性の高いフロントエンド構成 を維持できる。
+
+
+
+
+
+
+
+root@vm-21d67eda-53:~/setup# ls -R /root/setup/structured/admin
+/root/setup/structured/admin:
+deposit                    deposit-crypto-address-edit  kyc     settings          tickets      users
+deposit-bank-account-edit  group                        login   system-history    trades       withdraw
+deposit-bank-accounts      index                        logout  system-positions  user-detail  withdraw-detail
+
+/root/setup/structured/admin/deposit:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/admin/deposit-bank-account-edit:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/admin/deposit-bank-accounts:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/admin/deposit-crypto-address-edit:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/admin/group:
+body.html  head.html  script.js  script.js.bak  style.css
+
+/root/setup/structured/admin/index:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/admin/kyc:
+body.html  head.html  script.js  script.js.bak  style.css
+
+/root/setup/structured/admin/login:
+body.html  head.html  script.js  style.css
+
+/root/setup/structured/admin/logout:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/admin/settings:
+body.html  head.html  script.js  script.js.bak  style.css
+
+/root/setup/structured/admin/system-history:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/admin/system-positions:
+body.html  head.html  script.js  script.js.bak  style.css
+
+/root/setup/structured/admin/tickets:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/admin/trades:
+body.html  head.html  script.js  script.js.bak  style.css
+
+/root/setup/structured/admin/user-detail:
+body.html  head.html  script.js  script.js.bak  style.css
+
+/root/setup/structured/admin/users:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/admin/withdraw:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/admin/withdraw-detail:
+body.html  head.html  script.js  style.css
+
+
+root@vm-21d67eda-53:~/setup# ls -R /root/setup/structured/user
+/root/setup/structured/user:
+campaign       deposit-thanks  history  kyc    logout  signup   system-trade
+crypto-thanks  exchange        index    login  mypage  support  wallet
+
+/root/setup/structured/user/campaign:
+body.html  head.html  script.js  style.css
+
+/root/setup/structured/user/crypto-thanks:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/user/deposit-thanks:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/user/exchange:
+body.html  head.html  script.js  style.css
+
+/root/setup/structured/user/history:
+body.html  head.html  script.js  style.css
+
+/root/setup/structured/user/index:
+body.html  head.html  script.js  style.css
+
+/root/setup/structured/user/kyc:
+body.html  head.html  script.js  style.css
+
+/root/setup/structured/user/login:
+body.html  head.html  script.js  style.css
+
+/root/setup/structured/user/logout:
+body.html  head.html  script.js  script.js.bak  script.js.bak_before_clean  style.css
+
+/root/setup/structured/user/mypage:
+body.html  head.html  script.js  style.css
+
+/root/setup/structured/user/signup:
+body.html  head.html  script.js  style.css
+
+/root/setup/structured/user/support:
+body.html  head.html  script.js  style.css
+
+/root/setup/structured/user/system-trade:
+body.html  head.html  script.js  style.css
+
+/root/setup/structured/user/wallet:
+body.html  head.html  script.js  style.css

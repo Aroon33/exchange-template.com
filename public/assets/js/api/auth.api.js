@@ -1,28 +1,71 @@
-// assets/js/api/auth.api.js
-import { apiFetch } from "./apiClient.js";
+// ========================================
+// Auth API（最終版）
+// ========================================
 
-/* ログイン */
-export function login(email, password) {
-  return apiFetch("/auth/login", {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  });
-}
+import { CONFIG } from "../config.js";
 
-/* 新規登録 */
-export function signup(payload) {
-  return apiFetch("/auth/signup", {
+const API_BASE_URL = CONFIG.API_BASE_URL;
+
+
+/**
+ * 新規登録
+ */
+export async function signup(payload) {
+  const res = await fetch(API_BASE_URL + "/auth/register", {
     method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.message || "登録に失敗しました");
+  }
+
+  return json;
 }
 
-/* ログアウト */
-export function logout() {
-  return apiFetch("/auth/logout", { method: "POST" });
+/**
+ * ログイン
+ */
+export async function login(email, password) {
+  const res = await fetch(API_BASE_URL + "/auth/login", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.message || "ログインに失敗しました");
+  }
+
+  return json;
 }
 
-/* 自分情報（ヘッダー用） */
-export function getMe() {
-  return apiFetch("/auth/me");
+/**
+ * ログインユーザー取得
+ */
+export async function getMe() {
+  const res = await fetch(API_BASE_URL + "/auth/me", {
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return res.json();
+}
+
+/**
+ * ログアウト
+ */
+export async function logout() {
+  await fetch(API_BASE_URL + "/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
 }

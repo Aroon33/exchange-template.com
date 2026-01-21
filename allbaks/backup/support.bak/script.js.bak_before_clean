@@ -1,0 +1,135 @@
+import { CONFIG } from "../config.js";
+
+// [DEPRECATED] was: const API_BASE_URL = "https://api.exchange-template.com";
+
+/* ---------------- API ---------------- */
+async function apiGet(path){
+  const r = await fetch(API_BASE_URL + path,{credentials:"include"});
+  return r.json();
+}
+async function apiPost(path,body){
+  const r = await fetch(API_BASE_URL + path,{
+    method:"POST",
+    credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify(body)
+  });
+  return r.json();
+}
+
+/* ---------------- Ticket ---------------- */
+const newTitleEl=document.getElementById("new-title");
+const newBodyEl=document.getElementById("new-body");
+const threadListEl=document.getElementById("thread-list");
+const threadCountEl=document.getElementById("thread-count");
+let currentTicketId=null;
+
+async function loadTickets(){
+  const tickets=await apiGet("/tickets");
+  threadListEl.innerHTML="";
+  threadCountEl.textContent=`${tickets.length}件`;
+
+  tickets.forEach(t=>{
+    const row=document.createElement("div");
+    row.className="thread-row";
+    row.innerHTML=`
+      <div class="thread-title">${t.title}</div>
+      <div class="thread-meta">
+        ID:${t.id} ／ ${new Date(t.createdAt).toLocaleString("ja-JP")}
+      </div>`;
+    row.onclick=()=>{
+      currentTicketId=t.id;
+      loadMessages();
+    };
+    threadListEl.appendChild(row);
+  });
+}
+
+async function loadMessages(){
+  const msgs=await apiGet(`/tickets/${currentTicketId}/messages`);
+  const chatWindow=document.getElementById("chat-window");
+  chatWindow.innerHTML="";
+  msgs.forEach(m=>{
+    const div=document.createElement("div");
+    div.className="chat-msg "+(m.sender==="ADMIN"?"admin":"user");
+    div.innerHTML=`
+      <div class="chat-meta">
+        ${m.sender} ／ ${new Date(m.createdAt).toLocaleString("ja-JP")}
+      </div>
+      <div>${m.message}</div>`;
+    chatWindow.appendChild(div);
+  });
+  document.getElementById("chat-title").textContent=`スレッド #${currentTicketId}`;
+  document.getElementById("chat-input-area").style.display="flex";
+}
+
+document.getElementById("btn-create-thread").onclick=async()=>{
+  if(!newTitleEl.value||!newBodyEl.value)return;
+  await apiPost("/tickets",{title:newTitleEl.value,message:newBodyEl.value});
+  newTitleEl.value="";
+  newBodyEl.value="";
+  loadTickets();
+};
+
+document.getElementById("btn-send-msg").onclick=async()=>{
+  const msg=document.getElementById("chat-input").value;
+  if(!msg)return;
+  await apiPost(`/tickets/${currentTicketId}/reply`,{message:msg});
+  document.getElementById("chat-input").value="";
+  loadMessages();
+};
+
+/* ---------------- Menu ---------------- */
+const toggle=document.getElementById("menu-toggle");
+const menu=document.getElementById("mobile-menu");
+const overlay=document.getElementById("menu-overlay");
+toggle.onclick=()=>{menu.classList.add("open");overlay.classList.add("show");};
+overlay.onclick=()=>{menu.classList.remove("open");overlay.classList.remove("show");};
+
+loadTickets();
+
+/* =========================
+   ヘッダー：ログイン状態反映
+========================= */
+async function updateHeaderUserState() {
+  const headerActions = document.querySelector(".header-actions");
+  if (!headerActions) return;
+
+  try {
+    const res = await fetch(API_BASE_URL + "/auth/me", {
+      credentials: "include",
+    });
+    if (!res.ok) return; // 未ログイン
+
+    const data = await res.json();
+    const user = data.user || data;
+
+    // ヘッダー右側を差し替え
+    headerActions.innerHTML = "";
+
+    const userBtn = document.createElement("a");
+    userBtn.href = "users.html";
+    userBtn.className = "btn btn-outline btn-sm";
+    userBtn.textContent = user.name + " さん";
+    headerActions.appendChild(userBtn);
+
+    const logoutBtn = document.createElement("a");
+    logoutBtn.href = "#";
+    logoutBtn.className = "btn btn-primary btn-sm";
+    logoutBtn.textContent = "ログアウト";
+    logoutBtn.onclick = async () => {
+      await fetch(API_BASE_URL + "/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      location.href = "../login.html";
+    };
+    headerActions.appendChild(logoutBtn);
+
+  } catch (e) {
+    console.warn("ログイン状態取得失敗", e);
+  }
+}
+
+/* 初期化 */
+document.addEventListener("DOMContentLoaded", updateHeaderUserState);

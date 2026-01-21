@@ -1,0 +1,109 @@
+  <div class="admin-main-inner">
+
+    <div class="page-title">グループ管理</div>
+
+    <!-- グループ一覧 -->
+    <section class="table-card">
+      <div class="table-header-row">
+        <div>
+          <div class="table-title">グループ一覧</div>
+          <div class="table-sub" id="group-count">0件</div>
+        </div>
+      </div>
+
+      <table class="table group-table">
+        <thead>
+  <tr>
+    <th>ID</th>
+    <th>グループ名</th>
+    <th>人数</th>
+    <th>ポジション</th>
+    <th>損益</th>
+    <th>残高</th>
+    <th>リンク</th>
+    <th>操作</th>
+  </tr>
+</thead>
+
+        <tbody id="group-body">
+          <tr>
+            <td colspan="7" style="text-align:center;">読み込み中...</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ユーザー一覧 -->
+    <section class="table-card" style="margin-top:25px;">
+      <div class="table-header-row" style="display:flex;justify-content:space-between;">
+        <div>
+          <div class="table-title">ユーザー一覧</div>
+          <div class="table-sub">グループ単位で表示</div>
+        </div>
+
+        <div style="display:flex;gap:8px;">
+  <!-- 表示用 -->
+  <select id="filter-group" class="btn-sm">
+    <option value="">表示グループ</option>
+  </select>
+
+  <!-- 移行先 -->
+  <select id="move-group-select" class="btn-sm">
+    <option value="">移行先グループ</option>
+  </select>
+
+  <button class="btn-xs btn-xs-primary"
+          id="btn-bulk-move"
+          disabled>
+    選択ユーザーを移動
+  </button>
+</div>
+
+      </div>
+
+      <table class="table group-table">
+        <thead>
+  <tr>
+    <th><input type="checkbox" id="check-all"></th>
+    <th>ID</th>
+    <th>名前</th>
+    <th>KYC</th>
+    <th>ポジション</th>
+    <th>損益</th>
+    <th>残高</th>
+    <th>メール</th>
+    <th>操作</th>
+  </tr>
+</thead>
+
+
+    
+        <tbody id="user-body">
+          <tr>
+            <td colspan="5" style="text-align:center;">グループを選択してください</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- グループ統計 -->
+    <section class="card" style="margin-top:25px;">
+      <h2 class="card-title-small">グループ統計</h2>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        <div class="stat-card">
+          <div class="stat-label">ユーザー数</div>
+          <div class="stat-value" id="stat-user-count">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">ポジション数</div>
+          <div class="stat-value" id="stat-positions-count">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">合計残高</div>
+          <div class="stat-value" id="stat-total-balance">-</div>
+        </div>
+      </div>
+    </section>
+
+  </div>

@@ -7,248 +7,185 @@
 
   <link rel="stylesheet" href="/assets/css/style.css">
   <style>
-    /* ---------------------------
-       共通レイアウト改善
-    ----------------------------*/
-    .section-card {
-      background: #fff;
-      padding: 18px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-      margin-top: 20px;
-    }
-    h2.card-sub {
-      margin-top: 24px;
-      margin-bottom: 12px;
-      font-size: 18px;
-      font-weight: bold;
-    }
+  /* ---------------------------
+     共通レイアウト改善
+  ----------------------------*/
+  .section-card {
+    background: #fff;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    margin-top: 20px;
+  }
 
-    /* ---------------------------
-       残高エリア（info-grid強化）
-    ----------------------------*/
-    .balance-boxes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .balance-item {
-      flex: 1;
-      min-width: 110px;
-      padding: 12px;
-      border-radius: 8px;
-      background: #f8fafc;
-      border: 1px solid #e5e7eb;
-    }
-    .balance-label {
-      font-size: 12px;
-      color: #777;
-    }
-    .balance-value {
-      margin-top: 4px;
-      font-size: 20px;
-      font-weight: bold;
-    }
+  h2.card-sub {
+    margin-top: 24px;
+    margin-bottom: 12px;
+    font-size: 18px;
+    font-weight: bold;
+  }
 
-    /* ---------------------------
-       タブ
-    ----------------------------*/
-    .tab-buttons {
-      display: flex;
-      gap: 8px;
-      margin: 16px 0;
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 10px;
-      background: #f1f5f9;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .tab-btn.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-
-    /* ---------------------------
-       入金/出金フォーム
-    ----------------------------*/
-    .form-section {
-      padding: 18px;
-      border-radius: 10px;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      margin-bottom: 10px;
-    }
-    .form-row {
-      margin-bottom: 14px;
-    }
-    .form-row label {
-      display: block;
-      font-size: 13px;
-      margin-bottom: 4px;
-      color: #555;
-    }
-    .form-row input,
-    .form-row select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      font-size: 15px;
-    }
-
-    .btn-sm {
-      padding: 8px 14px;
-      font-size: 14px;
-      border-radius: 6px;
-    }
-
-    /* ---------------------------
-       履歴テーブル
-    ----------------------------*/
-    .table-wrapper {
-      overflow-x: auto;
-    }
-    table.table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-    table.table th {
-      background: #f1f5f9;
-      padding: 10px;
-      text-align: left;
-      border-bottom: 2px solid #e5e7eb;
-    }
-    table.table td {
-      padding: 10px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    tr:hover {
-      background: #f9fafb;
-    }
-
-    .status-pending {
-      color: #d97706; /* orange */
-      font-weight: bold;
-    }
-    .status-completed {
-      color: #059669; /* green */
-      font-weight: bold;
-    }
-    .status-canceled {
-      color: #dc2626; /* red */
-      font-weight: bold;
-    }
-
-    /* ---------------------------
-       スマホ最適化
-    ----------------------------*/
-    @media (max-width: 600px) {
-      h1.card-title {
-        font-size: 20px;
-      }
-      .balance-value {
-        font-size: 17px;
-      }
-      table.table th, table.table td {
-        padding: 8px;
-        font-size: 13px;
-      }
-      .tab-btn {
-        font-size: 13px;
-        padding: 8px;
-      }
-    }
-    /* =============================
-   スマホ版ヘッダー制御
-============================= */
-.hamburger {
-  display: none;
-  font-size: 28px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-@media (max-width: 768px) {
-  .site-header {
+  /* ---------------------------
+     残高エリア
+  ----------------------------*/
+  .balance-boxes {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: relative;
-    z-index: 10000;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
   }
 
-  .hamburger {
+  .balance-item {
+    flex: 1;
+    min-width: 110px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+  }
+
+  .balance-label {
+    font-size: 12px;
+    color: #777;
+  }
+
+  .balance-value {
+    margin-top: 4px;
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  /* ---------------------------
+     タブ
+  ----------------------------*/
+  .tab-buttons {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .tab-btn.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  /* ---------------------------
+     入金 / 出金フォーム
+  ----------------------------*/
+  .form-section {
+    padding: 18px;
+    border-radius: 10px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 10px;
+  }
+
+  .form-row {
+    margin-bottom: 14px;
+  }
+
+  .form-row label {
     display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: #555;
   }
 
-  .site-nav {
-    display: none !important;
+  .form-row input,
+  .form-row select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 15px;
   }
-}
 
-/* =============================
-   モバイルメニュー
-============================= */
-.mobile-menu {
-  position: fixed;
-  top: 0;
-  left: -260px;
-  width: 240px;
-  height: 100%;
-  background: #fff;
-  padding: 20px;
-  transition: left .3s;
-  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
-  z-index: 9999;
-}
+  .btn-sm {
+    padding: 8px 14px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
 
-.mobile-menu.open {
-  left: 0;
-}
+  /* ---------------------------
+     履歴テーブル
+  ----------------------------*/
+  .table-wrapper {
+    overflow-x: auto;
+  }
 
-.mobile-menu a {
-  display: block !important;
-  background: #f8fafc;
-  padding: 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
+  table.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
 
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 26px;
-  float: right;
-  cursor: pointer;
-}
+  table.table th {
+    background: #f1f5f9;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 2px solid #e5e7eb;
+  }
 
-/* 黒幕 */
-.menu-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
-  z-index: 9998;
-}
+  table.table td {
+    padding: 10px;
+    border-bottom: 1px solid #e5e7eb;
+  }
 
-.menu-overlay.show {
-  display: block;
-}
+  tr:hover {
+    background: #f9fafb;
+  }
 
-  </style>
+  .status-pending {
+    color: #d97706;
+    font-weight: bold;
+  }
+
+  .status-completed {
+    color: #059669;
+    font-weight: bold;
+  }
+
+  .status-canceled {
+    color: #dc2626;
+    font-weight: bold;
+  }
+
+  /* ---------------------------
+     スマホ最適化
+  ----------------------------*/
+  @media (max-width: 600px) {
+    h1.card-title {
+      font-size: 20px;
+    }
+
+    .balance-value {
+      font-size: 17px;
+    }
+
+    table.table th,
+    table.table td {
+      padding: 8px;
+      font-size: 13px;
+    }
+
+    .tab-btn {
+      font-size: 13px;
+      padding: 8px;
+    }
+  }
+</style>
+
 
 </head>
 
@@ -291,31 +228,31 @@
     <h2 class="card-sub">入金（Deposit）</h2>
 
     <div class="tab-buttons">
-      <button class="tab-btn active" id="tab-jpy">日本円で入金</button>
-      <button class="tab-btn" id="tab-crypto">暗号通貨で入金</button>
+      <button class="tab-btn active" id="tab-deposit-jpy">日本円で入金</button>
+      <button class="tab-btn" id="tab-deposit-crypto">暗号通貨で入金</button>
     </div>
 
     <!-- ▼ 日本円入金 -->
-    <div id="jpy-form" class="form-section">
+    <div id="deposit-jpy-form" class="form-section">
       <div class="form-row">
         <label>入金金額（JPY）</label>
-        <input type="number" id="jpy-amount" placeholder="15000" />
+        <input type="number" id="deposit-jpy-amount" placeholder="15000" />
       </div>
-      <button class="btn btn-primary btn-sm" id="jpy-submit">入金申請する</button>
+      <button class="btn btn-primary btn-sm" id="deposit-jpy-submit">入金申請する</button>
       <div id="bank-info" class="bank-info">銀行振込先情報…</div>
-      <p id="jpy-message" class="muted"></p>
+      <p id="deposit-jpy-message" class="muted"></p>
     </div>
 
     <!-- ▼ Crypto 入金 -->
-    <div id="crypto-form" class="form-section" style="display:none;">
+    <div id="deposit-crypto-form" class="form-section" style="display:none;">
       <div class="form-row">
         <label>入金金額（JPY）</label>
-        <input type="number" id="crypto-jpy" placeholder="100000" />
+        <input type="number" id="deposit-crypto-jpy" placeholder="100000" />
       </div>
 
       <div class="form-row">
         <label>送金通貨</label>
-        <select id="crypto-currency">
+        <select id="deposit-crypto-currency">
           <option value="BTC">BTC</option>
           <option value="ETH">ETH</option>
         </select>
@@ -323,14 +260,14 @@
 
       <div class="form-row">
         <label>暗号通貨の枚数</label>
-        <input type="text" id="crypto-amount" readonly />
+        <input type="text" id="deposit-crypto-amount" readonly />
       </div>
 
-      <p id="rate-info" class="muted" style="font-size:12px;"></p>
+      <p id="deposit-rate-info" class="muted" style="font-size:12px;"></p>
 
   
-      <button class="btn btn-primary btn-sm" id="crypto-submit">暗号通貨で入金申請する</button>
-      <p id="crypto-message" class="muted"></p>
+      <button class="btn btn-primary btn-sm" id="deposit-crypto-submit">暗号通貨で入金申請する</button>
+      <p id="deposit-crypto-message" class="muted"></p>
     </div>
 
     <!-- ------------------------
@@ -391,36 +328,53 @@
 
 
     <!-- ------------------------
-        入出金履歴
-    ------------------------- -->
-    <h2 class="card-sub">入出金履歴</h2>
+     入出金履歴
+------------------------- -->
+<h2 class="card-sub">入出金履歴</h2>
 
-    <div class="table-wrapper">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>種別</th>
-            <th>通貨</th>
-            <th>金額</th>
-            <th>ステータス</th>
-            <th>日時</th>
-          </tr>
-        </thead>
-        <tbody id="wallet-history">
-          <tr>
-            <td colspan="6" style="text-align:center; color:#888; padding:12px;">
-              入出金履歴はありません。
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+<!-- 履歴タブ -->
+<div class="tab-buttons">
+  <button class="tab-btn active" id="tab-history-all">すべて</button>
+  <button class="tab-btn" id="tab-history-deposit">入金</button>
+  <button class="tab-btn" id="tab-history-withdraw">出金</button>
+</div>
+
+<div class="table-wrapper">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>種別</th>
+        <th>通貨</th>
+        <th>金額</th>
+        <th>ステータス</th>
+        <th>日時</th>
+      </tr>
+    </thead>
+    <tbody id="wallet-history">
+      <tr>
+        <td colspan="6" style="text-align:center; color:#888; padding:12px;">
+          入出金履歴はありません。
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- もっと見る -->
+<button
+  id="history-load-more"
+  class="btn btn-sm"
+  style="width:100%; margin-top:12px; display:none;"
+>
+  もっと見る
+</button>
+
 
   </section>
 </main>
 
-  <script type="module" src="/assets/js/header-user.js"></script>
+<script type="module" src="/assets/js/header-loader.js"></script>
 <script type="module" src="/assets/js/wallet.js"></script>
 
 

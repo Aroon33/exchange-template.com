@@ -1,0 +1,106 @@
+const API_BASE = "https://api.exchange-template.com";
+
+/* ▼ ログアウト */
+async function doLogout() {
+  await fetch(API_BASE + "/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
+  window.location.href = "../login.html";
+}
+
+/* ▼ API GET */
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path, { credentials: "include" });
+  if (res.status === 401) doLogout();
+  const txt = await res.text();
+  if (!res.ok) throw new Error(txt);
+  return JSON.parse(txt);
+}
+
+/* ▼ DOM */
+const tbody      = document.getElementById("table-body");   // ← 修正済み
+const fGroup     = document.getElementById("f-group");
+const fFrom      = document.getElementById("f-from");
+const fTo        = document.getElementById("f-to");
+const fText      = document.getElementById("f-text");
+const metaEl     = document.getElementById("table-meta");
+
+let allUsers = [];
+
+/* ▼ 日付フォーマット */
+function fmtDate(iso) {
+  if (!iso) return "-";
+  return new Date(iso).toLocaleDateString("ja-JP");
+}
+
+/* ▼ 全ユーザー読み込み */
+async function loadUsers() {
+  allUsers = await apiGet("/admin/users");
+  renderTable(allUsers); // 初期表示は全件
+}
+
+/* ▼ フィルタ適用 */
+function applyFilters() {
+  let list = [...allUsers];
+
+  const group = Number(fGroup.value);
+  const from  = fFrom.value ? new Date(fFrom.value) : null;
+  const to    = fTo.value ? new Date(fTo.value) : null;
+  const text  = fText.value.trim().toLowerCase();
+
+  // グループ
+  if (group > 0) list = list.filter(u => Number(u.groupId) === group);
+
+  // 開設日フィルタ
+  if (from) list = list.filter(u => new Date(u.createdAt) >= from);
+  if (to)   list = list.filter(u => new Date(u.createdAt) <= to);
+
+  // キーワード（名前 / メール）
+  if (text) {
+    list = list.filter(u =>
+      u.name.toLowerCase().includes(text) ||
+      u.email.toLowerCase().includes(text)
+    );
+  }
+
+  renderTable(list);
+}
+
+/* ▼ テーブル描画 */
+function renderTable(list) {
+  tbody.innerHTML = "";
+  metaEl.textContent = `${list.length}件`;
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">データがありません。</td></tr>`;
+    return;
+  }
+
+  list.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${u.id}</td>
+      <td>${u.name}</td>
+      <td>${u.email}</td>
+      <td>${u.groupId ?? "-"}</td>
+      <td>${fmtDate(u.createdAt)}</td>
+      <td>${u.balanceTotal ?? 0}</td>
+      <td><a href="user-detail.html?id=${u.id}" class="btn-xs btn-primary">詳細</a></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ▼ フィルターイベント */
+document.getElementById("btn-search").addEventListener("click", applyFilters);
+document.getElementById("btn-clear").addEventListener("click", () => {
+  fGroup.value = "";
+  fFrom.value = "";
+  fTo.value = "";
+  fText.value = "";
+  renderTable(allUsers);
+});
+
+/* ▼ 初期ロード */
+loadUsers().catch(console.error);

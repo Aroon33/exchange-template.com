@@ -7,76 +7,6 @@
   <link rel="stylesheet" href="assets/css/style.css">
 
   <style>
-    /* ハンバーガーボタン（スマホのみ表示） */
-.hamburger {
-  display: none;
-  font-size: 26px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-left: auto;
-}
-
-@media (max-width: 768px) {
-  .hamburger {
-    display: block;
-  }
-
-  /* PC ナビをスマホでは非表示 */
-  .site-nav {
-    display: none;
-  }
-}
-
-/* サイドメニュー */
-.mobile-menu {
-  position: fixed;
-  top: 0;
-  left: -260px;
-  width: 240px;
-  height: 100%;
-  background: #fff;
-  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
-  padding: 20px;
-  transition: left 0.3s ease;
-  z-index: 9999;
-}
-
-.mobile-menu.open {
-  left: 0;
-}
-
-.mobile-menu a {
-  display: block;
-  padding: 12px 0;
-  border-bottom: 1px solid #eee;
-  font-size: 16px;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  float: right;
-  cursor: pointer;
-}
-
-/* 背景の黒幕 */
-.menu-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
-  z-index: 9998;
-}
-
-.menu-overlay.show {
-  display: block;
-}
-
     /* -----------------------------
           カード（統一UI）
     ------------------------------*/
@@ -101,7 +31,7 @@
     }
 
     /* -----------------------------
-          情報表示（info-grid）
+          情報表示
     ------------------------------*/
     .info-grid {
       display: grid;
@@ -120,10 +50,12 @@
       padding: 12px;
       border-radius: 10px;
     }
+
     .info-label {
       font-size: 12px;
       color: #6b7280;
     }
+
     .info-value {
       font-size: 17px;
       margin-top: 4px;
@@ -131,7 +63,7 @@
     }
 
     /* -----------------------------
-          KYC バッジ
+          KYC
     ------------------------------*/
     .kyc-pill {
       padding: 6px 12px;
@@ -148,88 +80,92 @@
     .kyc-5 { background:#86efac; color:#065f46; }
 
     /* -----------------------------
-          残高ボックス
+          Input
     ------------------------------*/
-    .balance-boxes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 10px;
-    }
-    .balance-item {
-      flex: 1;
-      min-width: 120px;
-      padding: 12px;
-      border-radius: 10px;
-      background: #eef2ff;
-      border: 1px solid #e5e7eb;
-    }
-    .balance-value {
-      font-size: 20px;
-      font-weight: bold;
-      margin-top: 6px;
-    }
     .input-text {
-  width: 100%;
-  margin-top: 6px;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border-soft);
-  background: #fff;
-  font-size: 14px;
-}
-.input-text:focus {
-  outline: 2px solid var(--primary-light);
+      width: 100%;
+      margin-top: 6px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      background: #fff;
+      font-size: 14px;
+    }
 
-}
+    .input-text:focus {
+      outline: 2px solid var(--primary-light);
+    }
 
-/* ============================
-   モバイルメニューのリンクを縦並びに強制
-============================ */
-.mobile-menu a {
-  display: block !important;     /* 絶対に縦表示 */
-  width: 100%;
-  background: #f8fafc;           /* 背景色 */
-  border: 1px solid #e5e7eb;     /* 薄い枠 */
-  padding: 12px 10px;
-  margin-bottom: 8px;
-  border-radius: 8px;
-  font-size: 15px;
-  color: #333;
-}
+    /* ============================
+          モーダル
+    ============================ */
+    .modal.hidden {
+      display: none;
+    }
 
-/* ホバーエフェクト */
-.mobile-menu a:hover {
-  background: #eef2ff;
-  border-color: var(--primary);
-}
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+    }
 
-/* market-tabs（スマホ用タブ）の CSS が
-   mobile-menu に干渉しないよう明示的に制限 */
-.mobile-menu .market-tab,
-.mobile-menu .market-tabs {
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+      position: relative;
+      max-width: 720px;
+      margin: 10vh auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 14px;
+    }
+    /* 表示制御用（必須） */
+.hidden {
   display: none !important;
 }
+/* ===== モーダル内セクション ===== */
+.modal-section {
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-section:last-child {
+  border-bottom: none;
+}
+
+/* ヘッダー + 編集ボタン */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+/* モーダルスクロール（再確認） */
+.modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
 
   </style>
-
-  
 </head>
 
 <body>
 
-<!-- 共通ヘッダー差し込み口（これだけ） -->
+<!-- 共通ヘッダー -->
 <div id="header"></div>
 
-<!-- MAIN -->
 <main>
   <section class="section-card">
     <h1 class="card-title">マイページ</h1>
     <p id="mypage-message" class="muted"></p>
 
-    <!-- ----------------------------
-          アカウント情報
-    ----------------------------- -->
     <h2 class="section-title">アカウント情報</h2>
     <div class="info-grid">
       <div class="info-box">
@@ -241,16 +177,8 @@
         <div class="info-label">名前</div>
         <div class="info-value" id="my-name">-</div>
       </div>
-
-      <div class="info-box">
-        <div class="info-label">グループID</div>
-        <div class="info-value" id="my-group">-</div>
-      </div>
     </div>
 
-    <!-- ----------------------------
-          KYC ステータス（繰り上げ）
-    ----------------------------- -->
     <h2 class="section-title">KYC ステータス</h2>
     <div class="info-grid">
       <div class="info-box">
@@ -261,114 +189,224 @@
       </div>
     </div>
 
-    <!-- ----------------------------
-          残高サマリー
-    ----------------------------- -->
-    <h2 class="section-title">残高サマリー</h2>
-    <div class="balance-boxes">
-      <div class="balance-item">
-        <div class="info-label">総残高</div>
-        <div class="balance-value" id="my-balance-total">0</div>
+    <button
+      id="open-profile-modal"
+      class="btn btn-primary"
+      style="margin-top:16px;"
+    >
+      プロフィール詳細を見る
+    </button>
+  </section>
+
+  <!-- 銀行口座 -->
+<section id="bank-section" class="section-card">
+
+    <h2 class="section-title">銀行口座の登録（出金用）</h2>
+    <p id="bank-msg" class="muted"></p>
+
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-label">銀行名</div>
+        <input id="bank-name" class="input-text">
       </div>
 
-      <div class="balance-item">
-        <div class="info-label">利用可能残高</div>
-        <div class="balance-value" id="my-balance-available">0</div>
+      <div class="info-box">
+        <div class="info-label">支店名</div>
+        <input id="bank-branch" class="input-text">
       </div>
 
-      <div class="balance-item">
-        <div class="info-label">ロック残高</div>
-        <div class="balance-value" id="my-balance-locked">0</div>
+      <div class="info-box">
+        <div class="info-label">口座種別</div>
+        <select id="bank-type" class="input-text">
+          <option value="普通">普通</option>
+          <option value="当座">当座</option>
+        </select>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">口座番号</div>
+        <input id="bank-number" class="input-text">
+      </div>
+
+      <div class="info-box" style="grid-column:1/-1;">
+        <div class="info-label">口座名義（全角カナ）</div>
+        <input id="bank-holder" class="input-text">
       </div>
     </div>
 
+    <button id="save-bank" class="btn btn-primary" style="margin-top:14px;">
+      保存する
+    </button>
   </section>
-  <!-- =============================
-      銀行口座の登録（出金用）
-============================= -->
-<section class="section-card" style="max-width:760px;">
-  <h2 class="section-title">銀行口座の登録（出金用）</h2>
-  <p id="bank-msg" class="muted"></p>
+
+  <!-- 暗号通貨 -->
+<section id="crypto-section" class="section-card">
+    <h2 class="section-title">暗号通貨アドレスの登録</h2>
+    <p id="crypto-msg" class="muted"></p>
+
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-label">BTC</div>
+        <input id="crypto-btc" class="input-text">
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">ETH</div>
+        <input id="crypto-eth" class="input-text">
+      </div>
+
+      <div class="info-box" style="grid-column:1/-1;">
+        <div class="info-label">USDT（TRC20）</div>
+        <input id="crypto-usdt" class="input-text">
+      </div>
+    </div>
+
+    <button id="save-crypto" class="btn btn-primary" style="margin-top:14px;">
+      保存する
+    </button>
+  </section>
+<!-- =========================
+     初回プロフィール登録
+========================= -->
+<section id="profile-setup" class="section-card hidden">
+  <h2 class="section-title">プロフィール登録（初回）</h2>
+  <p class="muted">はじめにプロフィール情報を登録してください。</p>
 
   <div class="info-grid">
-
     <div class="info-box">
-      <div class="info-label">銀行名</div>
-      <input id="bank-name" class="input-text" placeholder="例：みずほ銀行">
+      <div class="info-label">生年月日</div>
+      <input id="p-dob" type="date" class="input-text">
     </div>
-
     <div class="info-box">
-      <div class="info-label">支店名</div>
-      <input id="bank-branch" class="input-text" placeholder="例：渋谷支店">
-    </div>
-
-    <div class="info-box">
-      <div class="info-label">口座種別</div>
-      <select id="bank-type" class="input-text">
-        <option value="普通">普通</option>
-        <option value="当座">当座</option>
+      <div class="info-label">性別</div>
+      <select id="p-gender" class="input-text">
+        <option value="">選択してください</option>
+        <option value="male">男性</option>
+        <option value="female">女性</option>
+        <option value="other">その他</option>
       </select>
     </div>
-
+    <div class="info-box" style="grid-column:1/-1;">
+      <div class="info-label">住所</div>
+      <input id="p-address" class="input-text">
+    </div>
     <div class="info-box">
-      <div class="info-label">口座番号</div>
-      <input id="bank-number" class="input-text" placeholder="例：1234567">
+      <div class="info-label">市区町村</div>
+      <input id="p-city" class="input-text">
     </div>
-
-    <div class="info-box" style="grid-column: 1 / -1;">
-      <div class="info-label">口座名義（全角カナ）</div>
-      <input id="bank-holder" class="input-text" placeholder="例：ヤマダ タロウ">
+    <div class="info-box">
+      <div class="info-label">郵便番号</div>
+      <input id="p-postal" class="input-text">
     </div>
-
+    <div class="info-box">
+      <div class="info-label">国</div>
+      <input id="p-country" class="input-text" value="日本">
+    </div>
+    <div class="info-box">
+      <div class="info-label">電話番号</div>
+      <input id="p-phone" class="input-text">
+    </div>
   </div>
 
-  <button id="save-bank" class="btn btn-primary" style="margin-top:14px;">
-    保存する
+  <button id="save-profile" class="btn btn-primary" style="margin-top:14px;">
+    登録する
   </button>
+  <p id="profile-msg" class="muted"></p>
 </section>
-<!-- =============================
-      暗号通貨アドレスの登録
-============================= -->
-<section class="section-card" style="max-width:760px;">
-  <h2 class="section-title">暗号通貨アドレスの登録</h2>
-  <p id="crypto-msg" class="muted"></p>
-
-  <div class="info-grid">
-
-    <div class="info-box">
-      <div class="info-label">BTC アドレス</div>
-      <input id="crypto-btc" class="input-text" placeholder="例：bc1xxxx...">
-    </div>
-
-    <div class="info-box">
-      <div class="info-label">ETH アドレス</div>
-      <input id="crypto-eth" class="input-text" placeholder="例：0xABC123...">
-    </div>
-
-    <div class="info-box" style="grid-column: 1 / -1;">
-      <div class="info-label">USDT（TRC20）</div>
-      <input id="crypto-usdt" class="input-text" placeholder="例：TXYZ1234...">
-    </div>
-
-  </div>
-
-  <button id="save-crypto" class="btn btn-primary" style="margin-top:14px;">
-    保存する
-  </button>
-</section>
-
-
-
 
 </main>
 
-<!-- 共通JS -->
-<script type="module" src="/assets/js/header-user.js"></script>
+<!-- プロフィールモーダル -->
+<div id="profile-modal" class="modal hidden">
+  <div class="modal-overlay"></div>
+  <div class="modal-content">
 
-<!-- マイページ専用JS -->
+  <!-- ===== プロフィール ===== -->
+  <div class="modal-section">
+    <div class="modal-header">
+      <h2 class="section-title">ユーザープロフィール</h2>
+      <button class="btn btn-outline btn-sm" id="edit-profile-btn">編集</button>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-label">メール</div>
+        <div id="modal-email" class="info-value">-</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">名前</div>
+        <div id="modal-name" class="info-value">-</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">KYC</div>
+        <div id="modal-kyc" class="info-value">-</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">生年月日</div>
+        <div id="profile-dob" class="info-value">-</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">性別</div>
+        <div id="profile-gender" class="info-value">-</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">住所</div>
+        <div id="profile-address" class="info-value">-</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">電話番号</div>
+        <div id="profile-phone" class="info-value">-</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 出金情報 ===== -->
+  <div class="modal-section">
+    <div class="modal-header">
+      <h2 class="section-title">出金情報</h2>
+      <button class="btn btn-outline btn-sm" id="edit-withdraw-btn">編集</button>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-label">銀行口座</div>
+        <div id="modal-bank" class="info-value">未登録</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">BTC アドレス</div>
+        <div id="modal-btc" class="info-value">未登録</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">ETH アドレス</div>
+        <div id="modal-eth" class="info-value">未登録</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">USDT（TRC20）</div>
+        <div id="modal-usdt" class="info-value">未登録</div>
+      </div>
+    </div>
+  </div>
+
+  <button id="close-profile-modal" class="btn" style="margin-top:20px;">
+    閉じる
+  </button>
+
+</div>
+
+</div>
+
+<script type="module" src="/assets/js/header-loader.js"></script>
 <script type="module" src="/assets/js/mypage.js"></script>
-
-
 
 </body>
 </html>
+

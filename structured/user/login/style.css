@@ -1,0 +1,96 @@
+    /* レイアウト */
+    main {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-card {
+      background: #ffffff;
+      padding: 26px;
+      max-width: 420px;
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    .login-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .login-desc {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+
+    /* 入力欄 */
+    .form-row {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      color: #475569;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #f8fafc;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+    input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.25);
+      background: #ffffff;
+      outline: none;
+    }
+
+    /* ログイン状態保持＋リンク */
+    .login-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      font-size: 12px;
+    }
+    .login-options a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .login-options a:hover {
+      text-decoration: underline;
+    }
+
+    /* ログインボタン */
+    .btn-login {
+      width: 100%;
+      background: #2563eb;
+      color: white;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-login:hover {
+      background: #1e4fcf;
+    }
+
+    /* 結果メッセージ */
+    #login-message {
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    /* スマホ最適化 */
+    @media(max-width: 480px){
+      .login-card { padding: 20px; }
+      .login-title { font-size: 20px; }
+    }

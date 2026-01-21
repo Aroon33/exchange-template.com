@@ -1,0 +1,50 @@
+  <section class="section-card">
+
+    <h1 class="card-title">取引履歴</h1>
+    <p class="muted">決済済みの取引履歴を確認できます。</p>
+    <p id="history-message" class="muted"></p>
+
+    <!-- 期間タブ -->
+    <div class="history-filter">
+      <button class="filter-btn active" data-days="1">1日</button>
+      <button class="filter-btn" data-days="3">3日</button>
+      <button class="filter-btn" data-days="7">7日</button>
+      <button class="filter-btn" data-days="30">30日</button>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="table">
+
+        <!-- PC用ヘッダー -->
+        <thead class="thead-pc">
+          <tr>
+            <th>ID</th>
+            <th>銘柄</th>
+            <th>売買</th>
+            <th>数量</th>
+            <th>建値</th>
+            <th>決済値</th>
+            <th>損益</th>
+            <th>決済日時</th>
+          </tr>
+        </thead>
+
+       <!-- スマホ用ヘッダー -->
+<thead class="thead-sp">
+  <tr>
+    <th>取引</th>
+  </tr>
+</thead>
+
+
+        <tbody id="trade-history-body"></tbody>
+      </table>
+    </div>
+
+    <div style="text-align:center;">
+      <button id="btn-loadmore" class="btn btn-outline btn-sm">
+        続きを見る
+      </button>
+    </div>
+
+  </section>

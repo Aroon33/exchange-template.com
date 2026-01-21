@@ -5,8 +5,8 @@
   <title>CryptoX Admin - システムポジション＆決済管理</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="/admin/assets/css/style.css" />
+  <link rel="stylesheet" href="/admin/assets/css/admin.css" />
 
   <style>
     th, td {
@@ -25,51 +25,12 @@
 
 <body>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="sidebar-title">メニュー</div>
-  <ul class="nav-list">
-    <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
-    <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
-    <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
-    <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
-    <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
-    <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
-    <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
-    <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
-    <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
-    <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
-    <li class="nav-item"><a href="system-history.html" class="nav-link active">📜 システム履歴</a></li>
-    <li class="nav-item"><a href="deposit-bank-accounts.html" class="nav-link active">📜 銀行管理</a></li>
-    <li class="nav-item"><a href="deposit-bank-accounts-edit.html" class="nav-link active">📜 口座登録</a></li>
-    <li class="nav-item"><a href="deposit-crypto-address-form.html" class="nav-link active">📜 アドレス登録</a></li>
-  </ul>
-</aside>
-
-<header class="admin-header">
-  <div class="admin-header-left">
-    <div class="admin-logo-badge">AX</div>
-    <div>
-      <div class="admin-logo-text">Admin Console</div>
-      <div class="admin-logo-sub">ダッシュボード</div>
-    </div>
-  </div>
-  <div class="admin-header-right">
-
-<!-- ▼ 追加：サイドバートグル -->
-    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button> 
-   <button class="btn btn-outline btn-sm" onclick="doLogout()">ログアウト</button>
-  </div>
-</header>
-
-<!-- overlay -->
-<div class="sidebar-overlay" onclick="closeSidebar()"></div>
 <main class="admin-main">
   <div class="admin-main-inner">
 
     <div class="page-title">ポジション管理（OPEN）＋ 決済操作</div>
 
-    <!-- ▼ グループ選択 -->
+    <!-- グループ選択 -->
     <section class="filters-card">
       <div class="filters-grid">
         <div class="field">
@@ -80,11 +41,11 @@
 
       <div class="filter-actions">
         <button class="btn-xs btn-xs-primary" onclick="loadPositions()">更新</button>
-        <button class="btn-xs btn-danger" onclick="closeGroupAll()">⚠ 全決済（親＋子）</button>
+        <button class="btn-xs btn-danger" onclick="onCloseGroupAll()">⚠ 全決済（親＋子）</button>
       </div>
     </section>
 
-    <!-- ▼ 親口座 -->
+    <!-- 親口座 -->
     <section class="table-card">
       <div class="table-header-row">
         <div class="table-title">親口座ポジション（MAM）</div>
@@ -95,11 +56,12 @@
         <thead>
           <tr>
             <th>日時</th>
-            <th>Symbol</th>
-            <th>Lot</th>
-            <th>Entry</th>
-            <th>Current</th>
-            <th>PnL</th>
+            <th>名前</th>
+            <th>通貨</th>
+            <th>枚数</th>
+            <th>建値</th>
+            <th>価格</th>
+            <th>損益</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -107,7 +69,7 @@
       </table>
     </section>
 
-    <!-- ▼ 子口座 -->
+    <!-- 子口座 -->
     <section class="table-card">
       <div class="table-header-row">
         <div class="table-title">子口座ポジション（PAM）</div>
@@ -118,13 +80,13 @@
         <thead>
           <tr>
             <th>日時</th>
-            <th>Symbol</th>
-            <th>Lot</th>
-            <th>Entry</th>
-            <th>Current</th>
-            <th>PnL</th>
+            <th>名前</th>
+            <th>通貨</th>
+            <th>枚数</th>
+            <th>建値</th>
+            <th>価格</th>
+            <th>損益</th>
             <th>操作</th>
-            <th>ユーザー</th>
           </tr>
         </thead>
         <tbody id="childBody"></tbody>
@@ -134,190 +96,10 @@
   </div>
 </main>
 
-<!-- Toast -->
 <div class="toast" id="toast"><span id="toast-text"></span></div>
 
-<script>
-const API = "https://api.exchange-template.com";
-
-/* ------------------------
-      API UTIL
------------------------- */
-async function apiGet(path){
-  const r = await fetch(API + path, { credentials:"include" });
-  const t = await r.text();
-  if(!r.ok) throw new Error(t);
-  return JSON.parse(t);
-}
-async function apiPost(path){
-  const r = await fetch(API + path, { method:"POST", credentials:"include" });
-  const t = await r.text();
-  if(!r.ok) throw new Error(t);
-  return JSON.parse(t);
-}
-
-function toast(msg){
-  const t = document.getElementById("toast");
-  document.getElementById("toast-text").textContent = msg;
-  t.classList.add("show");
-  setTimeout(()=>t.classList.remove("show"), 1800);
-}
-
-/* ------------------------
-      FORMATTERS
------------------------- */
-function fmtDate(iso){
-  if(!iso) return "-";
-  return new Date(iso).toLocaleString("ja-JP",{hour12:false});
-}
-
-function fmt3(n){
-  return Number(n).toFixed(3);
-}
-
-/* ------------------------
-      GROUP LOAD
------------------------- */
-async function loadGroups(){
-  const list = await apiGet("/admin/groups");
-  const sel = document.getElementById("groupSelect");
-  sel.innerHTML = "";
-  list.forEach(g=>{
-    sel.innerHTML += `<option value="${g.id}">${g.name} (ID:${g.id})</option>`;
-  });
-}
-
-/* ------------------------
-      POSITION LOAD
------------------------- */
-async function loadPositions(){
-  const gid = document.getElementById("groupSelect").value;
-  if(!gid) return;
-
-  const res = await apiGet(`/admin/system/positions/${gid}`);
-
-  renderParent(res.parent);
-  renderChildren(res.children);
-}
-
-/* ----------------------------------------------------
-      親口座レンダリング（★日時 + 小数点3桁対応）
----------------------------------------------------- */
-function renderParent(list){
-  const body = document.getElementById("parentBody");
-  body.innerHTML = "";
-  document.getElementById("metaParent").textContent = `${list.length}件`;
-
-  if(!list.length){
-    body.innerHTML = `<tr><td colspan="7" class="muted">なし</td></tr>`;
-    return;
-  }
-
-  list.forEach(p=>{
-    const pnlClass = p.unrealizedPnl >= 0 ? "profit" : "loss";
-
-    body.innerHTML += `
-      <tr>
-        <td>${fmtDate(p.openedAt)}</td>
-        <td>${p.symbol}</td>
-        <td>${fmt3(p.size)}</td>
-        <td>${fmt3(p.entryPrice)}</td>
-        <td>${fmt3(p.currentPrice)}</td>
-        <td class="${pnlClass}">${fmt3(p.unrealizedPnl)}</td>
-        <td>
-          <button class="btn-mini btn-danger" onclick="closeGroupSymbol('${p.symbol}')">
-            決済
-          </button>
-        </td>
-      </tr>
-    `;
-  });
-}
-
-/* ----------------------------------------------------
-      子口座レンダリング（★日時 + 小数点3桁対応）
----------------------------------------------------- */
-function renderChildren(list){
-  const body = document.getElementById("childBody");
-  body.innerHTML = "";
-  document.getElementById("metaChildren").textContent = `${list.length}件`;
-
-  if(!list.length){
-    body.innerHTML = `<tr><td colspan="8" class="muted">なし</td></tr>`;
-    return;
-  }
-
-  list.forEach(c=>{
-    const pnlClass = c.unrealizedPnl >= 0 ? "profit" : "loss";
-
-    body.innerHTML += `
-      <tr>
-        <td>${fmtDate(c.openedAt)}</td>
-        <td>${c.symbol}</td>
-        <td>${fmt3(c.size)}</td>
-        <td>${fmt3(c.entryPrice)}</td>
-        <td>${fmt3(c.currentPrice)}</td>
-        <td class="${pnlClass}">${fmt3(c.unrealizedPnl)}</td>
-        <td>
-          <button class="btn-mini btn-danger" onclick="closeUserSymbol(${c.userId}, '${c.symbol}')">
-            決済
-          </button>
-          <button class="btn-mini btn-warning" onclick="closeUser(${c.userId})">
-            全決済
-          </button>
-        </td>
-        <td>${c.userName} (ID:${c.userId})</td>
-      </tr>
-    `;
-  });
-}
-
-/* ----------------------------------------------------
-      決済機能
----------------------------------------------------- */
-async function closeGroupAll(){
-  const gid = document.getElementById("groupSelect").value;
-  if(!gid) return;
-  if(!confirm("⚠ グループ全ポジションを決済しますか？")) return;
-
-  await apiPost(`/system/close-group/${gid}`);
-  toast("グループ全決済しました");
-  loadPositions();
-}
-
-async function closeGroupSymbol(symbol){
-  const gid = document.getElementById("groupSelect").value;
-  if(!gid) return;
-  if(!confirm(`⚠ ${symbol} を決済しますか？`)) return;
-
-  await apiPost(`/system/close-group/${gid}/${symbol}`);
-  toast(`${symbol} を決済しました`);
-  loadPositions();
-}
-
-async function closeUser(userId){
-  if(!confirm(`⚠ ユーザー ${userId} の全通貨を決済しますか？`)) return;
-
-  await apiPost(`/system/close-user/${userId}`);
-  toast(`ユーザー ${userId} 全決済しました`);
-  loadPositions();
-}
-
-async function closeUserSymbol(userId, symbol){
-  if(!confirm(`⚠ ユーザー ${userId} の ${symbol} を決済しますか？`)) return;
-
-  await apiPost(`/system/close-user/${userId}/${symbol}`);
-  toast(`ユーザー ${userId} の ${symbol} を決済しました`);
-  loadPositions();
-}
-
-/* 初期化 */
-loadGroups().then(loadPositions);
-</script>
-
-<script src="/admin/assets/js/admin-auth.js"></script>
-<script src="/admin/assets/js/header-admin.js"></script>
-
+<script type="module" src="/admin/assets/js/admin-header.js"></script>
+<script type="module" src="/admin/assets/js/admin-system-positions.js"></script>
 
 </body>
 </html>

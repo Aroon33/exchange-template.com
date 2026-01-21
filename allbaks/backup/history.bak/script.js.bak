@@ -1,0 +1,164 @@
+const API_BASE_URL = "https://api.exchange-template.com";
+
+const elMsg       = document.getElementById("history-message");
+const elTradeBody = document.getElementById("trade-history-body");
+const btnLoadMore = document.getElementById("btn-loadmore");
+
+let trades = [];
+let displayCount = 20;     // 最初に表示する件数
+const LOAD_COUNT  = 20;    // ボタンで増やす件数
+
+async function apiGet(path){
+  const res = await fetch(API_BASE_URL + path, { credentials:"include" });
+  if(!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+function fmtDate(iso){
+  if(!iso) return "-";
+  return new Date(iso).toLocaleString("ja-JP",{ hour12:false });
+}
+
+function fmtNum(n){
+  if(n == null) return "-";
+  return Number(n).toLocaleString("en-US",{ minimumFractionDigits:0, maximumFractionDigits: 2 });
+}
+
+/* -------------------------
+      履歴描画
+-------------------------- */
+function renderTrades(){
+  elTradeBody.innerHTML = "";
+
+  if(!trades.length){
+    elTradeBody.innerHTML =
+    `<tr><td colspan="8" style="text-align:center; color:#888;">取引履歴はありません。</td></tr>`;
+    btnLoadMore.style.display = "none";
+    return;
+  }
+
+  const slice = trades.slice(0, displayCount);
+
+  slice.forEach(t=>{
+    const profitClass = Number(t.profit) >= 0 ? "profit" : "loss";
+
+    elTradeBody.innerHTML += `
+      <tr>
+        <td>${t.id}</td>
+        <td>${t.symbol}</td>
+        <td>${t.side}</td>
+        <td>${fmtNum(t.size)}</td>
+        <td>${fmtNum(t.entryPrice)}</td>
+        <td>${fmtNum(t.closePrice)}</td>
+        <td class="${profitClass}">${fmtNum(t.profit)}</td>
+        <td>${fmtDate(t.closedAt)}</td>
+      </tr>
+    `;
+  });
+
+  // ボタン制御
+  if(displayCount >= trades.length){
+    btnLoadMore.style.display = "none";
+  } else {
+    btnLoadMore.style.display = "inline-block";
+  }
+}
+
+/* -------------------------
+      追加読み込み
+-------------------------- */
+function loadMore(){
+  displayCount += LOAD_COUNT;
+  renderTrades();
+}
+
+/* -------------------------
+      初期ロード
+-------------------------- */
+(async function init(){
+  try {
+    trades = await apiGet("/trades/history");
+
+    elMsg.textContent = "取引履歴を更新しました。";
+    elMsg.style.color = "green";
+
+    renderTrades();
+
+  } catch (e){
+    console.error(e);
+    elMsg.textContent = "取引履歴の取得に失敗しました。";
+    elMsg.style.color = "red";
+  }
+})();
+
+// イベント
+btnLoadMore.addEventListener("click", loadMore);
+
+const API_BASE = "https://api.exchange-template.com";
+
+async function updateHeaderUserState() {
+  const loginBtn = document.querySelector(".header-actions a[href='login.html']");
+  const signupBtn = document.querySelector(".header-actions a[href='signup.html']");
+
+  if (!loginBtn || !signupBtn) return;
+
+  try {
+    const res = await fetch(API_BASE + "/auth/me", { credentials: "include" });
+    if (!res.ok) return; // 未ログインなら何もしない
+
+    const data = await res.json();
+    const user = data.user || data;
+
+    // 既存ボタンをクリア
+    const headerActions = document.querySelector(".header-actions");
+    headerActions.innerHTML = "";
+
+    // マイページボタン
+    const mp = document.createElement("a");
+    mp.href = "mypage.html";
+    mp.className = "btn btn-outline btn-sm";
+    mp.textContent = user.name + " さん";
+    headerActions.appendChild(mp);
+
+    // ログアウトボタン
+    const lo = document.createElement("a");
+    lo.href = "#";
+    lo.className = "btn btn-primary btn-sm";
+    lo.textContent = "ログアウト";
+    lo.addEventListener("click", async () => {
+      await fetch(API_BASE + "/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+      location.href = "login.html";
+    });
+    headerActions.appendChild(lo);
+
+  } catch (e) {
+    console.warn("Not logged in");
+  }
+}
+
+  const toggle = document.getElementById("menu-toggle");
+  const menu = document.getElementById("mobile-menu");
+  const overlay = document.getElementById("menu-overlay");
+  const closeBtn = document.getElementById("menu-close");
+
+  toggle.onclick = () => {
+    menu.classList.add("open");
+    overlay.classList.add("show");
+  };
+
+  closeBtn.onclick = () => {
+    menu.classList.remove("open");
+    overlay.classList.remove("show");
+  };
+
+  overlay.onclick = () => {
+    menu.classList.remove("open");
+    overlay.classList.remove("show");
+  };
+
+
+// ページ読込後に実行
+document.addEventListener("DOMContentLoaded", updateHeaderUserState);

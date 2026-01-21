@@ -1,0 +1,139 @@
+const API_BASE = "https://api.exchange-template.com";
+let allTickets = [];
+let currentTicketId = null;
+
+/* =========================
+   Utility
+========================= */
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+function fmtDate(s) {
+  return new Date(s).toLocaleString("ja-JP",{hour12:false});
+}
+
+/* =========================
+   API
+========================= */
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path,{credentials:"include"});
+  if (!res.ok) throw new Error();
+  return res.json();
+}
+async function apiPost(path,body) {
+  const res = await fetch(API_BASE + path,{
+    method:"POST",
+    credentials:"include",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error();
+}
+
+/* =========================
+   Tickets
+========================= */
+async function loadTickets() {
+  allTickets = await apiGet("/tickets/admin/all");
+  renderTicketsPC(allTickets);
+  renderTicketsSP(allTickets);
+}
+
+function renderTicketsPC(list) {
+  const tbody = document.getElementById("ticket-table-body");
+  tbody.innerHTML = "";
+  list.forEach(t=>{
+    tbody.innerHTML += `
+      <tr>
+        <td>${t.id}</td>
+        <td>${fmtDate(t.updatedAt)}</td>
+        <td>${t.title}</td>
+        <td><button onclick="openChat(${t.id})">表示</button></td>
+      </tr>
+    `;
+  });
+}
+
+function renderTicketsSP(list) {
+  const el = document.getElementById("ticket-list-mobile");
+  el.innerHTML = "";
+
+  list.forEach(t => {
+    el.innerHTML += `
+      <div class="ticket-card"
+           onclick="openChat(${t.id})">
+
+        <div class="ticket-card-header">
+          ${t.userName ?? "User"} / ${t.status}
+        </div>
+
+        <div class="ticket-card-meta">
+          ${fmtDate(t.updatedAt)}
+        </div>
+
+        <div class="ticket-card-title">
+          ${t.title}
+        </div>
+
+      </div>
+    `;
+  });
+}
+
+
+/* =========================
+   Chat
+========================= */
+async function openChat(ticketId) {
+  currentTicketId = ticketId;
+  const panel = document.getElementById("chat-panel");
+  panel.classList.add("active");
+
+  const msgs = await apiGet(`/tickets/${ticketId}/messages`);
+  const ticket = allTickets.find(t=>t.id===ticketId);
+
+  document.getElementById("chat-title").textContent =
+    `#${ticketId} ${ticket.title}`;
+
+  const win = document.getElementById("chat-window");
+  win.innerHTML = "";
+
+  msgs.forEach(m=>{
+    win.innerHTML += `
+      <div class="chat-message ${m.sender==="ADMIN"?"admin":"user"}">
+        <div class="chat-message-meta">
+          ${m.sender} / ${fmtDate(m.createdAt)}
+        </div>
+        <div class="chat-message-body">${m.message}</div>
+      </div>
+    `;
+  });
+
+  win.scrollTop = win.scrollHeight;
+
+  document.getElementById("chat-input-area").style.display =
+    ticket.status==="CLOSED" ? "none" : "flex";
+}
+
+function closeChatMobile() {
+  document.getElementById("chat-panel").classList.remove("active");
+}
+
+/* =========================
+   Send
+========================= */
+document.getElementById("btn-send").addEventListener("click", async()=>{
+  const input = document.getElementById("chat-input");
+  const msg = input.value.trim();
+  if (!msg || !currentTicketId) return;
+
+  await apiPost(`/tickets/admin/${currentTicketId}/reply`,{message:msg});
+  input.value = "";
+  openChat(currentTicketId);
+});
+
+/* Init */
+loadTickets();

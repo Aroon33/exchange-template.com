@@ -1,0 +1,97 @@
+  <div class="admin-main-inner">
+
+    <div class="page-title">グループ取引履歴</div>
+
+    <!-- フィルター -->
+    <section class="filters-card">
+
+      <div class="filters-grid">
+
+        <div class="field">
+          <label>グループID</label>
+          <select id="groupSelect">
+            <option value="">選択してください</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>銘柄（Symbol）</label>
+          <input type="text" id="fSymbol" placeholder="例：BTCUSDT" />
+        </div>
+
+        <div class="field">
+          <label>ユーザーID（任意）</label>
+          <input type="number" id="fUserId" placeholder="例：8" />
+        </div>
+
+        <div class="field">
+          <label>状態</label>
+          <select id="fStatus">
+            <option value="">すべて</option>
+            <option value="open">未決済</option>
+            <option value="closed">決済済</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-xs" onclick="clearFilters()">クリア</button>
+        <button class="btn-xs btn-xs-primary" onclick="loadHistory()">検索</button>
+      </div>
+
+    </section>
+
+    <!-- 親履歴 -->
+    <section class="table-card">
+      <div class="table-header-row">
+        <div class="table-title">親口座履歴（MAM）</div>
+        <div class="table-meta" id="metaParent">0件</div>
+      </div>
+
+      <table class="table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>名前</th>
+      <th>種別</th>
+      <th>通貨</th>
+      <th>枚数</th>
+      <th>建値</th>
+      <th>現在価格</th>
+      <th>損益</th>
+      <th>日時</th>
+    </tr>
+  </thead>
+  <tbody id="trade-body"></tbody>
+</table>
+
+    </section>
+
+    <!-- 子履歴 -->
+    <section class="table-card">
+      <div class="table-header-row">
+        <div class="table-title">子口座履歴（PAM）</div>
+        <div class="table-meta" id="metaChildren">0件</div>
+      </div>
+
+      <table class="table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>名前</th>
+      <th>種別</th>
+      <th>通貨</th>
+      <th>枚数</th>
+      <th>建値</th>
+      <th>現在価格</th>
+      <th>損益</th>
+      <th>日時</th>
+    </tr>
+  </thead>
+  <tbody id="trade-body"></tbody>
+</table>
+
+    </section>
+
+  </div>

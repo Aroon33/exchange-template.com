@@ -1,0 +1,445 @@
+import { CONFIG } from "../config.js";
+
+/* =========================
+   基本定義
+========================= */
+// [DEPRECATED] was: const API_BASE = "https://api.exchange-template.com";
+
+/* =========================
+   共通ユーティリティ
+========================= */
+function showToast(msg, color = "green") {
+  const t =
+    document.getElementById("withdraw-message") ||
+    document.getElementById("wallet-message") ||
+    document.getElementById("toast");
+
+  if (!t) return;
+
+  t.textContent = msg;
+  t.style.color = color;
+}
+
+
+function formatDate(v) {
+  return v ? new Date(v).toLocaleString("ja-JP", { hour12:false }) : "-";
+}
+
+// ★ formatJPY はこれ1つだけ
+function formatJPY(v) {
+  const n = Number(v);
+  if (isNaN(n)) return "-";
+  return Math.floor(n).toLocaleString("ja-JP") + " 円";
+}
+
+function typeJP(type) {
+  if (type === "DEPOSIT") return "入金";
+  if (type === "WITHDRAW") return "出金";
+  return "-";
+}
+
+function statusJP(status) {
+  if (status === "PENDING") return "申請中";
+  if (status === "COMPLETED") return "完了";
+  if (status === "CANCELED") return "キャンセル";
+  return "-";
+}
+
+// ★ 正しい通貨表示関数
+function currencyLabel(t) {
+  return t.method === "CRYPTO" ? t.currency : "JPY";
+}
+
+
+/* =========================
+   API
+========================= */
+async function apiGet(path) {
+  const res = await fetch(CONFIG.API_BASE_URL + path, { credentials:"include" });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(CONFIG.API_BASE_URL + path, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(body),
+  });
+  const txt = await res.text();
+  if (!res.ok) throw new Error(txt);
+  return txt ? JSON.parse(txt) : {};
+}
+
+/* =========================
+   モバイルメニュー
+========================= */
+const toggle = document.getElementById("menu-toggle");
+const menu = document.getElementById("mobile-menu");
+const overlay = document.getElementById("menu-overlay");
+const closeBtn = document.getElementById("menu-close");
+
+if (toggle) toggle.onclick = () => {
+  menu.classList.add("open");
+  overlay.classList.add("show");
+};
+if (closeBtn) closeBtn.onclick = () => {
+  menu.classList.remove("open");
+  overlay.classList.remove("show");
+};
+if (overlay) overlay.onclick = () => {
+  menu.classList.remove("open");
+  overlay.classList.remove("show");
+};
+
+/* =========================
+   ウォレット表示
+========================= */
+const elBalTotal = document.getElementById("wallet-total");
+const elBalAvail = document.getElementById("wallet-available");
+const elBalLock  = document.getElementById("wallet-locked");
+const elHistBody = document.getElementById("wallet-history");
+
+async function loadWalletPage() {
+  const data = await apiGet("/wallet");
+  const w = data.wallet || {};
+  const trs = data.transfers || [];
+
+  elBalTotal.textContent = formatJPY(w.balanceTotal ?? 0);
+  elBalAvail.textContent = formatJPY(w.balanceAvailable ?? 0);
+  elBalLock.textContent  = formatJPY(w.balanceLocked ?? 0);
+
+  elHistBody.innerHTML = "";
+  if (!trs.length) {
+    elHistBody.innerHTML =
+      `<tr><td colspan="6" style="text-align:center;">履歴はありません</td></tr>`;
+    return;
+  }
+
+  trs.forEach(t => {
+    elHistBody.insertAdjacentHTML("beforeend", `
+      <tr>
+        <td>${t.id}</td>
+        <td>${typeJP(t.type)}</td>
+        <td>${currencyLabel(t)}</td>
+        <td>${formatJPY(t.amount)}</td>
+        <td>${statusJP(t.status)}</td>
+        <td>${formatDate(t.createdAt)}</td>
+      </tr>
+    `);
+  });
+}
+
+
+/* =========================
+   入金タブ切替
+========================= */
+const tabJPY = document.getElementById("tab-jpy");
+const tabCRYPTO = document.getElementById("tab-crypto");
+const formJPY = document.getElementById("jpy-form");
+const formCRYPTO = document.getElementById("crypto-form");
+
+if (tabJPY) tabJPY.onclick = () => {
+  tabJPY.classList.add("active");
+  tabCRYPTO.classList.remove("active");
+  formJPY.style.display = "block";
+  formCRYPTO.style.display = "none";
+};
+if (tabCRYPTO) tabCRYPTO.onclick = () => {
+  tabCRYPTO.classList.add("active");
+  tabJPY.classList.remove("active");
+  formCRYPTO.style.display = "block";
+  formJPY.style.display = "none";
+};
+
+/* =========================
+   日本円入金
+========================= */
+document.getElementById("jpy-submit").onclick = async () => {
+  const amount = Number(document.getElementById("jpy-amount").value);
+  if (!amount || amount <= 0) return alert("金額を入力してください");
+
+  await apiPost("/deposit/request", {
+    method: "JPY",
+    amount,
+    currency: "JPY",
+  });
+
+  location.href = "deposit-thanks.html";
+};
+
+/* =========================
+   暗号資産入金
+========================= */
+const cryptoJPY = document.getElementById("crypto-jpy");
+const cryptoCurrency = document.getElementById("crypto-currency");
+const cryptoAmountEl = document.getElementById("crypto-amount");
+
+async function updateRate() {
+  const jpy = Number(cryptoJPY.value);
+  if (!jpy || jpy <= 0) return (cryptoAmountEl.value = "");
+
+  const cur = cryptoCurrency.value;
+  const r = await fetch(
+    "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=jpy"
+  ).then(r => r.json());
+
+  const price = cur === "BTC" ? r.bitcoin.jpy : r.ethereum.jpy;
+  cryptoAmountEl.value = (jpy / price).toFixed(8);
+}
+
+cryptoJPY.oninput = updateRate;
+cryptoCurrency.onchange = updateRate;
+
+document.getElementById("crypto-submit").onclick = async () => {
+  await apiPost("/deposit/request", {
+    method: "CRYPTO",
+    amount: Number(cryptoJPY.value),
+    currency: cryptoCurrency.value,
+    cryptoAmount: Number(cryptoAmountEl.value),
+  });
+
+  location.href = "crypto-thanks.html";
+};
+
+/* =========================
+   出金タブ切替
+========================= */
+const tabWithdrawJPY = document.getElementById("tab-withdraw-jpy");
+const tabWithdrawCrypto = document.getElementById("tab-withdraw-crypto");
+const withdrawJPYForm = document.getElementById("withdraw-jpy-form");
+const withdrawCryptoForm = document.getElementById("withdraw-crypto-form");
+
+if (tabWithdrawJPY) tabWithdrawJPY.onclick = () => {
+  tabWithdrawJPY.classList.add("active");
+  tabWithdrawCrypto.classList.remove("active");
+  withdrawJPYForm.style.display = "block";
+  withdrawCryptoForm.style.display = "none";
+};
+if (tabWithdrawCrypto) tabWithdrawCrypto.onclick = () => {
+  tabWithdrawCrypto.classList.add("active");
+  tabWithdrawJPY.classList.remove("active");
+  withdrawCryptoForm.style.display = "block";
+  withdrawJPYForm.style.display = "none";
+};
+
+/* =========================
+   暗号資産出金：自動換算
+========================= */
+const withdrawCryptoJPY = document.getElementById("withdraw-crypto-jpy");
+const withdrawCryptoCurrency = document.getElementById("withdraw-crypto-currency");
+const withdrawCryptoAmount = document.getElementById("withdraw-crypto-amount");
+const withdrawRateInfo = document.getElementById("withdraw-rate-info");
+
+async function updateWithdrawRate() {
+  const jpy = Number(withdrawCryptoJPY.value);
+  if (!jpy || jpy <= 0) {
+    withdrawCryptoAmount.value = "";
+    withdrawRateInfo.textContent = "";
+    return;
+  }
+
+  const cur = withdrawCryptoCurrency.value;
+
+  try {
+    const r = await fetch(
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=jpy"
+    ).then(r => r.json());
+
+    const price =
+      cur === "BTC" ? r.bitcoin.jpy :
+      cur === "ETH" ? r.ethereum.jpy : null;
+
+    if (!price) return;
+
+    const crypto = jpy / price;
+    withdrawCryptoAmount.value = crypto.toFixed(8);
+
+    withdrawRateInfo.textContent =
+      `${cur} レート: ${price.toLocaleString()} JPY`;
+  } catch (e) {
+    withdrawRateInfo.textContent = "レート取得に失敗しました";
+  }
+}
+
+withdrawCryptoJPY.oninput = updateWithdrawRate;
+withdrawCryptoCurrency.onchange = updateWithdrawRate;
+
+/* =========================
+  銀行口座チェック：暗号資産アドレスチェック
+========================= */
+
+
+async function checkWithdrawDestination(method) {
+  try {
+    if (method === "JPY") {
+      // 銀行口座チェック
+      const res = await fetch(CONFIG.API_BASE_URL + "/user/bank-account", {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        showToast("出金先の銀行口座が未登録です。マイページで登録してください。", "red");
+        setTimeout(() => location.href = "mypage.html", 1500);
+        return false;
+      }
+    }
+
+    if (method === "CRYPTO") {
+      // 暗号資産アドレスチェック
+      const res = await fetch(CONFIG.API_BASE_URL + "/user/crypto", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error();
+
+      const list = await res.json();
+      if (!Array.isArray(list) || list.length === 0) {
+        showToast("出金先の暗号資産アドレスが未登録です。マイページで登録してください。", "red");
+        setTimeout(() => location.href = "mypage.html", 1500);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (e) {
+    showToast("出金先情報の確認に失敗しました。", "red");
+    return false;
+  }
+}
+
+
+/* =========================
+   日本円出金
+========================= */
+document.getElementById("withdraw-jpy-submit").onclick = async () => {
+  const amount = Number(document.getElementById("withdraw-jpy-amount").value);
+  if (!amount || amount <= 0) {
+    showToast("出金額を入力してください", "red");
+    return;
+  }
+
+  if (!(await checkWithdrawDestination("JPY"))) return;
+
+  try {
+    await apiPost("/withdraw/request", {
+      method: "JPY",
+      amount,
+    });
+
+    showToast(
+      "出金申請が完了しました。出金完了までお待ちください"
+    );
+    loadWalletPage();
+
+  } catch (e) {
+    let msg = "出金申請に失敗しました";
+
+    try {
+      const err = JSON.parse(e.message);
+      if (err.message) msg = err.message;
+    } catch {}
+
+    showToast(msg, "red");
+
+    if (msg.includes("KYC")) {
+      setTimeout(() => location.href = "kyc.html", 1500);
+    }
+  }
+};
+
+
+/* =========================
+   暗号資産出金申請
+========================= */
+document.getElementById("withdraw-crypto-submit").onclick = async () => {
+  const jpy = Number(document.getElementById("withdraw-crypto-jpy").value);
+  const currency = document.getElementById("withdraw-crypto-currency").value;
+  const cryptoAmount = Number(
+    document.getElementById("withdraw-crypto-amount").value
+  );
+
+  if (!jpy || jpy <= 0 || !cryptoAmount || cryptoAmount <= 0) {
+    showToast("金額が正しく入力されていません", "red");
+    return;
+  }
+
+  if (!(await checkWithdrawDestination("CRYPTO"))) return;
+
+  try {
+    await apiPost("/withdraw/request", {
+      method: "CRYPTO",
+      currency,
+      cryptoAmount,
+      amount: jpy,
+    });
+
+    showToast(
+      "出金申請が完了しました。出金完了までお待ちください"
+    );
+    loadWalletPage();
+
+  } catch (e) {
+    let msg = "出金申請に失敗しました";
+
+    try {
+      const err = JSON.parse(e.message);
+      if (err.message) msg = err.message;
+    } catch {}
+
+    showToast(msg, "red");
+
+    if (msg.includes("KYC")) {
+      setTimeout(() => location.href = "kyc.html", 1500);
+    }
+  }
+};
+
+
+
+/* =========================
+   ヘッダー（ログイン状態）
+========================= */
+async function updateHeaderUserState() {
+  try {
+    const res = await fetch(CONFIG.API_BASE_URL + "/auth/me", { credentials:"include" });
+    if (!res.ok) return;
+
+    const data = await res.json();
+    const user = data.user; // ← ★修正ポイント
+
+    const headerActions = document.querySelector(".header-actions");
+    headerActions.innerHTML = "";
+
+    const mp = document.createElement("a");
+    mp.href = "mypage.html";
+    mp.className = "btn btn-outline btn-sm";
+    mp.textContent = user.name + " さん";
+    headerActions.appendChild(mp);
+
+    const lo = document.createElement("a");
+    lo.href = "#";
+    lo.className = "btn btn-primary btn-sm";
+    lo.textContent = "ログアウト";
+    lo.onclick = async () => {
+      await fetch(CONFIG.API_BASE_URL + "/auth/logout", {
+        method:"POST",
+        credentials:"include"
+      });
+      location.href = "login.html";
+    };
+    headerActions.appendChild(lo);
+
+  } catch (e) {
+    console.warn("Not logged in");
+  }
+}
+
+
+/* =========================
+   初期化
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  updateHeaderUserState();
+  loadWalletPage();
+});

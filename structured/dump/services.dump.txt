@@ -1,0 +1,1563 @@
+#############################################
+# CATEGORY: app.service.ts
+# TYPE: SERVICE
+# FILE: app.service.ts
+# CLASS: AppService
+#############################################
+
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class AppService {
+  getHello(): string {
+    return 'Hello World!';
+  }
+}
+
+
+#############################################
+# CATEGORY: auth
+# TYPE: SERVICE
+# FILE: auth.service.ts
+# CLASS: AuthService
+#############################################
+
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcryptjs';
+import { UsersService } from '../users/users.service';
+import { UserRole } from '@prisma/client';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+    private readonly config: ConfigService,
+  ) {}
+
+  /** 新規登録 */
+  async register(dto: RegisterDto) {
+    const existing = await this.usersService.findByEmail(dto.email);
+    if (existing) {
+      throw new BadRequestException('Email already in use');
+    }
+
+    const hash = await bcrypt.hash(dto.password, 10);
+
+    const user = await this.usersService.createUser({
+      email: dto.email,
+      password: hash,
+      name: dto.name,
+      role: UserRole.USER,
+    });
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    };
+  }
+
+  /** ログイン */
+  async login(dto: LoginDto) {
+    const user = await this.usersService.findByEmail(dto.email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const ok = await bcrypt.compare(dto.password, user.password);
+    if (!ok) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      groupId: user.group?.id ?? undefined,
+      name: user.name,
+
+    };
+
+    // expires
+    const accessExpiresIn = this.config.get<string>('JWT_ACCESS_EXPIRES_IN') ?? '15m';
+    const refreshExpiresIn = this.config.get<string>('JWT_REFRESH_EXPIRES_IN') ?? '7d';
+
+    const access = await this.jwtService.signAsync(payload, {
+  secret: this.config.get('JWT_ACCESS_SECRET') as string,
+  expiresIn: accessExpiresIn as any,
+});
+
+const refresh = await this.jwtService.signAsync(payload, {
+  secret: this.config.get('JWT_REFRESH_SECRET') as string,
+  expiresIn: refreshExpiresIn as any,
+});
+
+
+    
+
+    return {
+      access,
+      refresh,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        groupId: user.group?.id,
+      },
+    };
+  }
+}
+
+
+#############################################
+# CATEGORY: deposit
+# TYPE: SERVICE
+# FILE: deposit.service.ts
+# CLASS: DepositService
+#############################################
+
+import {
+  BadRequestException,
+  Injectable,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import {
+  TransferStatus,
+  TransferType,
+  SenderType,
+} from '@prisma/client';
+import { Prisma } from '@prisma/client';
+
+@Injectable()
+export class DepositService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /* =====================================================
+     共通：CRYPTO アドレス割当 + ステータス遷移 + チャット
+     ※ 必ずトランザクション内で呼ぶ
+  ===================================================== */
+  private async assignCryptoAddressAndSendMessage(
+    tx: Prisma.TransactionClient,
+    transfer: any,
+  ) {
+    if (!transfer.currency) {
+      throw new BadRequestException('Currency missing');
+    }
+
+    // 🔒 未使用アドレスをロック取得
+    const rows = await tx.$queryRaw<any[]>`
+      SELECT *
+      FROM deposit_crypto_addresses
+      WHERE currency = ${transfer.currency}
+        AND used = 0
+        AND userId IS NULL
+      ORDER BY id ASC
+      LIMIT 1
+      FOR UPDATE
+    `;
+
+    if (!rows.length) {
+      throw new BadRequestException(
+        `未使用の ${transfer.currency} アドレスがありません`,
+      );
+    }
+
+    const addr = rows[0];
+
+    // ① アドレス割当
+    await tx.depositCryptoAddress.update({
+      where: { id: addr.id },
+      data: {
+        used: true,
+        userId: transfer.userId,
+      },
+    });
+
+    // ② ステータス更新
+    await tx.transfer.update({
+      where: { id: transfer.id },
+      data: {
+        status: TransferStatus.CONFIRMING,
+      },
+    });
+
+    // ③ チケット取得 or 作成
+    let ticket = await tx.ticket.findFirst({
+      where: { userId: transfer.userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!ticket) {
+      ticket = await tx.ticket.create({
+        data: {
+          userId: transfer.userId,
+          title: '入金のご案内',
+        },
+      });
+    }
+
+    // ④ チャット送信
+    await tx.ticketMessage.create({
+      data: {
+        ticketId: ticket.id,
+        sender: SenderType.ADMIN,
+        message:
+`【入金用アドレスのご案内】
+
+通貨：${addr.currency}
+アドレス：
+${addr.address}
+${addr.memoTag ? `MEMO / TAG：${addr.memoTag}` : ''}
+
+※ このアドレスは今回の入金専用です。
+※ 着金確認後、残高へ反映されます。`,
+      },
+    });
+  }
+
+  /* =====================================================
+     管理者：CRYPTO 入金アドレス割当（単体実行用）
+  ===================================================== */
+  async assignCryptoAddressAndNotify(transferId: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const transfer = await tx.transfer.findUnique({
+        where: { id: transferId },
+      });
+
+      if (!transfer) {
+        throw new BadRequestException('Transfer not found');
+      }
+
+      if (
+        transfer.type !== TransferType.DEPOSIT ||
+        transfer.method !== 'CRYPTO' ||
+        transfer.status !== TransferStatus.PENDING
+      ) {
+        throw new BadRequestException('Invalid transfer state');
+      }
+
+      await this.assignCryptoAddressAndSendMessage(tx, transfer);
+
+      return { success: true };
+    });
+  }
+
+  /* =====================================================
+     入金承認（ADMIN）
+     - JPY    : 即 COMPLETED + 残高反映
+     - CRYPTO : アドレス割当 + CONFIRMING + チャット
+  ===================================================== */
+  async approveDeposit(transferId: number) {
+    return this.prisma.$transaction(async (tx) => {
+
+      /* =====================
+         ① 入金取得
+      ===================== */
+      const transfer = await tx.transfer.findUnique({
+        where: { id: transferId },
+      });
+
+      if (!transfer) {
+        throw new BadRequestException('Transfer not found');
+      }
+
+      if (transfer.type !== TransferType.DEPOSIT) {
+        throw new BadRequestException('Not a deposit');
+      }
+
+      if (transfer.status !== TransferStatus.PENDING) {
+        throw new BadRequestException('Invalid status');
+      }
+
+      /* =====================
+         ② JPY 入金
+      ===================== */
+      if (transfer.method === 'JPY') {
+        const wallet = await tx.wallet.findUnique({
+          where: { userId: transfer.userId },
+        });
+
+        if (!wallet) {
+          throw new BadRequestException('Wallet not found');
+        }
+
+        const amount = Number(transfer.amount);
+
+        await tx.wallet.update({
+          where: { userId: transfer.userId },
+          data: {
+            balanceAvailable: { increment: amount },
+            balanceTotal: { increment: amount },
+          },
+        });
+
+        await tx.transfer.update({
+          where: { id: transfer.id },
+          data: { status: TransferStatus.COMPLETED },
+        });
+
+        return { success: true, type: 'JPY' };
+      }
+
+      /* =====================
+         ③ CRYPTO 入金
+      ===================== */
+      if (transfer.method === 'CRYPTO') {
+        await this.assignCryptoAddressAndSendMessage(tx, transfer);
+
+        return {
+          success: true,
+          type: 'CRYPTO',
+          status: 'CONFIRMING',
+        };
+      }
+
+      throw new BadRequestException('Unsupported deposit method');
+    });
+  }
+}
+
+
+#############################################
+# CATEGORY: groups
+# TYPE: SERVICE
+# FILE: groups.service.ts
+# CLASS: GroupsService
+#############################################
+
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+
+@Injectable()
+export class GroupsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async listGroups() {
+    return this.prisma.group.findMany({
+      orderBy: { id: 'asc' },
+      include: { users: true },
+    });
+  }
+
+  async moveUsersToGroup(groupId: number, userIds: number[]) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.user.updateMany({
+        where: { id: { in: userIds } },
+        data: { groupId },
+      });
+
+      return tx.group.findUnique({
+        where: { id: groupId },
+        include: { users: true },
+      });
+    });
+  }
+}
+
+
+#############################################
+# CATEGORY: kyc
+# TYPE: SERVICE
+# FILE: kyc.service.ts
+# CLASS: KycService
+#############################################
+
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import * as fs from 'fs';
+import * as path from 'path';
+
+@Injectable()
+export class KycService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * ユーザーの最新KYCステータスを取得
+   */
+  async getStatus(userId: number) {
+    const latest = await this.prisma.kycRequest.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!latest) {
+      return {
+        exists: false,
+        status: 0,
+        level: 0,
+        label: '未提出',
+      };
+    }
+
+    return {
+      exists: true,
+      id: latest.id,
+      userId: latest.userId,
+      status: latest.status,
+      level: latest.status,
+      label: this.statusLabel(latest.status),
+      documentFront: latest.documentFront,
+      documentBack: latest.documentBack,
+      createdAt: latest.createdAt,
+      updatedAt: latest.updatedAt,
+    };
+  }
+
+  /**
+   * KYC提出処理
+   * front/back 画像パスをDBに保存
+   * status = 1（提出済み）
+   */
+  async submit(userId: number, files: { front: string; back: string }) {
+    if (!files.front || !files.back) {
+      throw new BadRequestException('front/back 画像が両方必要です。');
+    }
+
+    const kyc = await this.prisma.kycRequest.create({
+      data: {
+        userId,
+        status: 1, // 1 = 提出済み
+        documentFront: files.front,
+        documentBack: files.back,
+      },
+    });
+
+    return {
+      message: 'KYCを提出しました（審査中）。',
+      id: kyc.id,
+      userId: kyc.userId,
+      status: kyc.status,
+      label: this.statusLabel(kyc.status),
+      front: kyc.documentFront,
+      back: kyc.documentBack,
+    };
+  }
+
+  /**
+   * 管理者：全KYC一覧
+   */
+  async listAll() {
+    return this.prisma.kycRequest.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: true,
+      },
+    });
+  }
+
+  /**
+   * 管理者：KYCステータス変更
+   * status = 0〜5
+   */
+  async setStatus(id: number, status: number, reason?: string) {
+    const kyc = await this.prisma.kycRequest.findUnique({ where: { id } });
+    if (!kyc) {
+      throw new NotFoundException('KYCリクエストが見つかりません');
+    }
+
+    const updated = await this.prisma.kycRequest.update({
+      where: { id },
+      data: {
+        status,
+        // documentBack に否認理由を暫定保存（必要ならカラム追加可）
+        documentBack: reason ?? kyc.documentBack,
+      },
+    });
+
+    return {
+      message: 'KYCステータスを更新しました',
+      id: updated.id,
+      status: updated.status,
+      label: this.statusLabel(updated.status),
+      reason: reason ?? null,
+    };
+  }
+
+  /**
+   * KYCステータスのラベル
+   */
+  private statusLabel(status: number): string {
+    switch (status) {
+      case 0: return '未提出';
+      case 1: return '提出済み';
+      case 2: return '審査中';
+      case 3: return '承認ステップ1';
+      case 4: return '否認';
+      case 5: return 'KYC完了';
+      default: return 'UNKNOWN';
+    }
+  }
+}
+
+
+#############################################
+# CATEGORY: prisma
+# TYPE: SERVICE
+# FILE: prisma.service.ts
+# CLASS: PrismaService
+#############################################
+
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
+  async onModuleInit() {
+    await this.$connect();
+  }
+
+  async onModuleDestroy() {
+    await this.$disconnect();
+  }
+}
+
+
+
+
+#############################################
+# CATEGORY: system
+# TYPE: SERVICE
+# FILE: system.config.service.ts
+# CLASS: SystemConfigService
+#############################################
+
+// src/system/system.config.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+
+@Injectable()
+export class SystemConfigService {
+  constructor(private prisma: PrismaService) {}
+
+  /** グループ別設定取得 */
+  async getConfigByGroup(groupId: number) {
+    const cfg = await this.prisma.systemTemplate.findFirst({
+      where: {
+        groupId: groupId,
+        name: 'autoTradeConfig',
+      },
+    });
+
+    if (!cfg) {
+      // DB にまだ設定が無い → デフォルト設定を返す
+      return this.defaultConfig();
+    }
+
+    return JSON.parse(cfg.params);
+  }
+
+  /** グループ別設定保存 */
+  async updateConfigByGroup(groupId: number, newCfg: any) {
+    const json = JSON.stringify(newCfg);
+
+    // 既存か確認
+    const exists = await this.prisma.systemTemplate.findFirst({
+      where: {
+        groupId: groupId,
+        name: 'autoTradeConfig',
+      },
+    });
+
+    if (!exists) {
+      // 新規作成
+      return this.prisma.systemTemplate.create({
+        data: {
+          groupId: groupId,
+          name: 'autoTradeConfig',
+          params: json,
+        },
+      });
+    }
+
+    // 更新
+    return this.prisma.systemTemplate.update({
+      where: { id: exists.id },
+      data: { params: json },
+    });
+  }
+/** user.systemStatus を更新する */
+async setUserSystemStatus(
+  userId: number,
+  status: 'RUNNING' | 'STOP_REQUESTED' | 'STOPPED'
+) {
+  return this.prisma.user.update({
+    where: { id: userId },
+    data: { systemStatus: status },
+  });
+}
+
+
+  /** デフォルト設定（初期値） */
+  defaultConfig() {
+    return {
+      BTCUSDT: { direction: 'BUY', size: 0.01, holdMinutes: 10, pips: 2, status: 'ACTIVE' },
+      ETHUSDT: { direction: 'SELL', size: 0.2, holdMinutes: 15, pips: 1.5, status: 'PENDING' },
+      SOLUSDT: { direction: 'BUY', size: 1, holdMinutes: 5, pips: 0.8, status: 'ACTIVE' },
+      XRPUSDT: { direction: 'BUY', size: 500, holdMinutes: 8, pips: 0.5, status: 'ACTIVE' },
+      BNBUSDT: { direction: 'SELL', size: 0.5, holdMinutes: 12, pips: 2, status: 'ACTIVE' },
+      DOGEUSDT: { direction: 'BUY', size: 1000, holdMinutes: 6, pips: 0.3, status: 'PENDING' },
+      LTCUSDT: { direction: 'SELL', size: 0.1, holdMinutes: 14, pips: 1.1, status: 'ACTIVE' },
+      ADAUSDT: { direction: 'BUY', size: 800, holdMinutes: 9, pips: 0.2, status: 'ACTIVE' },
+      AVAXUSDT:{ direction: 'BUY', size: 3, holdMinutes: 7, pips: 1.3, status: 'STOP' },
+      DOTUSDT:{ direction: 'SELL', size: 5, holdMinutes: 6, pips: 0.7, status: 'ACTIVE' },
+    };
+  }
+}
+
+
+
+#############################################
+# CATEGORY: system
+# TYPE: SERVICE
+# FILE: system.rate.service.ts
+# CLASS: SystemRateService
+#############################################
+
+// src/system/system.rate.service.ts
+import { Injectable } from '@nestjs/common';
+import axios from 'axios';
+
+@Injectable()
+export class SystemRateService {
+  private SPREAD: Record<string, number> = {
+    BTCUSDT: 2.5,
+    ETHUSDT: 0.5,
+    XRPUSDT: 0.02,
+    SOLUSDT: 0.2,
+    DOTUSDT: 0.2,
+    ADAUSDT: 0.01,
+    LTCUSDT: 0.3,
+    BNBUSDT: 0.5,
+  };
+
+  /** Binanceのリアル価格へスプレッドを加減して決済価格を作る */
+  async getFinalClosePrice(symbol: string, side: string): Promise<number> {
+    const url = `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`;
+
+    const res: any = await axios.get(url);
+    const market = Number(res.data.price);
+
+    const spread = this.SPREAD[symbol] ?? 0;
+
+    // BUY決済は Ask（価格＋スプレッド）、SELL決済は Bid（価格−スプレッド）
+    return side === 'BUY' ? market + spread : market - spread;
+  }
+}
+
+
+
+
+#############################################
+# CATEGORY: system
+# TYPE: SERVICE
+# FILE: system.trade.service.ts
+# CLASS: SystemTradeService
+#############################################
+
+// src/system/system.trade.service.ts
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { SystemRateService } from './system.rate.service';
+
+@Injectable()
+export class SystemTradeService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly rateService: SystemRateService, // ★外部レート・スプレッド対応
+  ) {}
+
+  /** 自動トレード開始 */
+  async autoTrade() {
+    const settings = await this.prisma.systemTemplate.findMany({
+      where: { name: 'autoTradeConfig' },
+    });
+
+    if (!settings.length) return;
+
+    for (const st of settings) {
+      const params = JSON.parse(st.params || '{}');
+      const groupId = st.groupId;
+      await this.runGroupLogic(groupId, params);
+    }
+  }
+
+  /** グループ設定処理 */
+  private async runGroupLogic(groupId: number, params: any) {
+    const symbols = params.symbols || params;
+
+    for (const symbol of Object.keys(symbols)) {
+      const conf = symbols[symbol];
+
+      if (!conf || conf.status === 'STOP') continue;
+
+      if (conf.status === 'ACTIVE') {
+        await this.openIfNotExists(groupId, symbol, conf);
+      }
+
+      if (conf.status === 'PENDING') {
+        await this.processPending(groupId, symbol, conf);
+      }
+    }
+  }
+
+  /** ------------------------------
+   * ACTIVE → 親＋子（PAM配分）で新規建て
+   * ------------------------------ */
+  private async openIfNotExists(groupId: number, symbol: string, conf: any) {
+    const openExists = await this.prisma.trade.findFirst({
+      where: {
+        groupId,
+        symbol,
+        closePrice: null,
+      },
+    });
+
+    if (openExists) return;
+
+    const entryPrice = await this.fakePrice(symbol);
+
+    /** 親口座 OPEN */
+    await this.prisma.trade.create({
+      data: {
+        userId: 9999,
+        symbol,
+        side: conf.direction,
+        size: conf.size,
+        entryPrice,
+        closePrice: null,
+        profit: 0,
+        openedAt: new Date(),
+        closedAt: null,
+        groupId,
+      },
+    });
+
+    console.log(`[OPEN_PARENT] g${groupId} ${symbol} @ ${entryPrice}`);
+
+    /** ★ 子口座へPAMロット配分コピー開始 ----------------------- */
+
+    // groupId の全ユーザー
+    const users = await this.prisma.user.findMany({
+      where: { groupId },
+      include: { wallet: true },
+    });
+
+    const children = users.filter((u) => u.id !== 9999);
+
+    // 子口座の総残高
+    const totalBalance = children.reduce(
+      (sum, u) => sum + Number(u.wallet?.balanceTotal ?? 0),
+      0,
+    );
+
+    if (totalBalance <= 0) {
+      console.log(`[WARN] g${groupId} PAM配分：総残高ゼロのため子口座コピーをスキップ`);
+      return;
+    }
+
+    for (const u of children) {
+      const userBalance = Number(u.wallet?.balanceTotal ?? 0);
+
+      // 証拠金比率
+      let userLot = conf.size * (userBalance / totalBalance);
+
+      // 端数切り捨て
+      userLot = Math.floor(userLot / 0.01) * 0.01;
+
+      // 最低ロット保証
+      if (userLot < 0.01) userLot = 0.01;
+
+      await this.prisma.trade.create({
+        data: {
+          userId: u.id,
+          groupId,
+          symbol,
+          side: conf.direction,
+          size: userLot,
+          entryPrice,
+          closePrice: null,
+          profit: 0,
+          openedAt: new Date(),
+          closedAt: null,
+        },
+      });
+
+      console.log(
+        `[OPEN_CHILD] g${groupId} user=${u.id} ${symbol} lot=${userLot} @ ${entryPrice}`,
+      );
+    }
+
+    /** ★ 子口座PAMコピーここまで ------------------------------- */
+  }
+
+  /** ------------------------------
+   * PENDING → 決済処理（旧ロジック）
+   * ------------------------------ */
+  private async processPending(groupId: number, symbol: string, conf: any) {
+    const opens = await this.prisma.trade.findMany({
+      where: {
+        groupId,
+        symbol,
+        closePrice: null,
+      },
+    });
+
+    const price = await this.fakePrice(symbol);
+
+    for (const t of opens) {
+      const profit =
+        conf.direction === 'BUY'
+          ? (price - Number(t.entryPrice)) * Number(t.size)
+          : (Number(t.entryPrice) - price) * Number(t.size);
+
+      await this.prisma.trade.update({
+        where: { id: t.id },
+        data: {
+          closePrice: price,
+          profit,
+          closedAt: new Date(),
+        },
+      });
+
+      console.log(
+        `[CLOSE_PENDING] g${groupId} ${symbol} profit=${profit.toFixed(2)}`,
+      );
+    }
+  }
+
+  /** --------------------------
+   * Wallet・User補助関数
+   * -------------------------- */
+  async getWalletForUser(userId: number) {
+    return this.prisma.wallet.findUnique({ where: { userId } });
+  }
+
+  async getUserById(userId: number) {
+    return this.prisma.user.findUnique({ where: { id: userId } });
+  }
+
+  /** ------------------------------
+   * 親一斉決済 → 子全員決済
+   * ------------------------------ */
+  async closePositionsForGroup(groupId: number, symbol?: string) {
+    const parentTrades = await this.prisma.trade.findMany({
+      where: {
+        userId: 9999,
+        groupId,
+        closePrice: null,
+        ...(symbol ? { symbol } : {}),
+      },
+    });
+
+    for (const p of parentTrades) {
+      const closePrice = await this.rateService.getFinalClosePrice(
+        p.symbol,
+        p.side,
+      );
+
+      const parentProfit =
+        p.side === 'BUY'
+          ? (closePrice - Number(p.entryPrice)) * Number(p.size)
+          : (Number(p.entryPrice) - closePrice) * Number(p.size);
+
+      await this.prisma.trade.update({
+        where: { id: p.id },
+        data: {
+          closePrice,
+          profit: parentProfit,
+          closedAt: new Date(),
+        },
+      });
+
+      console.log(
+        `[CLOSE_PARENT] g${groupId} ${p.symbol} profit=${parentProfit}`,
+      );
+
+      /** 子口座クローズ */
+      const children = await this.prisma.trade.findMany({
+        where: {
+          groupId,
+          userId: { not: 9999 },
+          symbol: p.symbol,
+          closePrice: null,
+        },
+      });
+
+      for (const c of children) {
+        const profit =
+          c.side === 'BUY'
+            ? (closePrice - Number(c.entryPrice)) * Number(c.size)
+            : (Number(c.entryPrice) - closePrice) * Number(c.size);
+
+        await this.prisma.trade.update({
+          where: { id: c.id },
+          data: {
+            closePrice,
+            profit,
+            closedAt: new Date(),
+          },
+        });
+
+        await this.prisma.wallet.update({
+          where: { userId: c.userId },
+          data: {
+            balanceTotal: { increment: profit },
+            balanceAvailable: { increment: profit },
+          },
+        });
+
+        console.log(
+          `[CLOSE_CHILD] g${groupId} user=${c.userId} ${c.symbol} profit=${profit}`,
+        );
+      }
+    }
+  }
+
+  /** ------------------------------
+   * 子口座個別決済
+   * ------------------------------ */
+  async closePositionsForUser(userId: number, symbol?: string) {
+    const opens = await this.prisma.trade.findMany({
+      where: {
+        userId,
+        closePrice: null,
+        ...(symbol ? { symbol } : {}),
+      },
+    });
+
+    for (const t of opens) {
+      const closePrice = await this.rateService.getFinalClosePrice(
+        t.symbol,
+        t.side,
+      );
+
+      const profit =
+        t.side === 'BUY'
+          ? (closePrice - Number(t.entryPrice)) * Number(t.size)
+          : (Number(t.entryPrice) - closePrice) * Number(t.size);
+
+      await this.prisma.trade.update({
+        where: { id: t.id },
+        data: {
+          closePrice,
+          profit,
+          closedAt: new Date(),
+        },
+      });
+
+      await this.prisma.wallet.update({
+        where: { userId },
+        data: {
+          balanceTotal: { increment: profit },
+          balanceAvailable: { increment: profit },
+        },
+      });
+
+      console.log(
+        `[CLOSE_USER] user=${userId} ${t.symbol} profit=${profit}`,
+      );
+    }
+  }
+
+  /** --------------------------
+   * 代表口座 OPENポジション取得
+   * -------------------------- */
+  async getOpenPositionsByGroup(groupId: number) {
+    const trades = await this.prisma.trade.findMany({
+      where: { groupId, closePrice: null },
+      orderBy: { openedAt: 'desc' },
+    });
+
+    return trades.map((t) => {
+      const currentPrice =
+        Number(t.entryPrice) * (1 + (Math.random() - 0.5) * 0.002);
+
+      const pnl =
+        t.side === 'BUY'
+          ? (currentPrice - Number(t.entryPrice)) * Number(t.size)
+          : (Number(t.entryPrice) - currentPrice) * Number(t.size);
+
+      return {
+        symbol: t.symbol,
+        size: t.size,
+        entryPrice: t.entryPrice,
+        currentPrice,
+        unrealizedPnl: pnl,
+        openedAt: t.openedAt,
+      };
+    });
+  }
+
+  /** 疑似価格（将来は外部APIに統合） */
+  private async fakePrice(symbol: string): Promise<number> {
+    const base = {
+      BTCUSDT: 70000,
+      ETHUSDT: 3200,
+      SOLUSDT: 150,
+      BNBUSDT: 600,
+      XRPUSDT: 0.5,
+      DOGEUSDT: 0.1,
+      LTCUSDT: 90,
+      ADAUSDT: 0.7,
+      AVAXUSDT: 35,
+      DOTUSDT: 8,
+    }[symbol] || 100;
+
+    const random = (Math.random() - 0.5) * 0.01 * base;
+    return base + random;
+  }
+}
+
+
+#############################################
+# CATEGORY: tickets
+# TYPE: SERVICE
+# FILE: tickets.service.ts
+# CLASS: TicketsService
+#############################################
+
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { SenderType, TicketStatus } from '@prisma/client';
+
+@Injectable()
+export class TicketsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async listMyTickets(userId: number) {
+    return this.prisma.ticket.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async createTicket(userId: number, title: string, message: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const ticket = await tx.ticket.create({
+        data: {
+          userId,
+          title,
+          status: TicketStatus.OPEN,
+        },
+      });
+
+      await tx.ticketMessage.create({
+        data: {
+          ticketId: ticket.id,
+          sender: SenderType.USER,
+          message,
+        },
+      });
+
+      return ticket;
+    });
+  }
+
+  async replyToTicketAsUser(userId: number, ticketId: number, message: string) {
+    const ticket = await this.prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) throw new NotFoundException('Ticket not found');
+    if (ticket.userId !== userId) throw new ForbiddenException('Not your ticket');
+
+    return this.prisma.ticketMessage.create({
+      data: {
+        ticketId,
+        sender: SenderType.USER,
+        message,
+      },
+    });
+  }
+
+  async listAllTickets() {
+    return this.prisma.ticket.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async replyAsAdmin(ticketId: number, message: string) {
+    return this.prisma.ticketMessage.create({
+      data: {
+        ticketId,
+        sender: SenderType.ADMIN,
+        message,
+      },
+    });
+  }
+
+  async setStatus(ticketId: number, status: TicketStatus) {
+    return this.prisma.ticket.update({
+      where: { id: ticketId },
+      data: { status },
+    });
+  }
+
+  async getTicketMessages(ticketId: number) {
+    return this.prisma.ticketMessage.findMany({
+      where: { ticketId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+}
+
+
+#############################################
+# CATEGORY: user-extra
+# TYPE: SERVICE
+# FILE: user-bank.service.ts
+# CLASS: UserBankService
+#############################################
+
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { SaveBankDto } from './dto/save-bank.dto';
+
+@Injectable()
+export class UserBankService {
+  constructor(private prisma: PrismaService) {}
+
+  async getBankAccount(userId: number) {
+    return this.prisma.userBankAccount.findUnique({ where: { userId } });
+  }
+
+  async saveBankAccount(userId: number, dto: SaveBankDto) {
+    return this.prisma.userBankAccount.upsert({
+      where: { userId },
+      create: { userId, ...dto },
+      update: { ...dto, updatedAt: new Date() },
+    });
+  }
+}
+
+
+#############################################
+# CATEGORY: user-extra
+# TYPE: SERVICE
+# FILE: user-crypto.service.ts
+# CLASS: UserCryptoService
+#############################################
+
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { SaveCryptoDto } from './dto/save-crypto.dto';
+import { UserCryptoAddress } from '@prisma/client';
+
+@Injectable()
+export class UserCryptoService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /** すべて取得 */
+  async getList(userId: number): Promise<UserCryptoAddress[]> {
+    return this.prisma.userCryptoAddress.findMany({
+      where: { userId },
+    });
+  }
+
+  /** 複数アドレス保存（UPSERT） */
+  async saveList(
+    userId: number,
+    dto: SaveCryptoDto
+  ): Promise<UserCryptoAddress[]> {
+
+    // ✅ 型を明示（超重要）
+    const results: UserCryptoAddress[] = [];
+
+    for (const c of dto.addresses) {
+      const saved = await this.prisma.userCryptoAddress.upsert({
+        where: {
+          userId_currency: {
+            userId,
+            currency: c.currency,
+          },
+        },
+        update: {
+          address: c.address,
+          memoTag: c.memoTag ?? null,
+        },
+        create: {
+          userId,
+          currency: c.currency,
+          address: c.address,
+          memoTag: c.memoTag ?? null,
+        },
+      });
+
+      results.push(saved); // ✅ エラーなし
+    }
+
+    return results;
+  }
+}
+
+
+#############################################
+# CATEGORY: users
+# TYPE: SERVICE
+# FILE: users.service.ts
+# CLASS: UsersService
+#############################################
+
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { UserRole } from '@prisma/client';
+
+@Injectable()
+export class UsersService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findByEmail(email: string) {
+  return this.prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      password: true,      // ← ★これがないと絶対にログインできない
+      name: true,
+      role: true,
+      systemStatus: true,
+      wallet: true,
+      group: true,
+    },
+  });
+}
+
+
+  async createUser(params: {
+    email: string;
+    password: string;
+    name: string;
+    role?: UserRole;
+  }) {
+    const { email, password, name, role = UserRole.USER } = params;
+
+    return this.prisma.$transaction(async (tx) => {
+      // Prisma のトランザクションクライアントを any として扱って型エラーを避ける
+      const client = tx as any;
+
+      const user = await client.user.create({
+        data: {
+          email,
+          password: password,
+          name,
+          role,
+        },
+      });
+
+      await client.wallet.create({
+        data: {
+          userId: user.id,
+          balanceTotal: 0,
+          balanceAvailable: 0,
+          balanceLocked: 0,
+        },
+      });
+
+      return user;
+    });
+  }
+
+  async findById(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: { wallet: true, group: true },
+    });
+  }
+}
+
+
+#############################################
+# CATEGORY: wallet
+# TYPE: SERVICE
+# FILE: wallet.service.ts
+# CLASS: WalletService
+#############################################
+
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+
+@Injectable()
+export class WalletService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async getWalletWithHistory(userId: number) {
+    const wallet = await this.prisma.wallet.findUnique({
+      where: { userId },
+    });
+
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
+    }
+
+    const transfers = await this.prisma.transfer.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    return { wallet, transfers };
+  }
+}
+
+
+#############################################
+# CATEGORY: withdraw
+# TYPE: SERVICE
+# FILE: withdraw.service.ts
+# CLASS: WithdrawService
+#############################################
+
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { TransferStatus, TransferType } from '@prisma/client';
+
+@Injectable()
+export class WithdrawService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * 出金申請（ユーザー）
+   *
+   * ルール：
+   * - KYC status = 5 のみ出金可能
+   * - 残高不足は拒否
+   * - 申請時に available → locked
+   */
+  async requestWithdraw(userId: number, amount: number) {
+    /* ---------- KYCチェック ---------- */
+    const kyc = await this.prisma.kycRequest.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!kyc) {
+      throw new BadRequestException(
+        '出金にはKYC提出が必要です。'
+      );
+    }
+
+    if (kyc.status !== 5) {
+      throw new BadRequestException(
+        'KYCが完了していません。出金可能なのはステータス5（完了）のみです。'
+      );
+    }
+
+    /* ---------- ウォレット ---------- */
+    const wallet = await this.prisma.wallet.findUnique({
+      where: { userId },
+    });
+    if (!wallet) throw new NotFoundException('Wallet not found');
+
+    if (amount <= 0) {
+      throw new BadRequestException('Amount must be positive');
+    }
+
+    if (Number(wallet.balanceAvailable) < amount) {
+      throw new BadRequestException('Insufficient available balance');
+    }
+
+    /* ---------- 出金申請 ---------- */
+    return this.prisma.$transaction(async (tx) => {
+      const transfer = await tx.transfer.create({
+        data: {
+          userId,
+          type: TransferType.WITHDRAW,
+          amount: amount.toString(),
+          status: TransferStatus.PENDING,
+        },
+      });
+
+      await tx.wallet.update({
+        where: { userId },
+        data: {
+          balanceAvailable: { decrement: amount },
+          balanceLocked: { increment: amount },
+        },
+      });
+
+      return transfer;
+    });
+  }
+
+  /**
+   * Pending出金一覧（Admin）
+   */
+  async listPendingWithdraws() {
+    return this.prisma.transfer.findMany({
+      where: {
+        type: TransferType.WITHDRAW,
+        status: TransferStatus.PENDING,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  /**
+   * 出金承認（Admin）
+   */
+  async approveWithdraw(transferId: number) {
+  const transfer = await this.prisma.transfer.findUnique({
+    where: { id: transferId },
+  });
+
+  if (!transfer || transfer.type !== TransferType.WITHDRAW) {
+    throw new NotFoundException('Withdraw request not found');
+  }
+
+  if (transfer.status !== TransferStatus.PENDING) {
+    throw new BadRequestException('Withdraw is not pending');
+  }
+
+  return this.prisma.$transaction(async (tx) => {
+    /* ---------- 出金完了 ---------- */
+    const updatedTransfer = await tx.transfer.update({
+      where: { id: transferId },
+      data: { status: TransferStatus.COMPLETED },
+    });
+
+    await tx.wallet.update({
+      where: { userId: transfer.userId },
+      data: {
+        balanceLocked: { decrement: transfer.amount },
+        balanceTotal: { decrement: transfer.amount },
+      },
+    });
+
+    /* ---------- チャット送信（出金承認） ---------- */
+    let ticket = await tx.ticket.findFirst({
+      where: {
+        userId: transfer.userId,
+        status: 'OPEN',
+      },
+    });
+
+    if (!ticket) {
+      ticket = await tx.ticket.create({
+        data: {
+          userId: transfer.userId,
+          title: '出金に関するご連絡',
+          status: 'OPEN',
+        },
+      });
+    }
+
+    await tx.ticketMessage.create({
+      data: {
+        ticketId: ticket.id,
+        sender: 'ADMIN',
+        message: `
+出金申請が承認されました。
+
+指定された出金先へ送金処理を進めております。
+反映まで今しばらくお待ちください。
+        `.trim(),
+      },
+    });
+
+    return updatedTransfer;
+  });
+}
+
+
+  /**
+   * 管理側：出金キャンセル
+   * - 出金キャンセル
+   * - KYC status = 4（追加認証）
+   * - チャット自動通知
+   */
+  async cancelWithdrawWithKycRollback(transferId: number) {
+    const transfer = await this.prisma.transfer.findUnique({
+      where: { id: transferId },
+    });
+
+    if (!transfer || transfer.type !== TransferType.WITHDRAW) {
+      throw new NotFoundException('Withdraw request not found');
+    }
+
+    if (transfer.status !== TransferStatus.PENDING) {
+      throw new BadRequestException('Withdraw is not pending');
+    }
+
+    const kyc = await this.prisma.kycRequest.findFirst({
+      where: { userId: transfer.userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return this.prisma.$transaction(async (tx) => {
+      /* ---------- 出金キャンセル ---------- */
+      await tx.transfer.update({
+        where: { id: transferId },
+        data: { status: TransferStatus.CANCELED },
+      });
+
+      await tx.wallet.update({
+        where: { userId: transfer.userId },
+        data: {
+          balanceLocked: { decrement: transfer.amount },
+          balanceAvailable: { increment: transfer.amount },
+        },
+      });
+
+      /* ---------- KYC 差し戻し ---------- */
+      if (kyc) {
+        await tx.kycRequest.update({
+          where: { id: kyc.id },
+          data: { status: 4 },
+        });
+      }
+
+      /* ---------- チャット通知 ---------- */
+      let ticket = await tx.ticket.findFirst({
+        where: {
+          userId: transfer.userId,
+          status: 'OPEN',
+        },
+      });
+
+      if (!ticket) {
+        ticket = await tx.ticket.create({
+          data: {
+            userId: transfer.userId,
+            title: '出金に関するご連絡',
+            status: 'OPEN',
+          },
+        });
+      }
+
+      await tx.ticketMessage.create({
+        data: {
+          ticketId: ticket.id,
+          sender: 'ADMIN',
+          message: `
+出金申請の内容に確認事項があり、
+追加の本人確認が必要となりました。
+
+お手数ですが、
+KYC（本人確認）の再提出をお願いいたします。
+
+確認完了後、再度出金申請が可能になります。
+          `.trim(),
+        },
+      });
+
+      return { success: true };
+    });
+  }
+}
+
+

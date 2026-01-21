@@ -6,177 +6,89 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/assets/css/style.css">
 
-  <style>
-    /* ------- カード全体 ------- */
-    .section-card {
-      background: #fff;
-      margin: 20px auto;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-      max-width: 760px;
-    }
-    h1.card-title { font-size:22px; margin-bottom:16px; }
-    
-    /* ------- KYC レベルピル ------- */
-    .kyc-pill {
-      padding: 6px 12px;
-      border-radius: 20px;
-      display: inline-block;
-      font-weight: bold;
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-    .kyc-0 { background:#fee2e2; color:#b91c1c; }
-    .kyc-1 { background:#fef3c7; color:#92400e; }
-    .kyc-2 { background:#fef9c3; color:#854d0e; }
-    .kyc-3 { background:#d9f99d; color:#365314; }
-    .kyc-4 { background:#bbf7d0; color:#166534; }
-    .kyc-5 { background:#86efac; color:#065f46; }
+<style>
+  /* ------- カード全体 ------- */
+  .section-card {
+    background: #fff;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    max-width: 760px;
+  }
 
-    /* ------- BOX ------- */
-    .kyc-box {
-      padding: 16px;
-      border: 1px solid var(--border-soft);
-      background: #fafbfd;
-      border-radius: 10px;
-    }
+  h1.card-title {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
 
-    .upload-section {
-      margin-top: 14px;
-    }
-    .upload-section label {
-      display: block;
-      font-size: 13px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
+  /* ------- KYC レベルピル ------- */
+  .kyc-pill {
+    padding: 6px 12px;
+    border-radius: 20px;
+    display: inline-block;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
 
-    input[type="file"] {
-      padding: 10px;
-      border-radius: 10px;
-      background: #fff;
-      border: 1px solid var(--border-soft);
-      width: 100%;
-    }
+  .kyc-0 { background:#fee2e2; color:#b91c1c; }
+  .kyc-1 { background:#fef3c7; color:#92400e; }
+  .kyc-2 { background:#fef9c3; color:#854d0e; }
+  .kyc-3 { background:#d9f99d; color:#365314; }
+  .kyc-4 { background:#bbf7d0; color:#166534; }
+  .kyc-5 { background:#86efac; color:#065f46; }
 
-    .btn-submit {
-      margin-top: 18px;
-      width: 100%;
-      padding: 12px;
-      font-size: 15px;
-    }
+  /* ------- BOX ------- */
+  .kyc-box {
+    padding: 16px;
+    border: 1px solid var(--border-soft);
+    background: #fafbfd;
+    border-radius: 10px;
+  }
 
-    .note {
-      font-size: 12px;
-      margin-top: 8px;
-      color: var(--text-muted);
-    }
+  /* ------- アップロード ------- */
+  .upload-section {
+    margin-top: 14px;
+  }
 
-    /* スマホ対応 */
-    @media (max-width:600px){
-      h1.card-title { font-size:20px; }
-      .btn-submit { font-size:14px; }
-    }
-    /* ハンバーガーボタン（スマホのみ表示） */
-.hamburger {
-  display: none;
-  font-size: 26px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-left: auto;
-}
-
-@media (max-width: 768px) {
-  .hamburger {
+  .upload-section label {
     display: block;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 4px;
   }
 
-  /* PC ナビをスマホでは非表示 */
-  .site-nav {
-    display: none;
+  input[type="file"] {
+    padding: 10px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid var(--border-soft);
+    width: 100%;
   }
-}
 
-/* サイドメニュー */
-.mobile-menu {
-  position: fixed;
-  top: 0;
-  left: -260px;
-  width: 240px;
-  height: 100%;
-  background: #fff;
-  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
-  padding: 20px;
-  transition: left 0.3s ease;
-  z-index: 9999;
-}
+  /* ------- ボタン ------- */
+  .btn-submit {
+    margin-top: 18px;
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+  }
 
-.mobile-menu.open {
-  left: 0;
-}
+  /* ------- 注記 ------- */
+  .note {
+    font-size: 12px;
+    margin-top: 8px;
+    color: var(--text-muted);
+  }
 
-.mobile-menu a {
-  display: block;
-  padding: 12px 0;
-  border-bottom: 1px solid #eee;
-  font-size: 16px;
-}
+  /* ------- スマホ対応 ------- */
+  @media (max-width: 600px) {
+    h1.card-title { font-size: 20px; }
+    .btn-submit { font-size: 14px; }
+  }
+</style>
 
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  float: right;
-  cursor: pointer;
-}
-
-/* 背景の黒幕 */
-.menu-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
-  z-index: 9998;
-}
-/* ============================
-   モバイルメニューのリンクを縦並びに強制
-============================ */
-.mobile-menu a {
-  display: block !important;     /* 絶対に縦表示 */
-  width: 100%;
-  background: #f8fafc;           /* 背景色 */
-  border: 1px solid #e5e7eb;     /* 薄い枠 */
-  padding: 12px 10px;
-  margin-bottom: 8px;
-  border-radius: 8px;
-  font-size: 15px;
-  color: #333;
-}
-
-/* ホバーエフェクト */
-.mobile-menu a:hover {
-  background: #eef2ff;
-  border-color: var(--primary);
-}
-
-/* market-tabs（スマホ用タブ）の CSS が
-   mobile-menu に干渉しないよう明示的に制限 */
-.mobile-menu .market-tab,
-.mobile-menu .market-tabs {
-  display: none !important;
-}
-
-
-.menu-overlay.show {
-  display: block;
-}
-
-  </style>
 </head>
 
 <body>
@@ -230,7 +142,7 @@
 </main>
 
 <!-- 共通JS -->
-<script type="module" src="/assets/js/header-user.js"></script>
+<script type="module" src="/assets/js/header-loader.js"></script>
 
 <!-- KYC専用JS -->
 <script type="module" src="/assets/js/kyc.js"></script>

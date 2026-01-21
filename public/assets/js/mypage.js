@@ -1,148 +1,298 @@
-import { getMe } from "./api/user.api.js";
-import { getWallet } from "./api/wallet.api.js";
-import { getKycStatus } from "./api/kyc.api.js";
+import { getMe } from "./api/auth.api.js";
 import {
+  getUserProfile,
+  createUserProfile,
   getBankAccount,
   saveBankAccount,
   getCryptoAddresses,
   saveCryptoAddresses,
 } from "./api/profile.api.js";
+import { getKycStatus } from "./api/kyc.api.js";
 
 /* =========================
-   DOM
+   STATE
 ========================= */
-const elMsg = document.getElementById("mypage-message");
-
-const elEmail = document.getElementById("my-email");
-const elName = document.getElementById("my-name");
-const elGroup = document.getElementById("my-group");
-
-const elKycPill = document.getElementById("my-kyc-pill");
-
-const elBalTotal = document.getElementById("my-balance-total");
-const elBalAvail = document.getElementById("my-balance-available");
-const elBalLock = document.getElementById("my-balance-locked");
+let currentUser = null;
 
 /* =========================
-   util
+   AUTH GUARD
 ========================= */
-function fmtAmount(n) {
-  return (
-    Number(n ?? 0).toLocaleString("en-US", {
-      maximumFractionDigits: 0,
-    }) + " JPY"
-  );
+async function guardUser() {
+  try {
+    const res = await getMe();
+
+    if (res.user?.role === "ADMIN") {
+      location.href = "/admin/index.html";
+      return;
+    }
+
+    currentUser = res.user;
+  } catch {
+    location.href = "/login.html";
+  }
 }
 
-/* =========================
-   Loaders
-========================= */
-async function loadMe() {
-  const data = await getMe();
+document.addEventListener("DOMContentLoaded", () => {
+  /* =========================
+     DOM
+  ========================= */
+  const elMsg = document.getElementById("mypage-message");
 
-  // ★ ここが重要
-  const u = data.user || data;
+  /* --- account --- */
+  const elEmail = document.getElementById("my-email");
+  const elName  = document.getElementById("my-name");
+  const elKycPill = document.getElementById("my-kyc-pill");
 
-  elEmail.textContent = u.email ?? "-";
-  elName.textContent  = u.name ?? "-";
-  elGroup.textContent = u.groupId ?? "-";
+  /* --- modal --- */
+  const modal = document.getElementById("profile-modal");
+  const openModalBtn = document.getElementById("open-profile-modal");
+  const closeModalBtn = document.getElementById("close-profile-modal");
+
+  const bankSection   = document.getElementById("bank-section");
+  const cryptoSection = document.getElementById("crypto-section");
+
+
+  const modalEmail = document.getElementById("modal-email");
+  const modalName  = document.getElementById("modal-name");
+  const modalKyc   = document.getElementById("modal-kyc");
+
+  /* --- modal withdraw info --- */
+const modalBank = document.getElementById("modal-bank");
+const modalBtc  = document.getElementById("modal-btc");
+const modalEth  = document.getElementById("modal-eth");
+const modalUsdt = document.getElementById("modal-usdt");
+
+
+  /* --- UserProfile view --- */
+  const elDob     = document.getElementById("profile-dob");
+  const elGender  = document.getElementById("profile-gender");
+  const elAddress = document.getElementById("profile-address");
+  const elPhone   = document.getElementById("profile-phone");
+
+  /* --- UserProfile setup --- */
+  const profileSetup = document.getElementById("profile-setup");
+  const pDob     = document.getElementById("p-dob");
+  const pGender  = document.getElementById("p-gender");
+  const pAddress = document.getElementById("p-address");
+  const pCity    = document.getElementById("p-city");
+  const pPostal  = document.getElementById("p-postal");
+  const pCountry = document.getElementById("p-country");
+  const pPhone   = document.getElementById("p-phone");
+  const saveProfileBtn = document.getElementById("save-profile");
+  const profileMsg = document.getElementById("profile-msg");
+
+
+
+  /* =========================
+     Loaders
+  ========================= */
+  async function loadMe() {
+    if (!currentUser) return;
+
+    elEmail.textContent = currentUser.email ?? "-";
+    elName.textContent  = currentUser.name ?? "-";
+
+    modalEmail.textContent = currentUser.email ?? "-";
+    modalName.textContent  = currentUser.name ?? "-";
+  }
+
+  async function loadKyc() {
+    const k = await getKycStatus();
+    const lv = Number(k.level ?? 0);
+
+    elKycPill.textContent = `レベル ${lv}`;
+    elKycPill.className = `kyc-pill kyc-${lv}`;
+    modalKyc.textContent = `レベル ${lv}`;
+  }
+
+  async function loadUserProfile() {
+  let profile = null;
+
+  try {
+    profile = await getUserProfile();
+  } catch {
+    profile = null;
+  }
+
+  // 未登録（正常）
+  if (!profile || Object.keys(profile).length === 0) {
+    profileSetup.classList.remove("hidden");
+
+    elMsg.textContent =
+      "はじめにプロフィール情報を登録してください。";
+    elMsg.style.color = "#b45309";
+
+    return;
+  }
+
+  // 登録済み
+  profileSetup.classList.add("hidden");
+
+  elDob.textContent = profile.dateOfBirth
+    ? new Date(profile.dateOfBirth).toLocaleDateString("ja-JP")
+    : "-";
+
+  elGender.textContent = profile.gender ?? "-";
+  elAddress.textContent =
+    [profile.postalCode, profile.country, profile.city, profile.address]
+      .filter(Boolean)
+      .join(" ");
+
+  elPhone.textContent = profile.phone ?? "-";
 }
 
 
-async function loadKyc() {
-  const k = await getKycStatus();
-  const lv = Number(k.level ?? 0);
-  elKycPill.textContent = `レベル ${lv}`;
-  elKycPill.className = `kyc-pill kyc-${lv}`;
-}
 
-async function loadWallet() {
-  const d = await getWallet();
-  const w = d.wallet || {};
-  elBalTotal.textContent = fmtAmount(w.balanceTotal);
-  elBalAvail.textContent = fmtAmount(w.balanceAvailable);
-  elBalLock.textContent = fmtAmount(w.balanceLocked);
-}
-
-async function loadBank() {
+  async function loadBank() {
   const bank = await getBankAccount();
-  if (!bank) return;
 
-  document.getElementById("bank-name").value = bank.bankName || "";
-  document.getElementById("bank-branch").value = bank.branchName || "";
-  document.getElementById("bank-type").value = bank.accountType || "普通";
-  document.getElementById("bank-number").value = bank.accountNumber || "";
-  document.getElementById("bank-holder").value = bank.accountHolder || "";
+  // 未登録
+  if (!bank) {
+    modalBank.textContent = "未登録";
+    bankSection.classList.remove("hidden");
+    return;
+  }
+
+  // 登録済み → フォーム非表示
+  bankSection.classList.add("hidden");
+
+  // モーダル表示
+  modalBank.textContent =
+    `${bank.bankName} ${bank.branchName} / ${bank.accountType} ${bank.accountNumber}`;
 }
 
-async function loadCrypto() {
+
+
+  async function loadCrypto() {
   const list = await getCryptoAddresses();
-  if (!list) return;
+
+  // 未登録
+  if (!list || !list.length) {
+    modalBtc.textContent  = "未登録";
+    modalEth.textContent  = "未登録";
+    modalUsdt.textContent = "未登録";
+    cryptoSection.classList.remove("hidden");
+    return;
+  }
+
+  // 登録済み → フォーム非表示
+  cryptoSection.classList.add("hidden");
 
   list.forEach(c => {
-    if (c.currency === "BTC")
-      document.getElementById("crypto-btc").value = c.address;
-    if (c.currency === "ETH")
-      document.getElementById("crypto-eth").value = c.address;
-    if (c.currency === "USDT")
-      document.getElementById("crypto-usdt").value = c.address;
+    if (c.currency === "BTC")  modalBtc.textContent  = c.address;
+    if (c.currency === "ETH")  modalEth.textContent  = c.address;
+    if (c.currency === "USDT") modalUsdt.textContent = c.address;
   });
 }
 
-/* =========================
-   Save handlers
-========================= */
-document.getElementById("save-bank").onclick = async () => {
-  try {
-    await saveBankAccount({
-      bankName: document.getElementById("bank-name").value,
-      branchName: document.getElementById("bank-branch").value,
-      accountType: document.getElementById("bank-type").value,
-      accountNumber: document.getElementById("bank-number").value,
-      accountHolder: document.getElementById("bank-holder").value,
-    });
 
-    document.getElementById("bank-msg").textContent = "銀行情報を保存しました";
-  } catch {
-    document.getElementById("bank-msg").textContent = "保存に失敗しました";
-  }
-};
 
-document.getElementById("save-crypto").onclick = async () => {
-  const payload = {
-    addresses: [
-      { currency: "BTC", address: document.getElementById("crypto-btc").value },
-      { currency: "ETH", address: document.getElementById("crypto-eth").value },
-      { currency: "USDT", address: document.getElementById("crypto-usdt").value },
-    ].filter(a => a.address),
+  /* =========================
+     Save handlers
+  ========================= */
+  saveProfileBtn?.addEventListener("click", async () => {
+    try {
+      await createUserProfile({
+        dateOfBirth: pDob.value,
+        gender: pGender.value,
+        address: pAddress.value,
+        city: pCity.value,
+        postalCode: pPostal.value,
+        country: pCountry.value,
+        phone: pPhone.value,
+      });
+
+      profileMsg.textContent = "プロフィールを登録しました。";
+      profileMsg.style.color = "green";
+
+      await loadUserProfile();
+    } catch {
+      profileMsg.textContent = "登録に失敗しました。";
+      profileMsg.style.color = "red";
+    }
+  });
+
+  document.getElementById("save-bank").onclick = async () => {
+    try {
+      await saveBankAccount({
+        bankName: document.getElementById("bank-name").value,
+        branchName: document.getElementById("bank-branch").value,
+        accountType: document.getElementById("bank-type").value,
+        accountNumber: document.getElementById("bank-number").value,
+        accountHolder: document.getElementById("bank-holder").value,
+      });
+
+      document.getElementById("bank-msg").textContent =
+        "銀行情報を保存しました";
+    } catch {
+      document.getElementById("bank-msg").textContent =
+        "保存に失敗しました";
+    }
   };
 
-  if (!payload.addresses.length) return;
+  document.getElementById("save-crypto").onclick = async () => {
+    try {
+      const payload = {
+        addresses: [
+          { currency: "BTC",  address: document.getElementById("crypto-btc").value },
+          { currency: "ETH",  address: document.getElementById("crypto-eth").value },
+          { currency: "USDT", address: document.getElementById("crypto-usdt").value },
+        ].filter(a => a.address),
+      };
 
-  await saveCryptoAddresses(payload);
-  document.getElementById("crypto-msg").textContent =
-    "暗号通貨アドレスを保存しました";
-};
+      if (!payload.addresses.length) return;
 
-/* =========================
-   Init
-========================= */
-(async function init() {
-  try {
-    await Promise.all([
-      loadMe(),
-      loadKyc(),
-      loadWallet(),
-      loadBank(),
-      loadCrypto(),
-    ]);
+      await saveCryptoAddresses(payload);
 
-    elMsg.textContent = "最新情報を取得しました。";
-    elMsg.style.color = "green";
-  } catch (e) {
-    console.error(e);
-    elMsg.textContent =
-      "情報取得に失敗しました。ログイン状態を確認してください。";
-    elMsg.style.color = "red";
-  }
-})();
+      document.getElementById("crypto-msg").textContent =
+        "暗号通貨アドレスを保存しました";
+    } catch {
+      document.getElementById("crypto-msg").textContent =
+        "保存に失敗しました";
+    }
+  };
+
+  document.getElementById("edit-profile-btn")?.addEventListener("click", () => {
+  modal.classList.add("hidden");
+  document.getElementById("profile-setup")?.scrollIntoView({ behavior: "smooth" });
+});
+
+document.getElementById("edit-withdraw-btn")?.addEventListener("click", () => {
+  modal.classList.add("hidden");
+  document.getElementById("bank-section")?.scrollIntoView({ behavior: "smooth" });
+});
+
+
+  /* =========================
+     Modal
+  ========================= */
+  openModalBtn.onclick = () => modal.classList.remove("hidden");
+  closeModalBtn.onclick = () => modal.classList.add("hidden");
+  modal.querySelector(".modal-overlay").onclick = () =>
+    modal.classList.add("hidden");
+
+  /* =========================
+     Init
+  ========================= */
+  (async function init() {
+    await guardUser();
+
+    try {
+      await Promise.all([
+        loadMe(),
+        loadKyc(),
+        loadUserProfile(),
+        loadBank(),
+        loadCrypto(),
+      ]);
+
+      elMsg.textContent = "最新のアカウント情報を取得しました。";
+      elMsg.style.color = "green";
+    } catch (e) {
+      console.error(e);
+      elMsg.textContent =
+        "情報取得に失敗しました。再ログインしてください。";
+      elMsg.style.color = "red";
+    }
+  })();
+});

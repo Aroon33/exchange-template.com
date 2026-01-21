@@ -1,0 +1,41 @@
+  <section class="section-card">
+
+    <h1 class="card-title">本人確認（KYC）</h1>
+    <p class="muted" id="kyc-msg"></p>
+
+    <!-- KYC レベル表示  -->
+    <div id="kyc-level-pill" class="kyc-pill kyc-0">
+      レベル - （取得中）
+    </div>
+
+    <div class="kyc-box">
+
+      <div id="kyc-status" style="font-size:15px; margin-bottom:10px; font-weight:bold;">
+        ステータス取得中...
+      </div>
+
+      <!-- KYC フォーム -->
+      <div id="kyc-form">
+
+        <div class="upload-section">
+          <label>本人確認書類（表）</label>
+          <input type="file" id="front-file" accept="image/*">
+        </div>
+
+        <div class="upload-section">
+          <label>本人確認書類（裏）</label>
+          <input type="file" id="back-file" accept="image/*">
+        </div>
+
+        <button class="btn btn-primary btn-submit" id="submit-kyc">
+          KYCを提出する
+        </button>
+
+        <p class="note">
+          JPG / PNG などの画像ファイルをアップロードしてください。
+        </p>
+      </div>
+
+    </div>
+
+  </section>

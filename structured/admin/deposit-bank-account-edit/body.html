@@ -1,0 +1,48 @@
+  <div class="admin-main-inner">
+
+    <div class="page-title" id="page-title">入金先登録</div>
+
+    <div class="card form-card">
+
+      <div class="form-grid">
+
+        <div class="form-row">
+          <label>銀行名</label>
+          <input type="text" id="bank_name" placeholder="例：みずほ銀行" />
+        </div>
+
+        <div class="form-row">
+          <label>支店名</label>
+          <input type="text" id="branch_name" placeholder="例：東京営業部" />
+        </div>
+
+        <div class="form-row">
+          <label>口座種別</label>
+          <select id="account_type">
+            <option value="普通">普通</option>
+            <option value="当座">当座</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>口座番号</label>
+          <input type="text" id="account_number" placeholder="例：1234567" />
+        </div>
+
+        <div class="form-row full">
+          <label>口座名義</label>
+          <input type="text" id="account_holder" placeholder="例：カ）クリプトエックス" />
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="save-btn">保存</button>
+        <button class="btn btn-outline"
+                onclick="location.href='deposit-bank-accounts.html'">
+          キャンセル
+        </button>
+      </div>
+
+    </div>
+  </div>

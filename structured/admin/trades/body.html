@@ -1,0 +1,67 @@
+  <div class="admin-main-inner">
+
+<div class="page-title">取引管理</div>
+
+<!-- ===== フィルター ===== -->
+<section class="filters-card">
+  <div class="filters-grid">
+
+    <div class="field">
+      <label>状態</label>
+      <select id="f-status">
+        <option value="">全て</option>
+        <option value="OPEN">保有中</option>
+        <option value="CLOSED">決済済み</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>ユーザー名</label>
+      <input id="f-userName" />
+    </div>
+
+    <div class="field">
+      <label>グループ名</label>
+      <input id="f-groupName" />
+    </div>
+
+    <div class="field">
+      <label>銘柄</label>
+      <select id="f-symbol">
+        <option value="">全て</option>
+        <option value="BTCUSDT">BTC</option>
+        <option value="ETHUSDT">ETH</option>
+      </select>
+    </div>
+
+  </div>
+
+  <div class="filter-actions">
+    <button class="btn-xs" id="btn-clear">クリア</button>
+    <button class="btn-xs btn-primary" id="btn-search">検索</button>
+  </div>
+</section>
+
+<!-- ===== テーブル ===== -->
+<section class="table-card">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>ユーザー</th>
+        <th>グループ</th>
+        <th>銘柄</th>
+        <th>売買</th>
+        <th>数量</th>
+        <th>建値</th>
+        <th>決済値</th>
+        <th>損益</th>
+        <th>エントリー</th>
+        <th>決済</th>
+      </tr>
+    </thead>
+    <tbody id="trade-body"></tbody>
+  </table>
+</section>
+
+</div>

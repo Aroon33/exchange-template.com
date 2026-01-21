@@ -1,0 +1,404 @@
+  <style>
+    /* ===== レイアウト ===== */
+    .form-card {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-row.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-row label {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 4px;
+    }
+
+    .form-row input,
+    .form-row select {
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    /* ===== スマホ対応 ===== */
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+  <style>
+    /* ===== レイアウト（銀行口座と同一） ===== */
+    .form-card {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-row.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-row label {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 4px;
+    }
+
+    .form-row input,
+    .form-row select {
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    /* ===== スマホ対応 ===== */
+    @media (max-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+  <style>
+/* =========================
+   Responsive (Deposit)
+========================= */
+@media (max-width: 768px) {
+
+  .thead-pc {
+    display: none;
+  }
+
+  .thead-sp {
+    display: table-header-group;
+  }
+
+  .pc-only {
+    display: none;
+  }
+
+  .table td.actions,
+  .table th.actions {
+    display: none;
+  }
+
+  .deposit-row td {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  /* ===== Modal ===== */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+
+  .modal-content {
+    background: #fff;
+    margin: 10% auto;
+    width: 92%;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .modal-footer {
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+  }
+
+  .modal-body {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+  }
+}
+
+/* PC only */
+@media (min-width: 769px) {
+  .thead-sp {
+    display: none;
+  }
+}
+.admin-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: #111;
+  color: #fff;
+  z-index: 1001;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+}
+
+.hamburger {
+  font-size: 22px;
+  background: none;
+  border: none;
+  color: #fff;
+}
+
+
+
+@media (max-width: 768px) {
+  .admin-header {
+    display: flex;
+  }
+
+  
+  .admin-main {
+    margin-top: 56px;
+  }
+}
+
+  </style>
+  <style>
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .dash-card {
+      padding: 18px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .dash-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .dash-value {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--primary);
+    }
+
+    .filter-box {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .filter-box input {
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-soft);
+    }
+
+    .filter-btn {
+      padding: 8px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: 1px solid var(--primary);
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+    }
+
+
+
+  </style>
+  <style>
+/* =========================
+   Admin Login
+========================= */
+body {
+  background: #0f0f0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.login-card {
+  background: #fff;
+  width: 100%;
+  max-width: 360px;
+  padding: 28px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.login-logo {
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.login-sub {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.login-group {
+  margin-bottom: 14px;
+}
+
+.login-group label {
+  font-size: 12px;
+  color: #444;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.login-group input {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+}
+
+.login-error {
+  display: none;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #c00;
+  text-align: center;
+}
+  </style>
+  <style>
+body {
+  background: #0f0f0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.logout-card {
+  background: #fff;
+  padding: 28px;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.logout-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.logout-text {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 10px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-btn:disabled {
+  opacity: 0.6;
+}
+  </style>
+  <style>
+    th, td {
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+    .btn-mini {
+      padding: 3px 6px;
+      font-size: 11px;
+      margin-left: 4px;
+    }
+    .profit { color:#059669; font-weight:bold; }
+    .loss   { color:#dc2626; font-weight:bold; }
+  </style>

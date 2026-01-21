@@ -1,0 +1,2345 @@
+#############################################
+# CATEGORY: admin
+# TYPE: CONTROLLER
+# FILE: admin-deposit-bank-accounts.controller.ts
+# CLASS: AdminDepositBankAccountsController
+# ROUTES:
+#   GET    /admin/deposit/bank-accounts
+#   GET    /admin/deposit/bank-accounts/:id
+#   POST   /admin/deposit/bank-accounts
+#   POST   /admin/deposit/bank-accounts/:id
+#   GET    /admin/deposit/bank-accounts/:id/activate
+#   GET    /admin/deposit/bank-accounts/:id/close
+#   GET    /admin/deposit/bank-accounts/:id/restore
+#   GET    /admin/deposit/bank-accounts/:id/delete
+#############################################
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Param,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { UserRole } from '@prisma/client';
+import { ForbiddenException } from '@nestjs/common';
+
+@UseGuards(JwtAccessGuard)
+@Controller('admin/deposit/bank-accounts')
+export class AdminDepositBankAccountsController {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /* ===============================
+     管理者チェック
+  =============================== */
+  private assertAdmin(req: any) {
+    if (!req.user || req.user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Admin only');
+    }
+  }
+
+  /* ===============================
+     一覧取得（銀行管理画面）
+  =============================== */
+  @Get()
+  async list(@Req() req: any) {
+    this.assertAdmin(req);
+
+    return this.prisma.depositBankAccount.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /* ===============================
+     単体取得（編集画面）
+  =============================== */
+  @Get(':id')
+  async getOne(@Req() req: any, @Param('id') id: string) {
+    this.assertAdmin(req);
+
+    const account = await this.prisma.depositBankAccount.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!account) {
+      throw new BadRequestException('Bank account not found');
+    }
+
+    return account;
+  }
+
+  /* ===============================
+     新規作成（最小構成）
+  =============================== */
+  @Post()
+  async create(@Req() req: any, @Body() body: any) {
+    this.assertAdmin(req);
+
+    const {
+      bankName,
+      branchName,
+      accountType,
+      accountNumber,
+      accountHolder,
+    } = body;
+
+    if (!bankName || !branchName || !accountNumber || !accountHolder) {
+      throw new BadRequestException('Invalid params');
+    }
+
+    // 既存 ACTIVE を UNUSED に戻す（1件ルール）
+    await this.prisma.depositBankAccount.updateMany({
+      where: { status: 'ACTIVE' },
+      data: { status: 'UNUSED' },
+    });
+
+    // 新規口座を ACTIVE で作成
+    return this.prisma.depositBankAccount.create({
+      data: {
+        bankName,
+        branchName,
+        accountType: accountType || '普通',
+        accountNumber,
+        accountHolder,
+        status: 'ACTIVE',
+      },
+    });
+  }
+
+  /* ===============================
+     更新
+  =============================== */
+  @Post(':id')
+  async update(@Req() req: any, @Param('id') id: string, @Body() body: any) {
+    this.assertAdmin(req);
+
+    const {
+      bankName,
+      branchName,
+      accountType,
+      accountNumber,
+      accountHolder,
+    } = body;
+
+    if (!bankName || !branchName || !accountNumber || !accountHolder) {
+      throw new BadRequestException('Invalid params');
+    }
+
+    return this.prisma.depositBankAccount.update({
+      where: { id: Number(id) },
+      data: {
+        bankName,
+        branchName,
+        accountType: accountType || '普通',
+        accountNumber,
+        accountHolder,
+      },
+    });
+  }
+
+  /* ===============================
+     使用開始（ACTIVE）
+  =============================== */
+  @Get(':id/activate')
+  async activate(@Req() req: any, @Param('id') id: string) {
+    this.assertAdmin(req);
+
+    await this.prisma.depositBankAccount.updateMany({
+      where: { status: 'ACTIVE' },
+      data: { status: 'UNUSED' },
+    });
+
+    return this.prisma.depositBankAccount.update({
+      where: { id: Number(id) },
+      data: { status: 'ACTIVE' },
+    });
+  }
+
+  /* ===============================
+     解約（CLOSED）
+  =============================== */
+  @Get(':id/close')
+  async close(@Req() req: any, @Param('id') id: string) {
+    this.assertAdmin(req);
+
+    return this.prisma.depositBankAccount.update({
+      where: { id: Number(id) },
+      data: { status: 'CLOSED' },
+    });
+  }
+
+  /* ===============================
+     未使用に戻す
+  =============================== */
+  @Get(':id/restore')
+  async restore(@Req() req: any, @Param('id') id: string) {
+    this.assertAdmin(req);
+
+    return this.prisma.depositBankAccount.update({
+      where: { id: Number(id) },
+      data: { status: 'UNUSED' },
+    });
+  }
+
+  /* ===============================
+     削除
+  =============================== */
+  @Get(':id/delete')
+  async remove(@Req() req: any, @Param('id') id: string) {
+    this.assertAdmin(req);
+
+    return this.prisma.depositBankAccount.delete({
+      where: { id: Number(id) },
+    });
+  }
+}
+
+
+#############################################
+# CATEGORY: admin
+# TYPE: CONTROLLER
+# FILE: admin-deposit-crypto-addresses.controller.ts
+# CLASS: AdminDepositCryptoAddressesController
+# ROUTES:
+#   GET    /admin/deposit/crypto-addresses
+#   GET    /admin/deposit/crypto-addresses/:id
+#   POST   /admin/deposit/crypto-addresses
+#   GET    /admin/deposit/crypto-addresses/:id/delete
+#   POST   /admin/deposit/crypto-addresses/:id
+#############################################
+
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Body,
+  Req,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { UserRole } from '@prisma/client';
+
+@UseGuards(JwtAccessGuard)
+@Controller('admin/deposit/crypto-addresses')
+export class AdminDepositCryptoAddressesController {
+  constructor(private prisma: PrismaService) {}
+
+  private assertAdmin(req:any){
+    if(!req.user || req.user.role !== UserRole.ADMIN){
+      throw new BadRequestException('Admin only');
+    }
+  }
+
+  /** 一覧 */
+  @Get()
+  async list(@Req() req:any){
+    this.assertAdmin(req);
+    return this.prisma.$queryRaw`
+      SELECT * FROM deposit_crypto_addresses
+      ORDER BY createdAt DESC
+    `;
+  }
+
+  /** 1件取得（編集用） */
+  @Get(':id')
+  async getOne(
+    @Req() req:any,
+    @Param('id') id:string
+  ){
+    this.assertAdmin(req);
+
+    const row:any = await this.prisma.$queryRaw`
+      SELECT * FROM deposit_crypto_addresses WHERE id = ${Number(id)}
+    `;
+    if(!row.length) throw new BadRequestException('Not found');
+    return row[0];
+  }
+
+  /** 新規作成 */
+  @Post()
+  async create(
+    @Req() req:any,
+    @Body() body:any
+  ){
+    this.assertAdmin(req);
+
+    if(!body.currency || !body.address){
+      throw new BadRequestException('currency & address required');
+    }
+
+    await this.prisma.$executeRaw`
+      INSERT INTO deposit_crypto_addresses
+      (currency,address,memoTag,userId,used)
+      VALUES
+      (${body.currency},${body.address},${body.memoTag},${body.userId},0)
+    `;
+
+    return { message:'created' };
+  }
+
+  @Get(':id/delete')
+async delete(
+  @Req() req:any,
+  @Param('id') id:string
+){
+  this.assertAdmin(req);
+
+  await this.prisma.$executeRaw`
+    DELETE FROM deposit_crypto_addresses
+    WHERE id = ${Number(id)}
+  `;
+
+  return { message: 'deleted' };
+}
+
+
+  /** 更新 */
+  @Post(':id')
+  async update(
+    @Req() req:any,
+    @Param('id') id:string,
+    @Body() body:any
+  ){
+    this.assertAdmin(req);
+
+
+
+    await this.prisma.$executeRaw`
+      UPDATE deposit_crypto_addresses
+      SET
+        currency = ${body.currency},
+        address = ${body.address},
+        memoTag = ${body.memoTag},
+        userId = ${body.userId}
+      WHERE id = ${Number(id)}
+    `;
+
+    return { message:'updated' };
+  }
+}
+
+
+#############################################
+# CATEGORY: admin
+# TYPE: CONTROLLER
+# FILE: admin.controller.ts
+# CLASS: AdminController
+# ROUTES:
+#   GET    /admin/dashboard
+#############################################
+
+import {
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+  BadRequestException,
+  Req,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { TransferType, TransferStatus, TicketStatus, UserRole } from '@prisma/client';
+
+@Controller('admin')
+@UseGuards(JwtAccessGuard)
+export class AdminController {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private assertAdmin(user: any) {
+    if (!user || user.role !== UserRole.ADMIN) {
+      throw new BadRequestException('Admin only');
+    }
+  }
+
+  /**
+   * GET /admin/dashboard
+   * 例: /admin/dashboard?from=2024-01-01&to=2025-12-31
+   */
+  @Get('dashboard')
+  async dashboard(
+    @Req() req: any,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    const user = req.user;
+    this.assertAdmin(user);
+
+    if (!from || !to) {
+      throw new BadRequestException('from と to は必須です');
+    }
+
+    const fromDate = new Date(from + 'T00:00:00');
+    const toDate = new Date(to + 'T23:59:59');
+
+    // ① 総ユーザー数
+    const totalUsers = await this.prisma.user.count();
+
+    // ② 総残高
+    const balanceAgg = await this.prisma.wallet.aggregate({
+      _sum: { balanceTotal: true },
+    });
+    const totalBalance = balanceAgg._sum.balanceTotal ?? 0;
+
+    // ③ 期間内の新規ユーザー
+    const newUsers = await this.prisma.user.count({
+      where: { createdAt: { gte: fromDate, lte: toDate } },
+    });
+
+    // ④ 入金合計
+    const depAgg = await this.prisma.transfer.aggregate({
+      _sum: { amount: true },
+      where: {
+        type: TransferType.DEPOSIT,
+        status: TransferStatus.COMPLETED,
+        createdAt: { gte: fromDate, lte: toDate },
+      },
+    });
+
+    const depositSum = depAgg._sum.amount ?? 0;
+
+    // ⑤ 出金合計
+    const witAgg = await this.prisma.transfer.aggregate({
+      _sum: { amount: true },
+      where: {
+        type: TransferType.WITHDRAW,
+        status: TransferStatus.COMPLETED,
+        createdAt: { gte: fromDate, lte: toDate },
+      },
+    });
+
+    const withdrawSum = witAgg._sum.amount ?? 0;
+
+    // ⑥ 入金 pending
+    const pendingDeposits = await this.prisma.transfer.count({
+      where: { type: TransferType.DEPOSIT, status: TransferStatus.PENDING },
+    });
+
+    // ⑦ 出金 pending
+    const pendingWithdraws = await this.prisma.transfer.count({
+      where: { type: TransferType.WITHDRAW, status: TransferStatus.PENDING },
+    });
+
+    // ⑧ KYC pending (0~4)
+    const pendingKyc = await this.prisma.kycRequest.count({
+      where: { status: { in: [0, 1, 2, 3, 4] } },
+    });
+
+    // ⑨ 問い合わせ pending
+    const openTickets = await this.prisma.ticket.count({
+      where: { status: TicketStatus.OPEN },
+    });
+
+    return {
+      totalUsers,
+      totalBalance,
+      newUsers,
+      depositSum,
+      withdrawSum,
+      pendingDeposits,
+      pendingWithdraws,
+      pendingKyc,
+      openTickets,
+    };
+  }
+}
+
+
+#############################################
+# CATEGORY: admin
+# TYPE: CONTROLLER
+# FILE: admin.groups.controller.ts
+# CLASS: AdminGroupsController
+# ROUTES:
+#   GET    /admin/groups
+#   POST   /admin/groups/create
+#   PATCH  /admin/groups/:id
+#   DELETE /admin/groups/:id
+#############################################
+
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Patch,
+  Body,
+  Param,
+  ParseIntPipe,
+  BadRequestException,
+  UseGuards,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { UserRole } from '@prisma/client';
+
+@UseGuards(JwtAccessGuard)
+@Controller('admin/groups')
+export class AdminGroupsController {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private assertAdmin(req: any) {
+    if (!req.user || req.user.role !== UserRole.ADMIN) {
+      throw new BadRequestException('Admin only');
+    }
+  }
+
+  /** 文字列を code 用に正規化（英数字のみ） */
+  private normalizeCode(s: string) {
+    return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  /** --------------------------
+   * グループ一覧取得
+   * -------------------------- */
+  @Get()
+  async list() {
+    const groups = await this.prisma.group.findMany({
+      orderBy: { id: 'asc' },
+      include: {
+        users: true,
+      },
+    });
+
+    return groups.map((g) => ({
+      id: g.id,
+      name: g.name,
+      code: g.code,
+      inviteLink: `https://exchange-template.com/signup.html?ref=${g.code}`,
+      userCount: g.users.length,
+    }));
+  }
+
+  /** --------------------------
+   * 新規作成
+   * -------------------------- */
+  @Post('create')
+  async create(@Body() body: { name: string }) {
+    if (!body.name) throw new BadRequestException('name is required');
+
+    let code = this.normalizeCode(body.name);
+
+    // 重複回避
+    const exists = await this.prisma.group.findUnique({ where: { code } });
+    if (exists) code = code + Date.now();
+
+    const group = await this.prisma.group.create({
+      data: { name: body.name, code },
+    });
+
+    return {
+      message: 'Group created',
+      group,
+      inviteLink: `https://exchange-template.com/signup.html?ref=${code}`,
+    };
+  }
+
+  /** --------------------------
+   * 編集（name + code）
+   * -------------------------- */
+  @Patch(':id')
+  async edit(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { name?: string; code?: string },
+  ) {
+    const data: any = {};
+
+    if (body.name) data.name = body.name;
+
+    if (body.code) {
+      const newCode = this.normalizeCode(body.code);
+      const exist = await this.prisma.group.findUnique({
+        where: { code: newCode },
+      });
+
+      if (exist && exist.id !== id) {
+        throw new BadRequestException('code already exists');
+      }
+
+      data.code = newCode;
+    }
+
+    const updated = await this.prisma.group.update({
+      where: { id },
+      data,
+    });
+
+    return {
+      message: 'Group updated',
+      group: updated,
+    };
+  }
+
+  /** --------------------------
+   * 削除（所属ユーザーの groupId を null へ）
+   * -------------------------- */
+  @Delete(':id')
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    // 所属ユーザーを groupId = null に更新
+    await this.prisma.user.updateMany({
+      where: { groupId: id },
+      data: { groupId: null },
+    });
+
+    await this.prisma.group.delete({ where: { id } });
+
+    return { message: 'Group deleted' };
+  }
+}
+
+
+#############################################
+# CATEGORY: admin
+# TYPE: CONTROLLER
+# FILE: admin.system.controller.ts
+# CLASS: AdminSystemController
+# ROUTES:
+#   GET    /admin/system/positions/:groupId
+#   GET    /admin/system/history/:groupId
+#############################################
+
+// src/admin/admin.system.controller.ts
+
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { PrismaService } from '../prisma/prisma.service';
+
+@UseGuards(JwtAccessGuard)
+@Controller('admin/system')
+export class AdminSystemController {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /** ▼ 親＋子の保有ポジション（system-positions 用） */
+  @Get('positions/:groupId')
+  async getPositions(@Param('groupId') groupId: string) {
+    const gId = Number(groupId);
+
+    // 親口座（9999）
+    const parentTrades = await this.prisma.trade.findMany({
+      where: { groupId: gId, userId: 9999, closePrice: null },
+    });
+
+    const parent = parentTrades.map((t) => {
+      const current =
+        Number(t.entryPrice) * (1 + (Math.random() - 0.5) * 0.002);
+      const pnl =
+        t.side === 'BUY'
+          ? (current - Number(t.entryPrice)) * Number(t.size)
+          : (Number(t.entryPrice) - current) * Number(t.size);
+
+      return {
+        symbol: t.symbol,
+        size: t.size,
+        entryPrice: t.entryPrice,
+        currentPrice: current,
+        unrealizedPnl: pnl,
+        openedAt: t.openedAt,
+      };
+    });
+
+    // 子口座
+    const childTrades = await this.prisma.trade.findMany({
+      where: { groupId: gId, userId: { not: 9999 }, closePrice: null },
+      include: { user: true },
+    });
+
+    const children = childTrades.map((t) => {
+      const current =
+        Number(t.entryPrice) * (1 + (Math.random() - 0.5) * 0.002);
+      const pnl =
+        t.side === 'BUY'
+          ? (current - Number(t.entryPrice)) * Number(t.size)
+          : (Number(t.entryPrice) - current) * Number(t.size);
+
+      return {
+        userId: t.userId,
+        userName: t.user?.name ?? '(unknown)',
+        symbol: t.symbol,
+        size: t.size,
+        entryPrice: t.entryPrice,
+        currentPrice: current,
+        unrealizedPnl: pnl,
+        openedAt: t.openedAt,
+      };
+    });
+
+    return { parent, children };
+  }
+
+  /** ▼ 親＋子の取引履歴（system-history 用） */
+  @Get('history/:groupId')
+  async getHistory(@Param('groupId') groupId: string) {
+    const gId = Number(groupId);
+
+    // 親履歴（MAM）
+    const parent = await this.prisma.trade.findMany({
+      where: { groupId: gId, userId: 9999 },
+      orderBy: { id: 'desc' },
+    });
+
+    // 子履歴（PAM）
+    const children = await this.prisma.trade.findMany({
+      where: { groupId: gId, userId: { not: 9999 } },
+      include: { user: true },
+      orderBy: { id: 'desc' },
+    });
+
+    return { parent, children };
+  }
+}
+
+
+#############################################
+# CATEGORY: admin
+# TYPE: CONTROLLER
+# FILE: admin.trades.controller.ts
+# CLASS: AdminTradesController
+# ROUTES:
+#   GET    /admin/trades
+#   POST   /admin/trades/:id/edit
+#   POST   /admin/trades/:id/delete
+#   POST   /admin/trades/bulk-delete
+#############################################
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+  Delete,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { UserRole } from '@prisma/client';
+
+@UseGuards(JwtAccessGuard)
+@Controller('admin/trades')
+export class AdminTradesController {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private assertAdmin(req: any) {
+    if (!req.user || req.user.role !== UserRole.ADMIN) {
+      throw new BadRequestException('Admin only');
+    }
+  }
+
+  /** 取引一覧（フィルター付き） */
+  @Get()
+  async listTrades(
+    @Req() req: any,
+    @Query('group') group?: string,
+    @Query('userId') userId?: string,
+    @Query('symbol') symbol?: string,
+    @Query('side') side?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    this.assertAdmin(req);
+
+    return this.prisma.trade.findMany({
+      where: {
+        ...(group ? { groupId: Number(group) } : {}),
+        ...(userId ? { userId: Number(userId) } : {}),
+        ...(symbol ? { symbol } : {}),
+        ...(side ? { side } : {}),
+        ...(from ? { closedAt: { gte: new Date(from) } } : {}),
+        ...(to ? { closedAt: { lte: new Date(to) } } : {}),
+      },
+      include: { user: true },
+      orderBy: { closedAt: 'desc' },
+    });
+  }
+
+  /** 編集 */
+  @Post(':id/edit')
+  async editTrade(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: any,
+  ) {
+    this.assertAdmin(req);
+
+    const updated = await this.prisma.trade.update({
+      where: { id },
+      data: {
+        size: body.size,
+        entryPrice: body.entryPrice,
+        closePrice: body.closePrice,
+        profit: body.profit,
+        closedAt: new Date(body.closedAt),
+      },
+    });
+
+    return { message: 'Updated', trade: updated };
+  }
+
+  /** 1件削除 */
+  @Post(':id/delete')
+  async deleteTrade(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    this.assertAdmin(req);
+
+    await this.prisma.trade.delete({ where: { id } });
+
+    return { message: 'Deleted', id };
+  }
+
+  /** 🔥 一括削除（今回の本命） */
+  @Post('bulk-delete')
+  async bulkDelete(
+    @Req() req: any,
+    @Body() body: { ids: number[] },
+  ) {
+    this.assertAdmin(req);
+
+    if (!body.ids || !Array.isArray(body.ids) || body.ids.length === 0) {
+      throw new BadRequestException('ids is required');
+    }
+
+    await this.prisma.trade.deleteMany({
+      where: { id: { in: body.ids } },
+    });
+
+    return { message: 'Bulk deleted', count: body.ids.length };
+  }
+}
+
+
+#############################################
+# CATEGORY: admin
+# TYPE: CONTROLLER
+# FILE: admin.auth.controller.ts
+# CLASS: AdminAuthController
+# ROUTES:
+#   POST   /admin/auth/login
+#############################################
+
+import {
+  Controller,
+  Post,
+  Body,
+  ForbiddenException,
+} from '@nestjs/common';
+
+import * as bcrypt from 'bcrypt';
+import { AuthService } from '../../auth/auth.service';
+import { PrismaService } from '../../prisma/prisma.service';
+
+@Controller('admin/auth')
+export class AdminAuthController {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  @Post('login')
+  async adminLogin(
+    @Body() body: { email: string; password: string },
+  ) {
+    const { email, password } = body;
+
+    // ① ユーザー取得
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user || !user.password) {
+      throw new ForbiddenException('Invalid credentials');
+    }
+
+    // ② パスワード検証（bcrypt 直接使用）
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) {
+      throw new ForbiddenException('Invalid credentials');
+    }
+
+    // ③ ADMIN 以外は拒否
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Admin only');
+    }
+
+    // ④ 既存 AuthService の login をそのまま使用
+    return this.authService.login(user);
+  }
+}
+
+
+#############################################
+# CATEGORY: admin
+# TYPE: CONTROLLER
+# FILE: users.admin.controller.ts
+# CLASS: AdminUsersController
+# ROUTES:
+#   GET    /admin/users
+#   GET    /admin/users/:id
+#   POST   /admin/users/:id/system-status
+#   POST   /admin/users/:id/group
+#############################################
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { UserRole, SystemStatus } from '@prisma/client';
+
+@UseGuards(JwtAccessGuard)
+@Controller('admin/users')
+export class AdminUsersController {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private assertAdmin(req: any) {
+    if (!req.user || req.user.role !== UserRole.ADMIN) {
+      throw new BadRequestException('Admin only');
+    }
+  }
+
+  // -------------------------
+  // 全ユーザー一覧
+  // -------------------------
+  @Get()
+  async listUsers(@Req() req: any) {
+    this.assertAdmin(req);
+
+    const users = await this.prisma.user.findMany({
+      orderBy: { id: 'asc' },
+      include: {
+        wallet: true,
+        UserProfile: true,
+        kycRequests: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+    });
+
+    return users.map((u) => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      role: u.role,
+      groupId: u.groupId,
+      systemStatus: u.systemStatus,
+      balanceTotal: u.wallet?.balanceTotal ?? 0,
+      balanceAvailable: u.wallet?.balanceAvailable ?? 0,
+      kycLevel: u.kycRequests[0]?.status ?? 0,
+      createdAt: u.createdAt,
+    }));
+  }
+
+  // -------------------------
+  // 個別ユーザー詳細
+  // -------------------------
+  @Get(':id')
+  async userDetail(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    this.assertAdmin(req);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        wallet: true,
+        transfers: { orderBy: { createdAt: 'desc' } },
+        kycRequests: { orderBy: { createdAt: 'desc' }, take: 1 },
+        UserProfile: true,
+        group: true,
+      },
+    });
+
+    if (!user) throw new BadRequestException('User not found');
+
+    return user;
+  }
+
+  // -------------------------
+  // systemStatus 更新（STOP / RUNNING）
+  // -------------------------
+  @Post(':id/system-status')
+  async updateSystemStatus(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { status: SystemStatus },
+  ) {
+    this.assertAdmin(req);
+
+    if (!body.status) throw new BadRequestException('Status required');
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { systemStatus: body.status },
+    });
+  }
+
+  // -------------------------
+  // groupId の更新
+  // -------------------------
+  @Post(':id/group')
+  async changeGroup(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { groupId: number },
+  ) {
+    this.assertAdmin(req);
+
+    if (!body.groupId) throw new BadRequestException('groupId required');
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { groupId: body.groupId },
+    });
+  }
+}
+
+
+#############################################
+# CATEGORY: app.controller.ts
+# TYPE: CONTROLLER
+# FILE: app.controller.ts
+# CLASS: AppController
+# ROUTES:
+#   GET    /
+#############################################
+
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service';
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get()
+  getHello(): string {
+    return this.appService.getHello();
+  }
+}
+
+
+#############################################
+# CATEGORY: auth
+# TYPE: CONTROLLER
+# FILE: auth.controller.ts
+# CLASS: AuthController
+# ROUTES:
+#   POST   /auth/register
+#   POST   /auth/login
+#   GET    /auth/me
+#   POST   /auth/logout
+#############################################
+
+import {
+  Body,
+  Controller,
+  Post,
+  Get,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { JwtAccessGuard } from './guards/jwt-access.guard';
+import type { Response, Request } from 'express';
+
+
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly auth: AuthService) {}
+
+  @Post('register')
+  register(@Body() dto: RegisterDto) {
+    return this.auth.register(dto);
+  }
+
+  @Post('login')
+  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    const { access, refresh, user } = await this.auth.login(dto);
+
+    res.cookie('access_token', access, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie('refresh_token', refresh, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 7 * 86400 * 1000,
+    });
+
+    return { user };
+  }
+
+  @Get('me')
+  @UseGuards(JwtAccessGuard)
+  me(@Req() req: Request) {
+    return { user: (req as any).user };
+  }
+
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    return { message: 'Logged out' };
+  }
+}
+
+
+#############################################
+# CATEGORY: deposit
+# TYPE: CONTROLLER
+# FILE: deposit.controller.ts
+# CLASS: DepositController
+# ROUTES:
+#   POST   /deposit/request
+#   GET    /deposit/config
+#   GET    /deposit/all
+#   GET    /deposit/pending
+#   POST   /deposit/approve
+#############################################
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { PrismaService } from '../prisma/prisma.service';
+import {
+  TransferStatus,
+  TransferType,
+  UserRole,
+} from '@prisma/client';
+import { DepositService } from './deposit.service';
+
+/**
+ * 入金申請 DTO（JPY / CRYPTO 共通）
+ */
+class DepositRequestDto {
+  amount: string;        // 円金額
+  method?: 'JPY' | 'CRYPTO';
+  currency?: 'JPY' | 'BTC' | 'ETH';
+  cryptoAmount?: string;
+}
+
+/**
+ * 入金承認 DTO（ADMIN）
+ */
+class ApproveDepositDto {
+  id: number;
+}
+
+@UseGuards(JwtAccessGuard)
+@Controller('deposit')
+export class DepositController {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly depositService: DepositService,
+  ) {}
+
+  /* ===============================
+     共通：管理者チェック
+  =============================== */
+  private assertAdmin(req: any) {
+    if (!req.user || req.user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Admin only');
+    }
+  }
+
+  /* ===============================
+     ユーザー：入金申請
+  =============================== */
+  @Post('request')
+  async requestDeposit(
+    @Req() req: any,
+    @Body() body: DepositRequestDto,
+  ) {
+    const user = req.user;
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    const userId = Number(user.sub);
+
+    const amountNum = Number(body.amount);
+    if (!amountNum || amountNum <= 0) {
+      throw new BadRequestException('Invalid deposit amount');
+    }
+
+    const method = body.method ?? 'JPY';
+    if (!['JPY', 'CRYPTO'].includes(method)) {
+      throw new BadRequestException('Invalid method');
+    }
+
+    const currency =
+      method === 'JPY'
+        ? 'JPY'
+        : body.currency && ['BTC', 'ETH'].includes(body.currency)
+        ? body.currency
+        : null;
+
+    if (method === 'CRYPTO' && !currency) {
+      throw new BadRequestException('Invalid crypto currency');
+    }
+
+    const cryptoAmount =
+      method === 'CRYPTO' && body.cryptoAmount
+        ? Number(body.cryptoAmount)
+        : null;
+
+    if (method === 'CRYPTO' && (!cryptoAmount || cryptoAmount <= 0)) {
+      throw new BadRequestException('Invalid cryptoAmount');
+    }
+
+    const transfer = await this.prisma.transfer.create({
+      data: {
+        userId,
+        type: TransferType.DEPOSIT,
+        method,
+        currency,
+        amount: amountNum.toString(),
+        cryptoAmount: cryptoAmount ? cryptoAmount.toString() : null,
+        status: TransferStatus.PENDING,
+      },
+    });
+
+    return {
+      message: '入金申請を受け付けました',
+      transfer,
+    };
+  }
+
+  /* ===============================
+     ユーザー：入金先情報取得
+     （サンクスページ用）
+  =============================== */
+  @Get('config')
+  async getDepositConfig(@Req() req: any) {
+    if (!req.user) {
+      throw new UnauthorizedException();
+    }
+
+    const bankAccount = await this.prisma.depositBankAccount.findFirst({
+      where: { status: 'ACTIVE' },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!bankAccount) {
+      throw new BadRequestException(
+        '使用中の入金先口座が設定されていません',
+      );
+    }
+
+    return {
+      bank: {
+        name: bankAccount.bankName,
+        branch: bankAccount.branchName,
+        type: bankAccount.accountType ?? '普通',
+        number: bankAccount.accountNumber,
+        holder: bankAccount.accountHolder,
+      },
+      crypto: {
+        BTC: 'bc1qbtcxxxxxxxxxxxxxxxxxxxxxx',
+        ETH: '0xethxxxxxxxxxxxxxxxxxxxxxxxxx',
+      },
+      note: '入金確認後、残高に反映されます。',
+    };
+  }
+
+  /* ===============================
+     ADMIN：入金一覧（すべて）
+  =============================== */
+  @Get('all')
+  async adminAll(@Req() req: any) {
+    this.assertAdmin(req);
+
+    return this.prisma.transfer.findMany({
+      where: { type: TransferType.DEPOSIT },
+      orderBy: { createdAt: 'desc' },
+      include: { user: true },
+    });
+  }
+
+  /* ===============================
+     ADMIN：PENDING 入金一覧
+  =============================== */
+  @Get('pending')
+  async listPending(@Req() req: any) {
+    this.assertAdmin(req);
+
+    return this.prisma.transfer.findMany({
+      where: {
+        type: TransferType.DEPOSIT,
+        status: TransferStatus.PENDING,
+      },
+      orderBy: { createdAt: 'desc' },
+      include: { user: true },
+    });
+  }
+
+  /* ===============================
+     ADMIN：入金承認（★完全版★）
+     - ステータス更新
+     - ウォレット反映
+     - チャット自動送信
+  =============================== */
+  @Post('approve')
+async approve(
+  @Req() req: any,
+  @Body() body: ApproveDepositDto,
+) {
+  this.assertAdmin(req);
+
+  const id = Number(body.id);
+  if (!id || isNaN(id)) {
+    throw new BadRequestException('Invalid deposit id');
+  }
+
+  return this.depositService.approveDeposit(id);
+}
+}
+
+
+#############################################
+# CATEGORY: groups
+# TYPE: CONTROLLER
+# FILE: groups.controller.ts
+# CLASS: GroupsController
+# ROUTES:
+#   GET    /groups
+#   POST   /groups/change
+#############################################
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { UserRole } from '@prisma/client';
+
+class ChangeGroupDto {
+  userId: number;
+  groupId: number;
+}
+
+@UseGuards(JwtAccessGuard)
+@Controller('groups')
+export class GroupsController {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private assertAdmin(req: any) {
+    if (!req.user || req.user.role !== UserRole.ADMIN) {
+      throw new BadRequestException('Admin only');
+    }
+  }
+
+  @Get()
+  async list() {
+    return await this.prisma.group.findMany({
+      orderBy: { id: 'asc' },
+    });
+  }
+
+  /**
+   * 管理側：グループ変更
+   * 条件：User.systemStatus === 'STOPPED'
+   */
+  @Post('change')
+  async changeGroup(@Req() req: any, @Body() body: ChangeGroupDto) {
+    this.assertAdmin(req);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: body.userId },
+    });
+    if (!user) throw new BadRequestException('User not found');
+
+    if (user.systemStatus !== 'STOPPED') {
+      throw new BadRequestException(
+        'Group change not allowed unless STOPPED (all positions must be closed)',
+      );
+    }
+
+    const group = await this.prisma.group.findUnique({
+      where: { id: body.groupId },
+    });
+    if (!group) throw new BadRequestException('Group not found');
+
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: { groupId: group.id },
+    });
+
+    return updated;
+  }
+}
+
+
+#############################################
+# CATEGORY: kyc
+# TYPE: CONTROLLER
+# FILE: kyc.controller.ts
+# CLASS: KycController
+# ROUTES:
+#   GET    /kyc/status
+#   POST   /kyc/submit
+#   GET    /kyc/admin/list
+#   POST   /kyc/admin/set-status
+#############################################
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+  UploadedFiles,
+  UseInterceptors,
+  ForbiddenException,
+} from '@nestjs/common';
+
+import { PrismaService } from '../prisma/prisma.service';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { UserRole } from '@prisma/client';
+
+import * as fs from 'fs';
+import * as path from 'path';
+import { Multer } from 'multer';
+
+
+@UseGuards(JwtAccessGuard)
+@Controller('kyc')
+export class KycController {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /** Status 名を返す */
+  private statusLabel(level: number): string {
+    switch (level) {
+      case 0: return 'NONE';
+      case 1: return 'SUBMITTED';
+      case 2: return 'IN_REVIEW';
+      case 3: return 'APPROVED_LEVEL1';
+      case 4: return 'REJECTED';
+      case 5: return 'COMPLETED';
+      default: return 'UNKNOWN';
+    }
+  }
+
+  /** 管理者チェック */
+  private assertAdmin(req: any) {
+    if (!req.user || req.user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Admin only');
+    }
+  }
+
+  // ----------------------------------------------------------
+  // GET /kyc/status  （ユーザー側）
+  // ----------------------------------------------------------
+  @Get('status')
+  async getStatus(@Req() req: any) {
+    const userId = Number(req.user.sub);
+
+    const kyc = await this.prisma.kycRequest.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!kyc) {
+      return {
+        exists: false,
+        level: 0,
+        status: 'NONE',
+      };
+    }
+
+    return {
+      exists: true,
+      id: kyc.id,
+      level: kyc.status,
+      status: this.statusLabel(kyc.status),
+      front: kyc.documentFront,
+      back: kyc.documentBack,
+      createdAt: kyc.createdAt,
+      updatedAt: kyc.updatedAt,
+    };
+  }
+
+  // ----------------------------------------------------------
+  // POST /kyc/submit  （ユーザー側: 画像アップロード）
+  // ----------------------------------------------------------
+  // ----------------------------------------------------------
+  // POST /kyc/submit  （ユーザー側: 画像アップロード）
+  // ----------------------------------------------------------
+  @Post('submit')
+  @UseInterceptors(FilesInterceptor('files', 2))
+  async submit(
+    @Req() req: any,
+    @UploadedFiles() files: Multer.File[],
+  ) {
+    const userId = Number(req.user.sub);
+
+    if (!files || files.length < 2) {
+      throw new BadRequestException('表面と裏面の画像を両方アップロードしてください');
+    }
+
+    const uploadDir = path.join(process.cwd(), 'uploads', 'kyc', String(userId));
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    const front = files[0];
+    const back = files[1];
+
+    const frontName = `front_${Date.now()}.jpg`;
+    const backName = `back_${Date.now()}.jpg`;
+
+    const frontPath = path.join(uploadDir, frontName);
+    const backPath = path.join(uploadDir, backName);
+
+    fs.renameSync(front.path, frontPath);
+    fs.renameSync(back.path, backPath);
+
+    const kyc = await this.prisma.kycRequest.create({
+      data: {
+        userId,
+        status: 1, // SUBMITTED
+        documentFront: `/uploads/kyc/${userId}/${frontName}`,
+        documentBack: `/uploads/kyc/${userId}/${backName}`,
+      },
+    });
+
+    return {
+      message: 'KYCを提出しました（審査中）。',
+      id: kyc.id,
+      userId: kyc.userId,
+      status: kyc.status,
+      front: kyc.documentFront,
+      back: kyc.documentBack,
+    };
+  }
+
+  // ----------------------------------------------------------
+  // GET /kyc/admin/list  （管理者）
+  // ----------------------------------------------------------
+  @Get('admin/list')
+  async adminList(@Req() req: any) {
+    this.assertAdmin(req);
+
+    const items = await this.prisma.kycRequest.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { user: true },
+    });
+
+    return items.map(k => ({
+      id: k.id,
+      userId: k.userId,
+      name: k.user.name,
+      email: k.user.email,
+      level: k.status,
+      statusText: this.statusLabel(k.status),
+      createdAt: k.createdAt,
+      updatedAt: k.updatedAt,
+      frontUrl: k.documentFront,
+      backUrl: k.documentBack,
+    }));
+  }
+
+  // ----------------------------------------------------------
+  // POST /kyc/admin/set-status  （管理者: 状態更新）
+  // ----------------------------------------------------------
+  @Post('admin/set-status')
+  async adminSetStatus(
+    @Req() req: any,
+    @Body() body: { id: number; level: number },
+  ) {
+    this.assertAdmin(req);
+
+    const id = Number(body.id);
+    const level = Number(body.level);
+
+    if (!id) throw new BadRequestException('Invalid KYC id');
+    if (isNaN(level) || level < 0 || level > 5) {
+      throw new BadRequestException('Invalid level (0〜5)');
+    }
+
+    const kyc = await this.prisma.kycRequest.findUnique({ where: { id } });
+    if (!kyc) throw new BadRequestException('KYC record not found');
+
+    const updated = await this.prisma.kycRequest.update({
+      where: { id },
+      data: {
+        status: level,
+      },
+    });
+
+    return {
+      id: updated.id,
+      userId: updated.userId,
+      level: updated.status,
+      statusText: this.statusLabel(updated.status),
+      updatedAt: updated.updatedAt,
+    };
+  }
+}
+
+
+#############################################
+# CATEGORY: system
+# TYPE: CONTROLLER
+# FILE: system.controller.ts
+# CLASS: SystemController
+# ROUTES:
+#   GET    /system/config/:groupId
+#   POST   /system/config/:groupId
+#   POST   /system/trade-loop
+#   GET    /system/overview
+#   POST   /system/close-group/:groupId
+#   POST   /system/close-group/:groupId/:symbol
+#   POST   /system/close-user/:userId
+#   POST   /system/close-user/:userId/:symbol
+#   POST   /system/stop
+#   POST   /system/admin/start
+#############################################
+
+// src/system/system.controller.ts
+import { 
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Req,
+  UseGuards,
+  BadRequestException
+} from '@nestjs/common';
+
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { SystemConfigService } from './system.config.service';
+import { SystemTradeService } from './system.trade.service';
+
+@UseGuards(JwtAccessGuard)
+@Controller('system')
+export class SystemController {
+  constructor(
+    private readonly configService: SystemConfigService,
+    private readonly tradeService: SystemTradeService,
+  ) {}
+
+  /** -------------- settings.html 用：グループ別設定取得 -------------- */
+  @Get('config/:groupId')
+  getConfigByGroup(@Param('groupId') groupId: string) {
+    return this.configService.getConfigByGroup(Number(groupId));
+  }
+
+  /** -------------- settings.html 用：グループ別設定保存 -------------- */
+  @Post('config/:groupId')
+  updateConfigByGroup(
+    @Param('groupId') groupId: string,
+    @Body() body: any,
+  ) {
+    return this.configService.updateConfigByGroup(Number(groupId), body);
+  }
+
+  /** -------------- 管理画面：手動トレードループ実行 -------------- */
+  @Post('trade-loop')
+  async runLoop() {
+    await this.tradeService.autoTrade();
+    return { message: 'loop executed' };
+  }
+
+  /** -------------- system-trade.html 用：システム概要取得 -------------- */
+@Get('overview')
+async getOverview(@Req() req: any) {
+  const jwt = req.user;
+  const userId = jwt.sub;
+  const groupId = jwt.groupId;
+
+  // DBからユーザー取得
+  const dbUser = await this.tradeService.getUserById(userId);
+
+  // 念のため null チェック（型エラー防止）
+  const systemStatus = dbUser?.systemStatus ?? 'UNKNOWN';
+
+  // wallet を取得
+  const wallet = await this.tradeService.getWalletForUser(userId);
+
+  // グループ代表口座の open positions
+  const positions = await this.tradeService.getOpenPositionsByGroup(groupId);
+
+  return {
+    groupId,
+    systemStatus,          // ← null の場合でも安全
+    balanceTotal: wallet?.balanceTotal ?? 0,
+    positions,
+  };
+}
+// CLOSE GROUP (全銘柄)
+@Post('close-group/:groupId')
+async closeGroupAll(@Param('groupId') groupId: string) {
+  await this.tradeService.closePositionsForGroup(Number(groupId));
+  return { message: 'Group positions closed' };
+}
+
+// CLOSE GROUP (シンボル単位)
+@Post('close-group/:groupId/:symbol')
+async closeGroupSymbol(
+  @Param('groupId') groupId: string,
+  @Param('symbol')
+  symbol: string
+) {
+  await this.tradeService.closePositionsForGroup(Number(groupId), symbol);
+  return { message: `Group positions closed for ${symbol}` };
+}
+
+// CLOSE USER (全銘柄)
+@Post('close-user/:userId')
+async closeUserAll(@Param('userId') userId: string) {
+  await this.tradeService.closePositionsForUser(Number(userId));
+  return { message: 'User positions closed' };
+}
+
+// CLOSE USER (シンボル単位)
+@Post('close-user/:userId/:symbol')
+async closeUserSymbol(
+  @Param('userId') userId: string,
+  @Param('symbol') symbol: string
+) {
+  await this.tradeService.closePositionsForUser(Number(userId), symbol);
+  return { message: `User positions closed for ${symbol}` };
+}
+
+
+
+  /** -------------- system-trade.html：STOP リクエスト -------------- */
+  @Post('stop')
+  async stopSystem(@Req() req: any) {
+    const userId = req.user.sub; // ★user.id ではなく sub
+    await this.configService.setUserSystemStatus(userId, 'STOP_REQUESTED');
+    return { message: 'STOP requested' };
+  }
+
+  /** -------------- system-trade.html：Admin ONLY → START -------------- */
+  @Post('admin/start')
+  async adminStart(@Req() req: any) {
+    const admin = req.user;
+
+    if (admin.role !== 'ADMIN') {
+      throw new BadRequestException('Admin only');
+    }
+
+    const userId = admin.sub;  // ★管理者自身のIDを RUNNING に戻す
+    await this.configService.setUserSystemStatus(userId, 'RUNNING');
+
+    return { message: 'System restarted' };
+  }
+}
+
+
+
+
+#############################################
+# CATEGORY: tickets
+# TYPE: CONTROLLER
+# FILE: tickets.controller.ts
+# CLASS: TicketsController
+# ROUTES:
+#   GET    /tickets
+#   POST   /tickets
+#   GET    /tickets/:id/messages
+#   POST   /tickets/:id/reply
+#   GET    /tickets/admin/all
+#   POST   /tickets/admin/:id/reply
+#   POST   /tickets/admin/:id/status
+#############################################
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { SenderType, TicketStatus, UserRole } from '@prisma/client';
+
+class CreateTicketDto {
+  title: string;
+  message: string;
+}
+
+class ReplyDto {
+  message: string;
+}
+
+class AdminStatusDto {
+  status: TicketStatus; // "OPEN" | "CLOSED"
+}
+
+@UseGuards(JwtAccessGuard)
+@Controller('tickets')
+export class TicketsController {
+  constructor(private prisma: PrismaService) {}
+
+  private assertAdmin(req: any) {
+    if (!req.user || req.user.role !== UserRole.ADMIN) {
+      throw new BadRequestException('Admin only');
+    }
+  }
+
+  /** ユーザー: 自分のチケット一覧 */
+  @Get()
+  async myTickets(@Req() req: any) {
+    const userId = Number(req.user.sub);
+
+    const tickets = await this.prisma.ticket.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+          take: 1,
+        },
+      },
+    });
+
+    return tickets.map((t) => ({
+      id: t.id,
+      title: t.title,
+      status: t.status,
+      createdAt: t.createdAt,
+      lastMessage: t.messages[0]?.message ?? null,
+    }));
+  }
+
+  /** ユーザー: 新規チケット作成 */
+  @Post()
+  async create(@Req() req: any, @Body() body: CreateTicketDto) {
+    const userId = Number(req.user.sub);
+    if (!body.title || !body.message) {
+      throw new BadRequestException('Title and message are required');
+    }
+
+    const ticket = await this.prisma.ticket.create({
+      data: {
+        userId,
+        title: body.title,
+        status: TicketStatus.OPEN,
+        messages: {
+          create: {
+            sender: SenderType.USER,
+            message: body.message,
+          },
+        },
+      },
+    });
+
+    return ticket;
+  }
+
+  /** ユーザー・管理共通: メッセージ一覧 */
+  @Get(':id/messages')
+  async messages(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const user = req.user as any;
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+    });
+    if (!ticket) {
+      throw new BadRequestException('Ticket not found');
+    }
+
+    if (user.role !== UserRole.ADMIN && ticket.userId !== Number(user.sub)) {
+      throw new BadRequestException('Forbidden');
+    }
+
+    const messages = await this.prisma.ticketMessage.findMany({
+      where: { ticketId: id },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return messages;
+  }
+
+  /** ユーザー: 自分のチケットに返信 */
+  @Post(':id/reply')
+  async reply(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: ReplyDto,
+  ) {
+    const userId = Number(req.user.sub);
+    if (!body.message) {
+      throw new BadRequestException('Message is required');
+    }
+
+    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
+    if (!ticket || ticket.userId !== userId) {
+      throw new BadRequestException('Ticket not found');
+    }
+
+    const msg = await this.prisma.ticketMessage.create({
+      data: {
+        ticketId: id,
+        sender: SenderType.USER,
+        message: body.message,
+      },
+    });
+
+    return msg;
+  }
+
+  /** 管理: 全チケット一覧 */
+  @Get('admin/all')
+  async adminAll(@Req() req: any) {
+    this.assertAdmin(req);
+
+    const tickets = await this.prisma.ticket.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: true,
+      },
+    });
+
+    return tickets.map((t) => ({
+      id: t.id,
+      userId: t.userId,
+      email: t.user.email,
+      title: t.title,
+      status: t.status,
+      createdAt: t.createdAt,
+    }));
+  }
+
+  /** 管理: チケットに返信 */
+  @Post('admin/:id/reply')
+  async adminReply(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: ReplyDto,
+  ) {
+    this.assertAdmin(req);
+    if (!body.message) {
+      throw new BadRequestException('Message is required');
+    }
+
+    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
+    if (!ticket) throw new BadRequestException('Ticket not found');
+
+    const msg = await this.prisma.ticketMessage.create({
+      data: {
+        ticketId: id,
+        sender: SenderType.ADMIN,
+        message: body.message,
+      },
+    });
+
+    return msg;
+  }
+
+  /** 管理: ステータス変更 */
+  @Post('admin/:id/status')
+  async adminStatus(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: AdminStatusDto,
+  ) {
+    this.assertAdmin(req);
+
+    if (!body.status) {
+      throw new BadRequestException('Status is required');
+    }
+
+    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
+    if (!ticket) throw new BadRequestException('Ticket not found');
+
+    const updated = await this.prisma.ticket.update({
+      where: { id },
+      data: {
+        status: body.status,
+      },
+    });
+
+    return updated;
+  }
+}
+
+
+#############################################
+# CATEGORY: trades
+# TYPE: CONTROLLER
+# FILE: trades.controller.ts
+# CLASS: TradesController
+# ROUTES:
+#   GET    /trades/history
+#   GET    /trades/admin/all
+#############################################
+
+import { Controller, Get, Req, UseGuards, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { UserRole } from '@prisma/client';
+
+@UseGuards(JwtAccessGuard)
+@Controller('trades')
+export class TradesController {
+  constructor(private prisma: PrismaService) {}
+
+  private assertAdmin(req: any) {
+    if (!req.user || req.user.role !== UserRole.ADMIN) {
+      throw new BadRequestException('Admin only');
+    }
+  }
+
+  /** ユーザーの取引履歴（マイページ/history用） */
+  @Get('history')
+  async history(@Req() req: any) {
+    const userId = req.user.sub;
+
+    const trades = await this.prisma.trade.findMany({
+      where: { userId },
+      orderBy: { closedAt: 'desc' },
+    });
+
+    return trades;
+  }
+
+  /** 管理者用：全ユーザーの取引履歴一覧（admin/trades.html 用） */
+  @Get('admin/all')
+  async adminAll(@Req() req: any) {
+    this.assertAdmin(req);
+
+    const trades = await this.prisma.trade.findMany({
+      orderBy: { closedAt: 'desc' },
+      include: {
+        user: true,
+      },
+    });
+
+    return trades.map((t) => ({
+      id: t.id,
+      userId: t.userId,
+      email: t.user.email,
+      symbol: t.symbol,
+      side: t.side,
+      size: t.size,
+      entryPrice: t.entryPrice,
+      closePrice: t.closePrice,
+      profit: t.profit,
+      openedAt: t.openedAt,
+      closedAt: t.closedAt,
+      groupId: t.groupId,
+    }));
+  }
+}
+
+
+#############################################
+# CATEGORY: user-extra
+# TYPE: CONTROLLER
+# FILE: user-bank.controller.ts
+# CLASS: UserBankController
+# ROUTES:
+#   GET    /user/bank-account
+#   POST   /user/bank-account
+#############################################
+
+import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { UserBankService } from './user-bank.service';
+import { SaveBankDto } from './dto/save-bank.dto';
+
+@Controller('user/bank-account')
+@UseGuards(JwtAccessGuard)
+export class UserBankController {
+  constructor(private readonly service: UserBankService) {}
+
+  @Get()
+  async getBank(@Req() req: any) {
+    return this.service.getBankAccount(req.user.sub);
+  }
+
+  @Post()
+  async saveBank(@Req() req: any, @Body() dto: SaveBankDto) {
+    return this.service.saveBankAccount(req.user.sub, dto);
+  }
+}
+
+
+#############################################
+# CATEGORY: user-extra
+# TYPE: CONTROLLER
+# FILE: user-crypto.controller.ts
+# CLASS: UserCryptoController
+# ROUTES:
+#   GET    /user/crypto
+#   POST   /user/crypto
+#############################################
+
+import { Controller, Get, Post, Body, Req, UseGuards } from '@nestjs/common';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { UserCryptoService } from './user-crypto.service';
+import { SaveCryptoDto } from './dto/save-crypto.dto';
+
+@Controller('user/crypto')
+@UseGuards(JwtAccessGuard)
+export class UserCryptoController {
+  constructor(private readonly service: UserCryptoService) {}
+
+  @Get()
+  async getList(@Req() req: any) {
+    return this.service.getList(req.user.sub);
+  }
+
+  @Post()
+  async save(@Req() req: any, @Body() dto: SaveCryptoDto) {
+    return this.service.saveList(req.user.sub, dto);
+  }
+}
+
+
+#############################################
+# CATEGORY: wallet
+# TYPE: CONTROLLER
+# FILE: wallet.controller.ts
+# CLASS: WalletController
+# ROUTES:
+#   GET    /wallet
+#############################################
+
+import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { WalletService } from './wallet.service';
+
+@Controller('wallet')
+@UseGuards(JwtAccessGuard)
+export class WalletController {
+  constructor(private readonly walletService: WalletService) {}
+
+  @Get()
+  async getWallet(@Req() req: Request) {
+    const user = (req as any).user;
+    return this.walletService.getWalletWithHistory(Number(user.sub));
+  }
+}
+
+
+#############################################
+# CATEGORY: withdraw
+# TYPE: CONTROLLER
+# FILE: withdraw.controller.ts
+# CLASS: WithdrawController
+# ROUTES:
+#   POST   /withdraw/request
+#   POST   /withdraw/approve
+#   POST   /withdraw/cancel
+#   GET    /withdraw/all
+#   GET    /withdraw/pending
+#############################################
+
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { PrismaService } from '../prisma/prisma.service';
+import { TransferStatus, TransferType, UserRole } from '@prisma/client';
+import { WithdrawService } from './withdraw.service';
+
+/**
+ * 出金申請 DTO（JPY / CRYPTO 共通）
+ */
+type WithdrawRequestDto = {
+  amount?: string;          // JPY換算額
+  method?: 'JPY' | 'CRYPTO';
+  currency?: 'BTC' | 'ETH';
+  cryptoAmount?: string;    // CRYPTO時のみ
+};
+
+@UseGuards(JwtAccessGuard)
+@Controller('withdraw')
+export class WithdrawController {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly withdrawService: WithdrawService,
+  ) {}
+
+  /* ===============================
+     ユーザー：出金申請
+     ※ 出金可否（KYC含む）は Service に委譲
+  =============================== */
+  @Post('request')
+  async request(
+    @Req() req: any,
+    @Body() body: WithdrawRequestDto,
+  ) {
+    const userId = Number(req.user.sub);
+    const method = body.method ?? 'JPY';
+
+    if (!['JPY', 'CRYPTO'].includes(method)) {
+      throw new BadRequestException('Invalid withdraw method');
+    }
+
+    /* ---------- JPY 出金 ---------- */
+    if (method === 'JPY') {
+      const amount = Number(body.amount);
+      if (!amount || amount <= 0) {
+        throw new BadRequestException('Invalid amount');
+      }
+
+      return this.withdrawService.requestWithdraw(userId, amount);
+    }
+
+    /* ---------- CRYPTO 出金 ---------- */
+    const cryptoAmount = Number(body.cryptoAmount);
+    const currency = body.currency;
+    const amount = Number(body.amount);
+
+    if (!currency || !['BTC', 'ETH'].includes(currency)) {
+      throw new BadRequestException('Invalid crypto currency');
+    }
+
+    if (!cryptoAmount || cryptoAmount <= 0) {
+      throw new BadRequestException('Invalid cryptoAmount');
+    }
+
+    if (!amount || amount <= 0) {
+      throw new BadRequestException('Invalid JPY amount');
+    }
+
+    // ※ 現仕様では JPY換算額でロック（Service側が最終判断）
+    return this.withdrawService.requestWithdraw(userId, amount);
+  }
+
+  /* ===============================
+     Admin：出金承認
+  =============================== */
+  @Post('approve')
+async approve(
+  @Req() req: any,
+  @Body() body: { transferId: number },
+) {
+  if (req.user.role !== UserRole.ADMIN) {
+    throw new ForbiddenException('Admin only');
+  }
+
+  const id = Number(body.transferId);
+  if (!id) throw new BadRequestException('Invalid ID');
+
+  return this.withdrawService.approveWithdraw(id);
+}
+
+
+  /* ===============================
+     Admin：出金キャンセル
+     - 出金キャンセル
+     - KYC status = 4
+     - チャット送信
+  =============================== */
+  @Post('cancel')
+  async cancel(
+    @Req() req: any,
+    @Body() body: { transferId: number },
+  ) {
+    if (req.user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Admin only');
+    }
+
+    const id = Number(body.transferId);
+    if (!id) throw new BadRequestException('Invalid ID');
+
+    return this.withdrawService.cancelWithdrawWithKycRollback(id);
+  }
+
+  /* ===============================
+     Admin：全出金履歴
+  =============================== */
+  @Get('all')
+  async adminAll(@Req() req: any) {
+    if (req.user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Admin only');
+    }
+
+    return this.prisma.transfer.findMany({
+      where: { type: TransferType.WITHDRAW },
+      orderBy: { createdAt: 'desc' },
+      include: { user: true },
+    });
+  }
+
+  /* ===============================
+     Admin：PENDING 出金のみ
+  =============================== */
+  @Get('pending')
+  async pending(@Req() req: any) {
+    if (req.user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Admin only');
+    }
+
+    return this.prisma.transfer.findMany({
+      where: {
+        type: TransferType.WITHDRAW,
+        status: TransferStatus.PENDING,
+      },
+      orderBy: { createdAt: 'desc' },
+      include: { user: true },
+    });
+  }
+}
+
+

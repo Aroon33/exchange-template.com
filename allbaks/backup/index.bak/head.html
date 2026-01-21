@@ -1,0 +1,206 @@
+  <meta charset="UTF-8" />
+  <title>CryptoX Exchange - 次世代の仮想通貨取引所（デモ）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="assets/css/style.css">
+
+  <style>
+    /* =============================
+       レイアウト改善
+    ============================== */
+    .index-main {
+      padding: 20px 16px 40px;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    /* =============================
+        HERO
+    ============================== */
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: center;
+      gap: 24px;
+      padding: 28px 0;
+    }
+
+    @media (max-width: 860px) {
+      .hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+    }
+
+    .hero-eyebrow {
+      font-size: 13px;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+    .hero-eyebrow a { color: var(--primary-dark); }
+
+    .hero-title {
+      font-size: 34px;
+      line-height: 1.35;
+      margin-bottom: 14px;
+      font-weight: bold;
+    }
+    .hero-title span {
+      color: var(--primary);
+    }
+
+    .hero-sub {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 18px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    @media(max-width:860px){
+      .hero-actions { justify-content: center; }
+    }
+
+    .hero-card {
+      background:#fff;
+      padding:18px;
+      border-radius:10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .hero-card-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .hero-card-title {
+      font-size:15px;
+      font-weight:bold;
+    }
+    .chip {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 8px;
+      font-size:11px;
+      border-radius:12px;
+    }
+
+    table.market-mini th, table.market-mini td {
+      padding:6px 4px;
+      font-size:12px;
+      text-align:left;
+    }
+
+    /* =============================
+         FEATURES
+    ============================== */
+    .section { margin-top: 40px; }
+    .section-title {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .section-sub {
+      font-size: 13px;
+      color:#666;
+      margin-bottom:14px;
+    }
+
+    .features {
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+      gap:14px;
+    }
+    .feature-card {
+      background:#fff;
+      padding:16px;
+      border-radius:10px;
+      border:1px solid var(--border-soft);
+    }
+    .feature-title {
+      font-weight:bold;
+      margin-bottom:6px;
+      font-size:14px;
+    }
+
+    /* =============================
+         STEPS
+    ============================== */
+    .steps {
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap:14px;
+      margin-top:10px;
+    }
+    .step-card {
+      padding:14px;
+      background:#fff;
+      border-radius:10px;
+      border:1px solid var(--border-soft);
+    }
+    .step-label {
+      font-size:11px;
+      color: var(--primary);
+      margin-bottom:4px;
+    }
+    .step-title { font-weight:bold; }
+
+    /* =============================
+         Coins grid
+    ============================== */
+    .coins-grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fit,minmax(120px,1fr));
+      gap:10px;
+    }
+    .coin-pill {
+      background:#fff;
+      padding:10px;
+      border-radius:20px;
+      display:flex;
+      justify-content:center;
+      gap:6px;
+      border:1px solid var(--border-soft);
+      font-size:12px;
+    }
+    .symbol { font-weight:bold; }
+
+    /* =============================
+         Campaign Banner
+    ============================== */
+    .campaign-banner {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:14px;
+      background:#f1f5ff;
+      border:1px solid #d0dcff;
+      padding:18px;
+      border-radius:12px;
+    }
+    @media(max-width:780px){
+      .campaign-banner { flex-direction:column; text-align:center; }
+    }
+    .campaign-chip {
+      background: var(--primary);
+      color:#fff;
+      padding:2px 8px;
+      border-radius:8px;
+      font-size:11px;
+    }
+    .campaign-btn {
+      padding:8px 16px;
+      border-radius:8px;
+      background:var(--primary);
+      color:#fff;
+      border:none;
+      cursor:pointer;
+    }
+
+  </style>

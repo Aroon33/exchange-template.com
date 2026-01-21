@@ -1,0 +1,444 @@
+/* =====================================================
+   Tickets Page (PC / Mobile)
+===================================================== */
+
+/* =========================
+   Common
+========================= */
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f4f6f9;
+}
+button { cursor: pointer; }
+.pc-only { display: block; }
+.sp-only { display: none; }
+
+/* =========================
+   Filter (PC)
+========================= */
+.filter-bar {
+  padding: 10px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+}
+.filter-tabs button {
+  margin-right: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 12px;
+}
+.filter-tabs button.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+.filter-search {
+  margin-top: 6px;
+  width: 100%;
+  padding: 6px;
+}
+
+/* =========================
+   Layout
+========================= */
+.admin-container {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+
+/* ===== Ticket List (PC) ===== */
+.ticket-list {
+  width: 380px;
+  background: #fff;
+  border-right: 1px solid #ddd;
+  overflow-y: auto;
+}
+.ticket-list table {
+  width: 100%;
+  font-size: 13px;
+}
+
+/* ===== Ticket List (SP) ===== */
+.ticket-list-mobile {
+  display: none;
+}
+.ticket-card {
+  background: #fff;
+  margin: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.ticket-card-header {
+  font-size: 14px;
+  font-weight: bold;
+}
+.ticket-card-meta {
+  font-size: 12px;
+  color: #666;
+  margin: 4px 0;
+}
+.ticket-card-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+/* ===== Chat ===== */
+.chat-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.chat-header {
+  padding: 10px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+}
+.chat-window {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+.chat-message {
+  margin-bottom: 10px;
+  max-width: 80%;
+}
+.chat-message.admin {
+  margin-left: auto;
+  text-align: right;
+}
+.chat-message-body {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff;
+  display: inline-block;
+}
+.chat-message.admin .chat-message-body {
+  background: #2563eb;
+  color: #fff;
+}
+.chat-message-meta {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 2px;
+}
+.chat-input-area {
+  border-top: 1px solid #ddd;
+  padding: 8px;
+  display: flex;
+  gap: 6px;
+}
+.chat-input-area textarea {
+  flex: 1;
+  height: 44px;
+}
+
+/* =========================
+   Mobile
+========================= */
+@media (max-width: 768px) {
+  .pc-only { display: none; }
+  .sp-only { display: block; }
+
+  .admin-container {
+    display: block;
+  }
+
+  .ticket-list {
+    display: none;
+  }
+
+  .ticket-list-mobile {
+    display: block;
+  }
+
+  .chat-panel {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    display: none;
+    z-index: 2000;
+  }
+  .chat-panel.active {
+    display: flex;
+  }
+  .chat-header {
+    background: #111;
+    color: #fff;
+  }
+  .chat-header button {
+    background: none;
+    border: none;
+    color: #fff;
+  }
+}
+
+/* =========================
+   Layout (PC)
+========================= */
+
+/* sidebar 幅と中央幅制御 */
+:root {
+  --admin-sidebar-width: 240px;
+  --tickets-max-width: 1200px;
+}
+
+/* sidebar の右から開始 + 中央寄せ */
+.admin-page-wrapper {
+  margin-left: var(--admin-sidebar-width);
+  display: flex;
+  justify-content: center;
+}
+
+/* メインコンテンツ */
+.admin-container {
+  width: 100%;
+  max-width: var(--tickets-max-width);
+  min-height: calc(100vh - 60px);
+  display: flex;
+  background: #fff;
+}
+
+/* =========================
+   Filter (PC only)
+========================= */
+
+.filter-bar {
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  padding: 10px;
+}
+
+.filter-tabs button {
+  margin-right: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  background: #fff;
+}
+
+.filter-tabs button.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.filter-search {
+  margin-top: 6px;
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+/* =========================
+   Ticket List (PC)
+========================= */
+
+.ticket-list {
+  width: 360px;
+  border-right: 1px solid #ddd;
+  overflow-y: auto;
+}
+
+.ticket-list table {
+  width: 100%;
+  font-size: 13px;
+}
+
+.ticket-list th,
+.ticket-list td {
+  padding: 8px 6px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.ticket-list tr:hover {
+  background: #f1f5f9;
+  cursor: pointer;
+}
+
+/* =========================
+   Ticket List (Mobile)
+========================= */
+
+.ticket-list-mobile {
+  display: none;
+}
+
+/* スマホ用カード */
+.ticket-card {
+  background: #fff;
+  margin: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.ticket-card-header {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.ticket-card-meta {
+  font-size: 11px;
+  color: #666;
+  margin: 4px 0;
+}
+
+.ticket-card-title {
+  font-size: 14px;
+  color: #333;
+}
+
+/* =========================
+   Chat Panel
+========================= */
+
+.chat-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-header {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-window {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+.chat-message {
+  margin-bottom: 10px;
+  max-width: 80%;
+}
+
+.chat-message.admin {
+  margin-left: auto;
+  text-align: right;
+}
+
+.chat-message-meta {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.chat-message-body {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff;
+  display: inline-block;
+}
+
+.chat-message.admin .chat-message-body {
+  background: #2563eb;
+  color: #fff;
+}
+
+/* =========================
+   Chat Input
+========================= */
+
+.chat-input-area {
+  border-top: 1px solid #ddd;
+  padding: 8px;
+  display: flex;
+  gap: 6px;
+}
+
+.chat-input-area textarea {
+  flex: 1;
+  height: 44px;
+  resize: none;
+  font-size: 13px;
+}
+
+.chat-input-area button {
+  padding: 0 14px;
+}
+
+/* =========================
+   Utility
+========================= */
+
+.pc-only {
+  display: block;
+}
+
+.sp-only {
+  display: none;
+}
+
+/* =========================
+   Mobile
+========================= */
+
+@media (max-width: 768px) {
+
+  .pc-only {
+    display: none;
+  }
+
+  .sp-only {
+    display: block;
+  }
+
+  .admin-page-wrapper {
+    margin-left: 0;
+  }
+
+  .admin-container {
+    display: block;
+    min-height: auto;
+  }
+
+  .ticket-list {
+    display: none;
+  }
+
+  .ticket-list-mobile {
+    display: block;
+  }
+
+  .chat-panel {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    display: none;
+    z-index: 2000;
+  }
+
+  .chat-panel.active {
+    display: flex;
+  }
+
+  .chat-header {
+    background: #111;
+    color: #fff;
+  }
+
+  .chat-header button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+  }
+}

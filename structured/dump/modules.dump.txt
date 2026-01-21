@@ -1,0 +1,369 @@
+#############################################
+# CATEGORY: admin
+# TYPE: MODULE
+# FILE: admin.module.ts
+# CLASS: AdminModule
+#############################################
+
+// src/admin/admin.module.ts
+
+import { Module } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+
+import { AdminController } from './admin.controller';
+import { AdminUsersController } from './users.admin.controller';
+import { AdminTradesController } from './admin.trades.controller';
+import { AdminGroupsController } from './admin.groups.controller';
+import { AdminSystemController } from './admin.system.controller';
+import { AdminDepositBankAccountsController } from './admin-deposit-bank-accounts.controller';
+
+import { AdminDepositCryptoAddressesController } from './admin-deposit-crypto-addresses.controller';
+
+@Module({
+  controllers: [
+    AdminController,
+    AdminUsersController,
+    AdminTradesController,
+    AdminGroupsController,
+    AdminSystemController, // ← ★これがないと API が 404 になる
+    AdminDepositCryptoAddressesController, // ← ★追加
+    AdminDepositBankAccountsController,
+  ],
+  providers: [PrismaService],
+})
+export class AdminModule {}
+
+
+#############################################
+# CATEGORY: admin
+# TYPE: MODULE
+# FILE: admin.auth.module.ts
+# CLASS: AdminAuthModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { AdminAuthController } from './admin.auth.controller';
+import { AuthModule } from '../../auth/auth.module';
+import { AuthService } from '../../auth/auth.service'; // ← ★追加
+
+@Module({
+  imports: [
+    AuthModule,
+  ],
+  controllers: [AdminAuthController],
+
+  // ★ ここを追加（確認用）
+  providers: [AuthService],
+})
+export class AdminAuthModule {}
+
+
+#############################################
+# CATEGORY: app.module.ts
+# TYPE: MODULE
+# FILE: app.module.ts
+# CLASS: AppModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { MulterModule } from '@nestjs/platform-express';   // ★追加
+
+import { AuthModule } from './auth/auth.module';
+import { WalletModule } from './wallet/wallet.module';
+import { DepositModule } from './deposit/deposit.module';
+import { SystemModule } from './system/system.module';
+import { TradesModule } from './trades/trades.module';
+import { WithdrawModule } from './withdraw/withdraw.module';
+import { KycModule } from './kyc/kyc.module';
+import { TicketsModule } from './tickets/tickets.module';
+import { GroupsModule } from './groups/groups.module';
+import { AdminModule } from './admin/admin.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { UserExtraModule } from './user-extra/user-extra.module';
+
+
+
+@Module({
+  imports: [
+    // ⭐ ← ここに追加    
+PrismaModule,    
+MulterModule.register({
+      dest: './uploads/kyc',   // 保存先
+    }),
+
+    AuthModule,
+    WalletModule,
+    DepositModule,
+    WithdrawModule,
+    KycModule,
+    TicketsModule,
+    GroupsModule,
+    SystemModule,
+    TradesModule,
+    AdminModule,
+    UserExtraModule,
+  ],
+})
+export class AppModule {}
+
+
+#############################################
+# CATEGORY: auth
+# TYPE: MODULE
+# FILE: auth.module.ts
+# CLASS: AuthModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
+import { PassportModule } from '@nestjs/passport';
+import { UsersModule } from '../users/users.module';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { JwtAccessStrategy } from './jwt-access.strategy';
+import { JwtRefreshStrategy } from './jwt-refresh.strategy';
+
+@Module({
+  imports: [
+    ConfigModule,
+    UsersModule,
+    PassportModule,
+    JwtModule.register({}),
+  ],
+  providers: [AuthService, JwtAccessStrategy, JwtRefreshStrategy],
+  controllers: [AuthController],
+})
+export class AuthModule {}
+
+
+#############################################
+# CATEGORY: deposit
+# TYPE: MODULE
+# FILE: deposit.module.ts
+# CLASS: DepositModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { DepositService } from './deposit.service';
+import { DepositController } from './deposit.controller';
+import { PrismaModule } from '../prisma/prisma.module';  // ← 必須
+
+@Module({
+  imports: [PrismaModule],  // ← これが足りない
+  providers: [DepositService],
+  controllers: [DepositController],
+})
+export class DepositModule {}
+
+
+#############################################
+# CATEGORY: groups
+# TYPE: MODULE
+# FILE: groups.module.ts
+# CLASS: GroupsModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { PrismaModule } from '../prisma/prisma.module';
+import { GroupsService } from './groups.service';
+import { GroupsController } from './groups.controller';
+
+@Module({
+  imports: [PrismaModule],
+  providers: [GroupsService],
+  controllers: [GroupsController],
+})
+export class GroupsModule {}
+
+
+#############################################
+# CATEGORY: kyc
+# TYPE: MODULE
+# FILE: kyc.module.ts
+# CLASS: KycModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { PrismaModule } from '../prisma/prisma.module';
+import { MulterModule } from '@nestjs/platform-express';
+import { KycService } from './kyc.service';
+import { KycController } from './kyc.controller';
+
+@Module({
+  imports: [PrismaModule, 
+    MulterModule.register({
+      dest: './uploads/kyc',
+    }),
+  ],
+  providers: [KycService],
+  controllers: [KycController],
+})
+export class KycModule {}
+
+
+#############################################
+# CATEGORY: prisma
+# TYPE: MODULE
+# FILE: prisma.module.ts
+# CLASS: PrismaModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { PrismaService } from './prisma.service';
+
+@Module({
+  providers: [PrismaService],
+  exports: [PrismaService],
+})
+export class PrismaModule {}
+
+
+#############################################
+# CATEGORY: system
+# TYPE: MODULE
+# FILE: system.module.ts
+# CLASS: SystemModule
+#############################################
+
+// src/system/system.module.ts
+import { Module } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { SystemController } from './system.controller';
+import { SystemConfigService } from './system.config.service';
+import { SystemTradeService } from './system.trade.service';
+import { SystemRateService } from './system.rate.service';
+
+@Module({
+  controllers: [SystemController],
+  providers: [
+    PrismaService,
+    SystemConfigService,
+    SystemTradeService,
+    SystemRateService, // ★ 追加
+  ],
+})
+export class SystemModule {}
+
+
+#############################################
+# CATEGORY: tickets
+# TYPE: MODULE
+# FILE: tickets.module.ts
+# CLASS: TicketsModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { PrismaModule } from '../prisma/prisma.module';
+import { TicketsService } from './tickets.service';
+import { TicketsController } from './tickets.controller';
+
+@Module({
+  imports: [PrismaModule],
+  providers: [TicketsService],
+  controllers: [TicketsController],
+})
+export class TicketsModule {}
+
+
+#############################################
+# CATEGORY: trades
+# TYPE: MODULE
+# FILE: trades.module.ts
+# CLASS: TradesModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { TradesController } from './trades.controller';
+import { PrismaService } from '../prisma/prisma.service';
+
+@Module({
+  controllers: [TradesController],
+  providers: [PrismaService],
+})
+export class TradesModule {}
+
+
+#############################################
+# CATEGORY: user-extra
+# TYPE: MODULE
+# FILE: user-extra.module.ts
+# CLASS: UserExtraModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { PrismaModule } from '../prisma/prisma.module';
+
+import { UserBankController } from './user-bank.controller';
+import { UserBankService } from './user-bank.service';
+
+import { UserCryptoController } from './user-crypto.controller';
+import { UserCryptoService } from './user-crypto.service';
+
+@Module({
+  imports: [PrismaModule],
+  controllers: [UserBankController, UserCryptoController],
+  providers: [UserBankService, UserCryptoService],
+})
+export class UserExtraModule {}
+
+
+#############################################
+# CATEGORY: users
+# TYPE: MODULE
+# FILE: users.module.ts
+# CLASS: UsersModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { PrismaModule } from '../prisma/prisma.module'; // ← 必要
+
+@Module({
+  imports: [PrismaModule],  // ← これが足りなかった
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}
+
+
+#############################################
+# CATEGORY: wallet
+# TYPE: MODULE
+# FILE: wallet.module.ts
+# CLASS: WalletModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { WalletService } from './wallet.service';
+import { WalletController } from './wallet.controller';
+import { PrismaModule } from '../prisma/prisma.module';   // ← これが必要！
+
+@Module({
+  imports: [PrismaModule],   // ← これが使えるようになる
+  providers: [WalletService],
+  controllers: [WalletController],
+})
+export class WalletModule {}
+
+
+#############################################
+# CATEGORY: withdraw
+# TYPE: MODULE
+# FILE: withdraw.module.ts
+# CLASS: WithdrawModule
+#############################################
+
+import { Module } from '@nestjs/common';
+import { WithdrawService } from './withdraw.service';
+import { WithdrawController } from './withdraw.controller';
+import { PrismaModule } from '../prisma/prisma.module';   // ← 必須！
+
+@Module({
+  imports: [PrismaModule],   // ← ここが抜けている
+  providers: [WithdrawService],
+  controllers: [WithdrawController],
+})
+export class WithdrawModule {}
+
+

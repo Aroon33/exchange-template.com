@@ -1,0 +1,29 @@
+  <h2>入金申請を受け付けました</h2>
+  <p class="thanks-note">
+    下記のアドレスへご入金ください。<br>
+    入金確認後、残高に反映されます。
+  </p>
+
+  <!-- 暗号通貨 -->
+  <div class="block">
+    <h3>暗号通貨 入金アドレス</h3>
+
+    <div class="row">
+      BTC：<span id="btc-address"></span>
+      <button class="copy-btn" onclick="copyText('btc-address')">コピー</button>
+    </div>
+
+    <div class="row">
+      ETH：<span id="eth-address"></span>
+      <button class="copy-btn" onclick="copyText('eth-address')">コピー</button>
+    </div>
+  </div>
+
+  <!-- 注意文言 -->
+  <p class="thanks-note" id="deposit-note"></p>
+
+  <div class="actions">
+    <button class="btn btn-primary" onclick="location.href='wallet.html'">
+      ウォレットへ戻る
+    </button>
+  </div>

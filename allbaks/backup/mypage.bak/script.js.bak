@@ -1,0 +1,272 @@
+const API_BASE_URL = "https://api.exchange-template.com";
+
+const elMsg   = document.getElementById("mypage-message");
+
+const elEmail = document.getElementById("my-email");
+const elName  = document.getElementById("my-name");
+const elGroup = document.getElementById("my-group");
+const elSys   = document.getElementById("my-system-status");
+
+const elKycPill = document.getElementById("my-kyc-pill");
+
+const elBalTotal = document.getElementById("my-balance-total");
+const elBalAvail = document.getElementById("my-balance-available");
+const elBalLock  = document.getElementById("my-balance-locked");
+
+async function apiGet(path) {
+  const res = await fetch(API_BASE_URL + path, { credentials:"include" });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+function fmtAmount(n){
+  if(!n) return "0 JPY";
+  return Number(n).toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }) + " JPY";
+}
+
+
+  const toggle = document.getElementById("menu-toggle");
+  const menu = document.getElementById("mobile-menu");
+  const overlay = document.getElementById("menu-overlay");
+  const closeBtn = document.getElementById("menu-close");
+
+  toggle.onclick = () => {
+    menu.classList.add("open");
+    overlay.classList.add("show");
+  };
+
+  closeBtn.onclick = () => {
+    menu.classList.remove("open");
+    overlay.classList.remove("show");
+  };
+
+  overlay.onclick = () => {
+    menu.classList.remove("open");
+    overlay.classList.remove("show");
+  };
+
+
+/* ----------------------------
+      Load Me
+----------------------------- */
+async function loadMe() {
+  const data = await apiGet("/auth/me");
+  const u = data.user || data;
+
+  elEmail.textContent = u.email ?? "-";
+  elName.textContent  = u.name  ?? "-";
+  elGroup.textContent = u.groupId ?? "-";
+ }
+
+/* ----------------------------
+      KYC
+----------------------------- */
+async function loadKyc() {
+  try {
+    const k = await apiGet("/kyc/status");
+    const lv = Number(k.level ?? 0);
+
+    elKycPill.textContent = `レベル ${lv}`;
+    elKycPill.className = `kyc-pill kyc-${lv}`;
+  } catch {
+    elKycPill.textContent = "取得エラー";
+  }
+}
+
+/* ----------------------------
+      Wallet
+----------------------------- */
+async function loadWallet() {
+  const d = await apiGet("/wallet");
+  const w = d.wallet || {};
+
+  elBalTotal.textContent = fmtAmount(w.balanceTotal ?? 0);
+  elBalAvail.textContent = fmtAmount(w.balanceAvailable ?? 0);
+  elBalLock.textContent  = fmtAmount(w.balanceLocked ?? 0);
+}
+async function loadBankInfo() {
+  try {
+    const res = await fetch(API_BASE_URL + "/user/bank-account", {
+      credentials: "include",
+    });
+    if (!res.ok) return; // 未設定なら無視
+
+    const bank = await res.json();
+
+    document.getElementById("bank-name").value   = bank.bankName || "";
+    document.getElementById("bank-branch").value = bank.branchName || "";
+    document.getElementById("bank-type").value   = bank.accountType || "普通";
+    document.getElementById("bank-number").value = bank.accountNumber || "";
+    document.getElementById("bank-holder").value = bank.accountHolder || "";
+
+  } catch (e) {
+    console.warn("銀行口座情報の取得に失敗:", e);
+  }
+}
+
+async function loadCryptoInfo() {
+  try {
+    const res = await fetch(API_BASE_URL + "/user/crypto", {
+      credentials: "include",
+    });
+    if (!res.ok) return;
+
+    const list = await res.json();
+
+    // 一旦クリア
+    document.getElementById("crypto-btc").value = "";
+    document.getElementById("crypto-eth").value = "";
+    document.getElementById("crypto-usdt").value = "";
+
+    // currency ごとに振り分け
+    list.forEach(c => {
+      if (c.currency === "BTC") {
+        document.getElementById("crypto-btc").value = c.address;
+      }
+      if (c.currency === "ETH") {
+        document.getElementById("crypto-eth").value = c.address;
+      }
+      if (c.currency === "USDT") {
+        document.getElementById("crypto-usdt").value = c.address;
+      }
+    });
+
+  } catch (e) {
+    console.warn("暗号通貨アドレスの取得に失敗:", e);
+  }
+}
+
+
+/* ----------------------------
+      Init
+----------------------------- */
+(async function init(){
+  try {
+    await loadMe();
+    await loadKyc();
+    await loadWallet();
+    await loadBankInfo();
+    await loadCryptoInfo();
+
+
+    elMsg.textContent = "最新情報を取得しました。";
+    elMsg.style.color = "green";
+  } catch (e) {
+    console.error(e);
+    elMsg.textContent = "情報取得に失敗しました。ログイン状態を確認してください。";
+    elMsg.style.color = "red";
+  }
+})();
+
+
+
+document.getElementById("save-bank").onclick = async () => {
+  const body = {
+    bankName: document.getElementById("bank-name").value,
+    branchName: document.getElementById("bank-branch").value,
+    accountType: document.getElementById("bank-type").value,
+    accountNumber: document.getElementById("bank-number").value,
+    accountHolder: document.getElementById("bank-holder").value,
+  };
+
+  try {
+    const res = await fetch(API_BASE_URL + "/user/bank-account", {
+  method: "POST",
+  credentials: "include",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body),
+});
+
+
+    if (!res.ok) throw new Error(await res.text());
+
+    document.getElementById("bank-msg").textContent = "銀行情報を保存しました";
+    document.getElementById("bank-msg").style.color = "green";
+
+  } catch (err) {
+    document.getElementById("bank-msg").textContent = "保存に失敗しました";
+    document.getElementById("bank-msg").style.color = "red";
+  }
+};
+document.getElementById("save-crypto").onclick = async () => {
+  const payload = {
+    addresses: [
+      {
+        currency: "BTC",
+        address: document.getElementById("crypto-btc").value.trim()
+      },
+      {
+        currency: "ETH",
+        address: document.getElementById("crypto-eth").value.trim()
+      },
+      {
+        currency: "USDT",
+        address: document.getElementById("crypto-usdt").value.trim()
+      }
+    ].filter(a => a.address) // 空欄は送らない
+  };
+
+  if (!payload.addresses.length) {
+    alert("少なくとも1つのアドレスを入力してください");
+    return;
+  }
+
+  await fetch(API_BASE_URL + "/user/crypto", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  document.getElementById("crypto-msg").textContent =
+    "暗号通貨アドレスを保存しました";
+};
+
+/* =========================
+   ヘッダー：ログイン状態反映
+========================= */
+async function updateHeaderUserState() {
+  const headerActions = document.querySelector(".header-actions");
+  if (!headerActions) return;
+
+  try {
+    const res = await fetch(API_BASE_URL + "/auth/me", {
+      credentials: "include",
+    });
+    if (!res.ok) return; // 未ログイン
+
+    const data = await res.json();
+    const user = data.user || data;
+
+    // ヘッダー右側を差し替え
+    headerActions.innerHTML = "";
+
+    const userBtn = document.createElement("a");
+    userBtn.href = "users.html";
+    userBtn.className = "btn btn-outline btn-sm";
+    userBtn.textContent = user.name + " さん";
+    headerActions.appendChild(userBtn);
+
+    const logoutBtn = document.createElement("a");
+    logoutBtn.href = "#";
+    logoutBtn.className = "btn btn-primary btn-sm";
+    logoutBtn.textContent = "ログアウト";
+    logoutBtn.onclick = async () => {
+      await fetch(API_BASE_URL + "/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      location.href = "../login.html";
+    };
+    headerActions.appendChild(logoutBtn);
+
+  } catch (e) {
+    console.warn("ログイン状態取得失敗", e);
+  }
+}
+
+/* 初期化 */
+document.addEventListener("DOMContentLoaded", updateHeaderUserState);

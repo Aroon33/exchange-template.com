@@ -1,0 +1,20 @@
+const API_BASE = "https://api.exchange-template.com";
+const btn = document.getElementById("logout-btn");
+
+btn.addEventListener("click", logout);
+
+async function logout() {
+  btn.disabled = true;
+
+  try {
+    await fetch(API_BASE + "/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // 失敗しても続行
+  } finally {
+    // 必ずログイン画面へ
+    location.href = "/admin/login.html";
+  }
+}

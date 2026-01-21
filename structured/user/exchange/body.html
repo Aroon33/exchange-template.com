@@ -1,0 +1,58 @@
+
+  <!-- ========== スマホ用マーケットタブ ========== -->
+  <div id="market-tabs" class="market-tabs"></div>
+
+  <!-- ========== PC用マーケットリスト ========== -->
+  <section class="card">
+    <div class="card-header"><div class="card-title">マーケット</div></div>
+    <div id="market-list"></div>
+  </section>
+
+  <!-- ========== チャート ========== -->
+  <section class="chart-area">
+    <div class="chart-header">
+      <div>
+        <div id="chartSymbolMain" class="chart-main-symbol">BTC / USD</div>
+        <div id="chartSymbolSub" class="chart-sub-symbol">Bitcoin · 現物</div>
+      </div>
+    </div>
+    <div id="tv_chart"></div>
+  </section>
+
+  <!-- ========== 注文 & 板 / 約定 ========== -->
+  <section class="order-side">
+
+    <div class="collapse-toggle" onclick="toggleCollapse('orderbookWrap')">📉 注文板（タップで開閉）</div>
+    <div id="orderbookWrap" class="collapse-content">
+      <div class="card">
+        <div class="card-header"><div class="card-title">注文板</div></div>
+        <div class="orderbook-list" id="orderbook"></div>
+      </div>
+    </div>
+
+    <div class="card order-panel">
+      <div class="card-header"><div class="card-title">注文</div></div>
+
+      <select id="order-type">
+        <option value="market">成行注文</option>
+        <option value="limit">指値注文</option>
+      </select>
+
+      <input type="number" id="order-price" placeholder="価格 (指値時)" disabled>
+      <input type="number" id="order-amount" placeholder="数量">
+
+      <button class="order-btn-buy">買い</button>
+      <button class="order-btn-sell">売り</button>
+
+      <div class="order-note">※ デモ版のため実際には注文されません。</div>
+    </div>
+
+    <div class="collapse-toggle" onclick="toggleCollapse('recentWrap')">📈 最新の約定（タップで開閉）</div>
+    <div id="recentWrap" class="collapse-content">
+      <div class="card">
+        <div class="card-header"><div class="card-title">最新の約定</div></div>
+        <div class="recent-trades" id="recent-trades"></div>
+      </div>
+    </div>
+
+  </section>

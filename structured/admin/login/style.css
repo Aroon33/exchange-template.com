@@ -1,0 +1,75 @@
+/* =========================
+   Admin Login
+========================= */
+body {
+  background: #0f0f0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.login-card {
+  background: #fff;
+  width: 100%;
+  max-width: 360px;
+  padding: 28px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.login-logo {
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.login-sub {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.login-group {
+  margin-bottom: 14px;
+}
+
+.login-group label {
+  font-size: 12px;
+  color: #444;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.login-group input {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+}
+
+.login-error {
+  display: none;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #c00;
+  text-align: center;
+}

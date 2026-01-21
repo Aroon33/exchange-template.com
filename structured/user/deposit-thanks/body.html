@@ -1,0 +1,34 @@
+  <h2>入金申請を受け付けました</h2>
+  <p class="thanks-note">
+    下記の口座またはアドレスへご入金ください。<br>
+    入金確認後、残高に反映されます。
+  </p>
+
+  <!-- 日本円 -->
+  <div class="block">
+    <h3>日本円 入金先</h3>
+
+    <div class="row">銀行名：<span id="bank-name"></span></div>
+    <div class="row">支店名：<span id="bank-branch"></span></div>
+    <div class="row">口座種別：<span id="bank-type"></span></div>
+
+    <div class="row">
+      口座番号：<span id="bank-number"></span>
+      <button class="copy-btn" onclick="copyText('bank-number')">コピー</button>
+    </div>
+
+    <div class="row">
+      口座名義：<span id="bank-holder"></span>
+      <button class="copy-btn" onclick="copyText('bank-holder')">コピー</button>
+    </div>
+  </div>
+
+  
+  <!-- 注意文言 -->
+  <p class="thanks-note" id="deposit-note"></p>
+
+  <div class="actions">
+    <button class="btn btn-primary" onclick="location.href='wallet.html'">
+      ウォレットへ戻る
+    </button>
+  </div>

@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>CryptoX Exchange - 次世代の仮想通貨取引所（デモ）</title>
+  <title>CryptoX Exchange - 次世代の仮想通貨取引所</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <link rel="stylesheet" href="assets/css/style.css">
@@ -211,42 +211,8 @@
 
 <body>
 
-<!-- ===========================
-      ヘッダー（ログイン前シンプル版）
-=========================== -->
-<header class="site-header" style="backdrop-filter:blur(10px); background:rgba(255,255,255,0.9);">
-
-  <div class="logo">
-    <div class="logo-badge">CX</div> CryptoX Exchange
-  </div>
-
-  <!-- ハンバーガーメニュー -->
-  <div class="menu-toggle" onclick="toggleMenu()">☰</div>
-
-  <!-- PC用メニュー -->
-  <nav class="site-nav">
-    <a href="index.html" class="nav-link active">TOP</a>
-    <a href="exchange.html" class="nav-link">トレード</a>
-    <a href="campaign.html" class="nav-link">キャンペーン</a>
-  </nav>
-
-  <div class="header-actions">
-    <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
-    <a href="signup.html" class="btn btn-primary btn-sm">無料口座開設</a>
-  </div>
-
-  <!-- スマホ用ドロワーメニュー -->
-  <nav id="mobileNav" class="mobile-nav">
-    <a href="index.html">TOP</a>
-    <a href="exchange.html">トレード</a>
-    <a href="campaign.html">キャンペーン</a>
-
-    <div class="header-actions-mobile">
-      <a href="login.html" class="btn btn-outline btn-sm">ログイン</a>
-      <a href="signup.html" class="btn btn-primary btn-sm">無料口座開設</a>
-    </div>
-  </nav>
-</header>
+<!-- 共通ヘッダー -->
+<div id="header"></div>
 
 
 <!-- ===========================
@@ -398,6 +364,7 @@ function toggleMenu() {
 }
 </script>
 
+<script type="module" src="/assets/js/header-loader.js"></script>
 
 </body>
 </html>

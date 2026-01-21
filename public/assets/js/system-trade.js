@@ -1,14 +1,10 @@
-// ========================================
-// System Trade Page Script (FINAL COMPLETE)
-// ========================================
-
 import {
   fetchSystemOverview,
   requestSystemStop
 } from "./api/system-trade.api.js";
 
 /* ======================================
-   DOM Elements
+   DOM
 ====================================== */
 const elMsg        = document.getElementById("sys-message");
 const elGroupId    = document.getElementById("sys-group-id");
@@ -16,69 +12,209 @@ const elStatusPill = document.getElementById("sys-status-pill");
 const elBalTotal   = document.getElementById("sys-balance-total");
 const elTotalPnl   = document.getElementById("sys-total-pnl");
 
-const elPosBody    = document.getElementById("sys-positions-body");   // PC
-const elHistoryBody= document.getElementById("trade-history-body");   // SP
-const btnStop      = document.getElementById("sys-stop-btn");
+const elPcBody = document.getElementById("sys-positions-body");
+const elSpBody = document.getElementById("sys-positions-sp-body");
+const btnStop  = document.getElementById("sys-stop-btn");
+const modal    = document.getElementById("trade-modal");
 
 /* ======================================
    State
 ====================================== */
 let currentPositions = [];
-const isMobile = window.matchMedia("(max-width: 768px)").matches;
+let currentDays = null;      // ★ デフォルトは「全て」
+let displayCount = 10;       // ★ 初期表示数
+const LOAD_COUNT = 10;
 
 /* ======================================
-   Bootstrap
+   Utils
 ====================================== */
-document.addEventListener("DOMContentLoaded", initPage);
-btnStop.addEventListener("click", handleStopClick);
+function isMobile() {
+  return window.matchMedia("(max-width: 768px)").matches;
+}
+
+function fmtNum(n) {
+  if (n == null || isNaN(n)) return "-";
+  return Number(n).toLocaleString("en-US", { maximumFractionDigits: 4 });
+}
+
+function fmtDate(iso) {
+  if (!iso) return "-";
+  return new Date(iso).toLocaleString("ja-JP", { hour12: false });
+}
+
+function symbol(s) {
+  return s ? s.replace("USDT", "") : "-";
+}
+
+function getSide(p) {
+  if (p.side) return p.side;
+  if (p.positionSide) return p.positionSide === "LONG" ? "BUY" : "SELL";
+  if (p.direction) return p.direction;
+  return "-";
+}
+
+/* ======================================
+   Filter
+====================================== */
+function filterPositions(list = []) {
+  let filtered = [...list];
+
+  // 日付フィルター（選択時のみ）
+  if (currentDays !== null) {
+    const limit = Date.now() - currentDays * 24 * 60 * 60 * 1000;
+    filtered = filtered.filter(p =>
+      p.openedAt && new Date(p.openedAt).getTime() >= limit
+    );
+  }
+
+  // 表示件数制限
+  return filtered.slice(0, displayCount);
+}
 
 /* ======================================
    Init
 ====================================== */
+document.addEventListener("DOMContentLoaded", initPage);
+btnStop.addEventListener("click", handleStopClick);
+
 async function initPage() {
   try {
     const overview = await fetchSystemOverview();
     currentPositions = overview.positions || [];
+
     renderOverview(overview);
+    renderPositions();
 
     elMsg.textContent = "システム情報を取得しました。";
     elMsg.style.color = "green";
   } catch (e) {
-    elMsg.textContent = e.message || "情報取得に失敗しました。";
+    elMsg.textContent = "情報取得に失敗しました。";
     elMsg.style.color = "red";
+    console.error(e);
   }
 }
 
 /* ======================================
-   Format Utilities
+   Overview
 ====================================== */
+function renderOverview(data) {
+  elGroupId.textContent    = data.groupId ?? "-";
+  elStatusPill.textContent = data.systemStatus ?? "-";
+  elBalTotal.textContent   = fmtNum(data.balanceTotal);
 
-/** 銘柄（USDT除外） */
-function formatSymbol(symbol) {
-  return symbol.replace("USDT", "");
-}
+  const total = (data.positions || []).reduce(
+    (sum, p) => sum + Number(p.unrealizedPnl || 0), 0
+  );
 
-/** 小数点4桁 */
-function formatDecimal(value) {
-  return Number(value).toFixed(4);
-}
-
-/** 日時：YYYY-MM-DD HH:mm */
-function formatDateTime(iso) {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  elTotalPnl.textContent = fmtNum(total);
+  elTotalPnl.className =
+    "info-value " + (total >= 0 ? "pnl-plus" : "pnl-minus");
 }
 
 /* ======================================
-   Calculations
+   Render
 ====================================== */
-function calcTotalPnl(positions = []) {
-  return positions.reduce(
-    (sum, p) => sum + Number(p.unrealizedPnl || 0),
-    0
-  );
+function renderPositions() {
+  const list = filterPositions(currentPositions);
+
+  elPcBody.innerHTML = "";
+  elSpBody.innerHTML = "";
+
+  if (!list.length) {
+    elPcBody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center;color:#888;">
+          該当するポジションはありません
+        </td>
+      </tr>`;
+    return;
+  }
+
+  list.forEach(p => {
+    const pnl = Number(p.unrealizedPnl);
+    const cls = pnl >= 0 ? "pnl-plus" : "pnl-minus";
+    const side = getSide(p);
+
+    // PC
+    elPcBody.insertAdjacentHTML("beforeend", `
+      <tr>
+        <td>${fmtDate(p.openedAt)}</td>
+        <td>${symbol(p.symbol)}</td>
+        <td>${side}</td>
+        <td>${fmtNum(p.size)}</td>
+        <td>${fmtNum(p.entryPrice)}</td>
+        <td>${fmtNum(p.currentPrice)}</td>
+        <td class="${cls}">${fmtNum(pnl)}</td>
+      </tr>
+    `);
+
+    // SP
+    elSpBody.insertAdjacentHTML("beforeend", `
+      <tr data-trade='${JSON.stringify(p)}'>
+        <td>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong>${symbol(p.symbol)} ${side}</strong>
+            <span style="font-size:18px;color:#bbb;">›</span>
+          </div>
+          <div class="${cls}" style="margin-top:4px;">
+            損益 ${fmtNum(pnl)}
+          </div>
+          <div style="font-size:11px;color:#888;margin-top:2px;">
+            ${fmtDate(p.openedAt)}
+          </div>
+        </td>
+      </tr>
+    `);
+  });
 }
+
+/* ======================================
+   Filter Buttons
+====================================== */
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn")
+      .forEach(b => b.classList.remove("active"));
+
+    btn.classList.add("active");
+
+    currentDays = Number(btn.dataset.days);
+    displayCount = 10;
+
+    renderPositions();
+  });
+});
+
+/* ======================================
+   SP → Modal
+====================================== */
+elSpBody.addEventListener("click", e => {
+  if (!isMobile()) return;
+  const row = e.target.closest("tr[data-trade]");
+  if (!row) return;
+  openModal(JSON.parse(row.dataset.trade));
+});
+
+/* ======================================
+   Modal
+====================================== */
+function openModal(p) {
+  document.getElementById("m-symbol").textContent = symbol(p.symbol);
+  document.getElementById("m-side").textContent   = getSide(p);
+  document.getElementById("m-size").textContent   = fmtNum(p.size);
+  document.getElementById("m-entry").textContent  = fmtNum(p.entryPrice);
+  document.getElementById("m-close").textContent  = fmtNum(p.currentPrice);
+  document.getElementById("m-profit").textContent = fmtNum(p.unrealizedPnl);
+  document.getElementById("m-date").textContent   = fmtDate(p.openedAt);
+
+  modal.classList.add("show");
+}
+
+modal.addEventListener("click", e => {
+  if (e.target === modal || e.target.classList.contains("modal-close")) {
+    modal.classList.remove("show");
+  }
+});
 
 /* ======================================
    Actions
@@ -93,122 +229,7 @@ async function handleStopClick() {
 }
 
 /* ======================================
-   Render (Overview)
-====================================== */
-function renderOverview(data) {
-  elGroupId.textContent    = data.groupId ?? "-";
-  elStatusPill.textContent = data.systemStatus ?? "-";
-  elBalTotal.textContent   = formatDecimal(data.balanceTotal);
-
-  const totalPnl = calcTotalPnl(data.positions);
-  elTotalPnl.textContent = formatDecimal(totalPnl);
-  elTotalPnl.className =
-    "info-value " + (totalPnl >= 0 ? "pnl-plus" : "pnl-minus");
-
-  if (isMobile) {
-    renderPositionsMobile(data.positions);
-  } else {
-    renderPositionsDesktop(data.positions);
-  }
-}
-
-/* ======================================
-   Render (Desktop)
-====================================== */
-function renderPositionsDesktop(positions = []) {
-  elPosBody.innerHTML = "";
-
-  if (!positions.length) {
-    elPosBody.innerHTML = `
-      <tr>
-        <td colspan="6" style="text-align:center;color:#888;">
-          保有中ポジションはありません。
-        </td>
-      </tr>`;
-    return;
-  }
-
-  positions.forEach(p => {
-    const pnl = Number(p.unrealizedPnl);
-    elPosBody.innerHTML += `
-      <tr>
-        <td>${formatDateTime(p.openedAt)}</td>
-        <td>${formatSymbol(p.symbol)}</td>
-        <td>${formatDecimal(p.size)}</td>
-        <td>${formatDecimal(p.entryPrice)}</td>
-        <td>${formatDecimal(p.currentPrice)}</td>
-        <td class="${pnl >= 0 ? "pnl-plus" : "pnl-minus"}">
-          ${formatDecimal(pnl)}
-        </td>
-      </tr>`;
-  });
-}
-
-/* ======================================
-   Render (Mobile)
-====================================== */
-function renderPositionsMobile(positions = []) {
-  elHistoryBody.innerHTML = "";
-
-  if (!positions.length) {
-    elHistoryBody.innerHTML = `
-      <tr>
-        <td style="text-align:center;color:#888;">
-          データがありません
-        </td>
-      </tr>`;
-    return;
-  }
-
-  positions.forEach((p, index) => {
-    const pnl = Number(p.unrealizedPnl);
-    elHistoryBody.innerHTML += `
-      <tr class="history-row" data-index="${index}">
-        <td>
-          <div class="history-main">
-            <strong>${formatSymbol(p.symbol)}</strong>
-            <span class="${pnl >= 0 ? "pnl-plus" : "pnl-minus"}">
-              ${formatDecimal(pnl)}
-            </span>
-          </div>
-          <div class="history-sub">
-            ${formatDateTime(p.openedAt)}
-          </div>
-        </td>
-      </tr>`;
-  });
-}
-
-/* ======================================
-   Mobile Modal
-====================================== */
-elHistoryBody.addEventListener("click", e => {
-  const row = e.target.closest(".history-row");
-  if (!row) return;
-  openTradeModal(currentPositions[row.dataset.index]);
-});
-
-function openTradeModal(p) {
-  if (!p) return;
-
-  document.getElementById("m-symbol").textContent = formatSymbol(p.symbol);
-  document.getElementById("m-side").textContent   = p.side || "-";
-  document.getElementById("m-size").textContent   = formatDecimal(p.size);
-  document.getElementById("m-entry").textContent  = formatDecimal(p.entryPrice);
-  document.getElementById("m-close").textContent  = formatDecimal(p.currentPrice);
-  document.getElementById("m-profit").textContent = formatDecimal(p.unrealizedPnl);
-  document.getElementById("m-date").textContent   = formatDateTime(p.openedAt);
-
-  document.getElementById("trade-modal").classList.add("show");
-}
-
-document.querySelector(".modal-close")
-  .addEventListener("click", () => {
-    document.getElementById("trade-modal").classList.remove("show");
-  });
-
-/* ======================================
-   UI
+   Toast
 ====================================== */
 function showToast(message) {
   const toast = document.getElementById("toast");

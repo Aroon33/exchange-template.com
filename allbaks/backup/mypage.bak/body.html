@@ -1,0 +1,137 @@
+  <section class="section-card">
+    <h1 class="card-title">マイページ</h1>
+    <p id="mypage-message" class="muted"></p>
+
+    <!-- ----------------------------
+          アカウント情報
+    ----------------------------- -->
+    <h2 class="section-title">アカウント情報</h2>
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-label">メールアドレス</div>
+        <div class="info-value" id="my-email">-</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">名前</div>
+        <div class="info-value" id="my-name">-</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-label">グループID</div>
+        <div class="info-value" id="my-group">-</div>
+      </div>
+    </div>
+
+    <!-- ----------------------------
+          KYC ステータス（繰り上げ）
+    ----------------------------- -->
+    <h2 class="section-title">KYC ステータス</h2>
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-label">あなたの KYC レベル</div>
+        <div class="info-value">
+          <span id="my-kyc-pill" class="kyc-pill kyc-0">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ----------------------------
+          残高サマリー
+    ----------------------------- -->
+    <h2 class="section-title">残高サマリー</h2>
+    <div class="balance-boxes">
+      <div class="balance-item">
+        <div class="info-label">総残高</div>
+        <div class="balance-value" id="my-balance-total">0</div>
+      </div>
+
+      <div class="balance-item">
+        <div class="info-label">利用可能残高</div>
+        <div class="balance-value" id="my-balance-available">0</div>
+      </div>
+
+      <div class="balance-item">
+        <div class="info-label">ロック残高</div>
+        <div class="balance-value" id="my-balance-locked">0</div>
+      </div>
+    </div>
+
+  </section>
+  <!-- =============================
+      銀行口座の登録（出金用）
+============================= -->
+<section class="section-card" style="max-width:760px;">
+  <h2 class="section-title">銀行口座の登録（出金用）</h2>
+  <p id="bank-msg" class="muted"></p>
+
+  <div class="info-grid">
+
+    <div class="info-box">
+      <div class="info-label">銀行名</div>
+      <input id="bank-name" class="input-text" placeholder="例：みずほ銀行">
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">支店名</div>
+      <input id="bank-branch" class="input-text" placeholder="例：渋谷支店">
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">口座種別</div>
+      <select id="bank-type" class="input-text">
+        <option value="普通">普通</option>
+        <option value="当座">当座</option>
+      </select>
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">口座番号</div>
+      <input id="bank-number" class="input-text" placeholder="例：1234567">
+    </div>
+
+    <div class="info-box" style="grid-column: 1 / -1;">
+      <div class="info-label">口座名義（全角カナ）</div>
+      <input id="bank-holder" class="input-text" placeholder="例：ヤマダ タロウ">
+    </div>
+
+  </div>
+
+  <button id="save-bank" class="btn btn-primary" style="margin-top:14px;">
+    保存する
+  </button>
+</section>
+<!-- =============================
+      暗号通貨アドレスの登録
+============================= -->
+<section class="section-card" style="max-width:760px;">
+  <h2 class="section-title">暗号通貨アドレスの登録</h2>
+  <p id="crypto-msg" class="muted"></p>
+
+  <div class="info-grid">
+
+    <div class="info-box">
+      <div class="info-label">BTC アドレス</div>
+      <input id="crypto-btc" class="input-text" placeholder="例：bc1xxxx...">
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">ETH アドレス</div>
+      <input id="crypto-eth" class="input-text" placeholder="例：0xABC123...">
+    </div>
+
+    <div class="info-box" style="grid-column: 1 / -1;">
+      <div class="info-label">USDT（TRC20）</div>
+      <input id="crypto-usdt" class="input-text" placeholder="例：TXYZ1234...">
+    </div>
+
+  </div>
+
+  <button id="save-crypto" class="btn btn-primary" style="margin-top:14px;">
+    保存する
+  </button>
+</section>
+
+
+
+

@@ -1,5 +1,16 @@
 import { apiFetch } from "./apiClient.js";
 
+export function getUserProfile() {
+  return apiFetch("/user/profile");
+}
+
+export function createUserProfile(payload) {
+  return apiFetch("/user/profile", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export function getBankAccount() {
   return apiFetch("/user/bank-account");
 }

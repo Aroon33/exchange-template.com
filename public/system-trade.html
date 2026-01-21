@@ -76,7 +76,9 @@
 /* =============================
    テーブル
 ============================= */
-.table-wrapper { overflow-x: auto; }
+.table-wrapper {
+  overflow-x: auto;
+}
 
 table.table {
   width: 100%;
@@ -91,6 +93,7 @@ table.table th {
   border-bottom: 2px solid #e5e7eb;
   white-space: nowrap;
 }
+
 table.table td {
   padding: 10px;
   font-size: 13px;
@@ -98,8 +101,15 @@ table.table td {
   white-space: nowrap;
 }
 
-.pnl-plus { color:#059669; font-weight:bold; }
-.pnl-minus { color:#dc2626; font-weight:bold; }
+.pnl-plus {
+  color: #059669;
+  font-weight: bold;
+}
+
+.pnl-minus {
+  color: #dc2626;
+  font-weight: bold;
+}
 
 .table td.pnl-plus,
 .table td.pnl-minus {
@@ -107,7 +117,9 @@ table.table td {
   font-family: monospace;
 }
 
-table.table tr:hover { background:#f9fafb; }
+table.table tr:hover {
+  background: #f9fafb;
+}
 
 /* =============================
    ボタン
@@ -118,89 +130,59 @@ table.table tr:hover { background:#f9fafb; }
   font-size: 15px;
   padding: 10px;
 }
-
-/* =============================
-   ハンバーガーメニュー（統一版）
-============================= */
-.hamburger {
+/* ============================
+   PC / SP テーブル切り替え
+============================ */
+.table-sp {
   display: none;
-  font-size: 28px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  margin-left: 10px;
 }
 
-@media(max-width:768px){
-  .hamburger { display:block; }
-  .site-nav { display:none; }
+@media (max-width: 768px) {
+  .table-pc {
+    display: none;
+  }
+  .table-sp {
+    display: block;
+  }
 }
-
-/* =============================
-   モバイルメニュー（統一版）
-============================= */
-.mobile-menu {
-  position: fixed;
-  top: 0;
-  left: -260px;
-  width: 240px;
-  height: 100%;
-  background: #fff;
-  padding: 20px;
-  z-index: 9999;
-  transition: 0.3s;
-  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
-}
-
-.mobile-menu.open { left: 0; }
-
-.mobile-menu a {
-  display:block !important;
-  width:100%;
-  background:#f8fafc;
-  border:1px solid #e5e7eb;
-  padding:12px 10px;
-  margin-bottom:8px;
-  border-radius:8px;
-  font-size:15px;
-  color:#333;
-}
-
-.mobile-menu a:hover {
-  background:#eef2ff;
-  border-color:var(--primary);
-}
-
-.close-btn {
-  background:none;
-  border:none;
-  font-size:24px;
-  float:right;
-  cursor:pointer;
-}
-
-.menu-overlay {
-  display:none;
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.4);
-  z-index:9998;
-}
-
-.menu-overlay.show { display:block; }
 
 /* =============================
    レスポンシブ
 ============================= */
-@media(max-width:600px) {
+@media (max-width: 600px) {
   table.table th,
   table.table td {
     font-size: 12px;
     padding: 8px;
   }
 }
-  </style>
+/* ============================
+   モーダル（SP用）
+============================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+.modal-card {
+  background: #fff;
+  width: calc(100% - 32px);
+  max-width: 420px;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+</style>
+
 </head>
 
 <body>
@@ -264,35 +246,38 @@ table.table tr:hover { background:#f9fafb; }
   </div>
 
   <!-- ===== PC TABLE ===== -->
-  <div class="table-wrapper table-pc">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>日時</th>
-          <th>銘柄</th>
-          <th>数量</th>
-          <th>建値</th>
-          <th>現在値</th>
-          <th>損益</th>
-        </tr>
-      </thead>
-      <tbody id="sys-positions-body"></tbody>
-    </table>
-  </div>
+<div class="table-wrapper table-pc">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>日時</th>
+        <th>銘柄</th>
+        <th>売買</th>
+        <th>数量</th>
+        <th>建値</th>
+        <th>現在値</th>
+        <th>損益</th>
+      </tr>
+    </thead>
+    <tbody id="sys-positions-body"></tbody>
+  </table>
+</div>
 
-  <!-- ===== MOBILE TABLE ===== -->
-  <div class="table-wrapper table-sp">
-    <table class="table">
-      <thead class="thead-sp">
-        <tr>
-          <th>取引</th>
-        </tr>
-      </thead>
-      <tbody id="trade-history-body">
-        <!-- JS描画 -->
-      </tbody>
-    </table>
-  </div>
+<!-- ===== MOBILE TABLE ===== -->
+<div class="table-wrapper table-sp">
+  <table class="table">
+    <thead class="thead-sp">
+      <tr>
+        <th>取引</th>
+      </tr>
+    </thead>
+    <!-- ★ id を変更 -->
+    <tbody id="sys-positions-sp-body">
+      <!-- JS描画 -->
+    </tbody>
+  </table>
+</div>
+
 
 </section>
 </main>
@@ -321,13 +306,13 @@ table.table tr:hover { background:#f9fafb; }
       <span>建値</span><span id="m-entry"></span>
     </div>
     <div class="modal-row">
-      <span>決済値</span><span id="m-close"></span>
+      <span>現在値</span><span id="m-close"></span>
     </div>
     <div class="modal-row">
       <span>損益</span><span id="m-profit"></span>
     </div>
     <div class="modal-row">
-      <span>決済日時</span><span id="m-date"></span>
+      <span>日時</span><span id="m-date"></span>
     </div>
 
     <button class="btn btn-outline btn-sm modal-close">閉じる</button>
@@ -335,7 +320,7 @@ table.table tr:hover { background:#f9fafb; }
 </div>
 
 <!-- Scripts -->
-<script type="module" src="/assets/js/header-user.js"></script>
+<script type="module" src="/assets/js/header-loader.js"></script>
 <script type="module" src="/assets/js/system-trade.js"></script>
 
 </body>

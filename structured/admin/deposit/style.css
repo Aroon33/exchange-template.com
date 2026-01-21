@@ -1,0 +1,109 @@
+/* =========================
+   Responsive (Deposit)
+========================= */
+@media (max-width: 768px) {
+
+  .thead-pc {
+    display: none;
+  }
+
+  .thead-sp {
+    display: table-header-group;
+  }
+
+  .pc-only {
+    display: none;
+  }
+
+  .table td.actions,
+  .table th.actions {
+    display: none;
+  }
+
+  .deposit-row td {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  /* ===== Modal ===== */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+
+  .modal-content {
+    background: #fff;
+    margin: 10% auto;
+    width: 92%;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .modal-header,
+  .modal-footer {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .modal-footer {
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+  }
+
+  .modal-body {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+  }
+}
+
+/* PC only */
+@media (min-width: 769px) {
+  .thead-sp {
+    display: none;
+  }
+}
+.admin-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: #111;
+  color: #fff;
+  z-index: 1001;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+}
+
+.hamburger {
+  font-size: 22px;
+  background: none;
+  border: none;
+  color: #fff;
+}
+
+
+
+@media (max-width: 768px) {
+  .admin-header {
+    display: flex;
+  }
+
+  
+  .admin-main {
+    margin-top: 56px;
+  }
+}
+

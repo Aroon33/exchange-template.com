@@ -1,0 +1,69 @@
+  <div class="admin-main-inner">
+
+    <div class="page-title">ポジション管理（OPEN）＋ 決済操作</div>
+
+    <!-- ▼ グループ選択 -->
+    <section class="filters-card">
+      <div class="filters-grid">
+        <div class="field">
+          <label>グループID</label>
+          <select id="groupSelect"></select>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-xs btn-xs-primary" onclick="loadPositions()">更新</button>
+        <button class="btn-xs btn-danger" onclick="closeGroupAll()">⚠ 全決済（親＋子）</button>
+      </div>
+    </section>
+
+    <!-- ▼ 親口座 -->
+    <section class="table-card">
+      <div class="table-header-row">
+        <div class="table-title">親口座ポジション（MAM）</div>
+        <div class="table-meta" id="metaParent"></div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>日時</th>
+            <th>名前</th>
+            <th>通貨</th>
+            <th>枚数</th>
+            <th>建値</th>
+            <th>価格</th>
+            <th>損益</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="parentBody"></tbody>
+      </table>
+    </section>
+
+    <!-- ▼ 子口座 -->
+    <section class="table-card">
+      <div class="table-header-row">
+        <div class="table-title">子口座ポジション（PAM）</div>
+        <div class="table-meta" id="metaChildren"></div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <tr>
+            <th>日時</th>
+            <th>名前</th>
+            <th>通貨</th>
+            <th>枚数</th>
+            <th>建値</th>
+            <th>価格</th>
+            <th>損益</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="childBody"></tbody>
+      </table>
+    </section>
+
+  </div>

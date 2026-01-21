@@ -1,0 +1,82 @@
+import { CONFIG } from "../config.js";
+
+// [DEPRECATED] was: const API_BASE = "https://api.exchange-template.com";
+
+/* ===== Utils ===== */
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+function getId() {
+  const p = new URLSearchParams(location.search);
+  return p.get("id");
+}
+
+/* ===== Load（編集時） ===== */
+async function load() {
+  const id = getId();
+  if (!id) return;
+
+  document.getElementById("page-title").textContent =
+    "クリプト入金アドレス編集";
+
+  const res = await fetch(
+    `${CONFIG.API_BASE_URL}/admin/deposit/crypto-addresses/${id}`,
+    { credentials:"include" }
+  );
+
+  if (!res.ok) {
+    toast("データ取得に失敗しました");
+    return;
+  }
+
+  const d = await res.json();
+
+  currency.value = d.currency;
+  address.value  = d.address;
+  memo.value     = d.memoTag ?? "";
+  userId.value   = d.userId ?? "";
+}
+
+/* ===== Save ===== */
+document.getElementById("save-btn").addEventListener("click", async () => {
+  if (!address.value.trim()) {
+    toast("アドレスは必須です");
+    return;
+  }
+
+  const id = getId();
+
+  const body = {
+    currency: currency.value,
+    address: address.value.trim(),
+    memoTag: memo.value.trim() || null,
+    userId: userId.value ? Number(userId.value) : null,
+  };
+
+  const url = id
+    ? `/admin/deposit/crypto-addresses/${id}`
+    : `/admin/deposit/crypto-addresses`;
+
+  const res = await fetch(CONFIG.API_BASE_URL + url, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    toast("保存に失敗しました");
+    return;
+  }
+
+  toast("保存しました");
+  setTimeout(() => {
+    location.href = "deposit-bank-accounts.html";
+  }, 800);
+});
+
+load();

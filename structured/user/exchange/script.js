@@ -1,0 +1,251 @@
+import { CONFIG } from "../config.js";
+
+/* ===============================
+      MARKET DATA
+================================ */
+
+const markets = [
+  { symbol:"BTC/USD", tv:"BINANCE:BTCUSDT", name:"Bitcoin", price:67420 },
+  { symbol:"ETH/USD", tv:"BINANCE:ETHUSDT", name:"Ethereum", price:3120 },
+  { symbol:"SOL/USD", tv:"BINANCE:SOLUSDT", name:"Solana", price:178 },
+  { symbol:"DOGE/USD", tv:"BINANCE:DOGEUSDT", name:"Dogecoin", price:0.18 },
+  { symbol:"XRP/USD", tv:"BINANCE:XRPUSDT", name:"XRP", price:0.55 },
+  { symbol:"ADA/USD", tv:"BINANCE:ADAUSDT", name:"Cardano", price:0.42 }
+];
+
+let currentMarket = markets[0];
+
+/* ===============================
+      Market Tabs (スマホ)
+================================ */
+function renderMarketTabs(){
+  const wrap = document.getElementById("market-tabs");
+  wrap.innerHTML = "";
+
+  markets.forEach(m => {
+    const tab = document.createElement("div");
+    tab.className = "market-tab" + (m.symbol === currentMarket.symbol ? " active":"");
+    tab.textContent = m.symbol.replace("/USD","");
+
+    tab.addEventListener("click",()=>{
+      currentMarket = m;
+
+      // 見た目更新
+      document.querySelectorAll(".market-tab").forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+
+      updateMarketInfo();
+      renderMarketList();
+      initTradingView(m.tv);
+      generateOrderbook();
+      generateTrades();
+    });
+
+    wrap.appendChild(tab);
+  });
+}
+
+/* ===============================
+      Market List (PC)
+================================ */
+function renderMarketList(){
+  const list = document.getElementById("market-list");
+  list.innerHTML = "";
+
+  markets.forEach(m => {
+    const item = document.createElement("div");
+    item.className = "market-item" + (m.symbol === currentMarket.symbol ? " active" : "");
+    item.innerHTML = `
+      <div>
+        <div>${m.symbol}</div>
+        <div>${m.name}</div>
+      </div>
+      <div>${m.price}</div>
+    `;
+    item.addEventListener("click",()=>{
+      currentMarket = m;
+      updateMarketInfo();
+      renderMarketList();
+      renderMarketTabs();
+      initTradingView(m.tv);
+      generateOrderbook();
+      generateTrades();
+    });
+    list.appendChild(item);
+  });
+}
+
+/* ===============================
+      Chart & Info Update
+================================ */
+function updateMarketInfo(){
+  document.getElementById("chartSymbolMain").textContent =
+    currentMarket.symbol.replace("/", " / ");
+  document.getElementById("chartSymbolSub").textContent =
+    `${currentMarket.name} · 現物`;
+}
+
+function initTradingView(symbol){
+  document.getElementById("tv_chart").innerHTML = "";
+  new TradingView.widget({
+    container_id:"tv_chart",
+    symbol: symbol,
+    interval:"15",
+    timezone:"Asia/Tokyo",
+    theme:"light",
+    style:"1",
+    locale:"ja",
+    autosize:true
+  });
+}
+
+/* ===============================
+      Orderbook / Trades
+================================ */
+function generateOrderbook(){
+  const el = document.getElementById("orderbook");
+  el.innerHTML = "";
+  for(let i=0;i<12;i++){
+    const price = (currentMarket.price + (Math.random()-0.5)*40).toFixed(2);
+    const amount = (Math.random()*2).toFixed(3);
+    const row = document.createElement("div");
+    row.className = "orderbook-row " + (i<6 ? "sell":"buy");
+    row.innerHTML = `<span>${price}</span><span>${amount}</span>`;
+    el.appendChild(row);
+  }
+}
+
+function generateTrades(){
+  const el = document.getElementById("recent-trades");
+  el.innerHTML = "";
+  for(let i=0;i<14;i++){
+    const price = (currentMarket.price + (Math.random()-0.5)*40).toFixed(2);
+    const amount = (Math.random()*2).toFixed(3);
+    const buy = Math.random() > 0.5;
+    const row = document.createElement("div");
+    row.className = "trade-row";
+    row.style.color = buy ? "var(--success)" : "var(--danger)";
+    row.innerHTML = `<span>${price}</span><span>${amount}</span>`;
+    el.appendChild(row);
+  }
+}
+
+/* ===============================
+      UI : 折りたたみ（スマホ）
+================================ */
+function toggleCollapse(id){
+  const box = document.getElementById(id);
+  box.style.display = box.style.display === "block" ? "none" : "block";
+}
+
+/* ===============================
+      INIT
+================================ */
+document.addEventListener("DOMContentLoaded",()=>{
+  renderMarketList();
+  renderMarketTabs();
+  updateMarketInfo();
+  initTradingView(currentMarket.tv);
+  generateOrderbook();
+  generateTrades();
+});
+
+/* ===============================
+      注文タイプ切替
+================================ */
+document.getElementById("order-type").addEventListener("change",e=>{
+  document.getElementById("order-price").disabled = e.target.value === "market";
+});
+
+/* ===============================
+      ハンバーガー
+================================ */
+const toggle = document.getElementById("menu-toggle");
+const menu   = document.getElementById("mobile-menu");
+const overlay= document.getElementById("menu-overlay");
+const closeB = document.getElementById("menu-close");
+
+toggle.onclick = ()=>{ menu.classList.add("open"); overlay.classList.add("show"); };
+closeB.onclick = ()=>{ menu.classList.remove("open"); overlay.classList.remove("show"); };
+overlay.onclick= ()=>{ menu.classList.remove("open"); overlay.classList.remove("show"); };
+
+
+/* =========================
+   システム取引専用アラート
+========================= */
+function showSystemTradeAlert() {
+  alert(
+    "この画面はシステム取引専用口座です。\n" +
+    "手動での売買はできません。"
+  );
+}
+
+/* =========================
+   注文ボタンの挙動上書き
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  const buyBtn  = document.querySelector(".order-btn-buy");
+  const sellBtn = document.querySelector(".order-btn-sell");
+
+  if (buyBtn) {
+    buyBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      showSystemTradeAlert();
+    });
+  }
+
+  if (sellBtn) {
+    sellBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      showSystemTradeAlert();
+    });
+  }
+});
+
+
+
+/* =========================
+   ヘッダー：ログイン状態反映
+========================= */
+async function updateHeaderUserState() {
+  const headerActions = document.querySelector(".header-actions");
+  if (!headerActions) return;
+
+  try {
+    const res = await fetch(CONFIG.API_BASE_URL + "/auth/me", {
+      credentials: "include",
+    });
+    if (!res.ok) return; // 未ログイン
+
+    const data = await res.json();
+    const user = data.user || data;
+
+    // ヘッダー右側を差し替え
+    headerActions.innerHTML = "";
+
+    const userBtn = document.createElement("a");
+    userBtn.href = "users.html";
+    userBtn.className = "btn btn-outline btn-sm";
+    userBtn.textContent = user.name + " さん";
+    headerActions.appendChild(userBtn);
+
+    const logoutBtn = document.createElement("a");
+    logoutBtn.href = "#";
+    logoutBtn.className = "btn btn-primary btn-sm";
+    logoutBtn.textContent = "ログアウト";
+    logoutBtn.onclick = async () => {
+      await fetch(CONFIG.API_BASE_URL + "/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      location.href = "../login.html";
+    };
+    headerActions.appendChild(logoutBtn);
+
+  } catch (e) {
+    console.warn("ログイン状態取得失敗", e);
+  }
+}
+
+/* 初期化 */
+document.addEventListener("DOMContentLoaded", updateHeaderUserState);

@@ -1,0 +1,46 @@
+  <div class="admin-main-inner">
+
+    <div class="page-title">システム設定（自動売買）</div>
+
+    <!-- ▼ グループ選択 -->
+    <section class="card" style="margin-bottom:20px;">
+      <div class="section-title">対象グループ</div>
+
+      <select id="group-select"></select>
+      <p class="muted">変更するグループを選択してください。</p>
+    </section>
+
+    <!-- ▼ 設定テーブル -->
+    <section class="table-card">
+      <div class="table-header-row">
+        <div class="table-title">通貨ごとの取引設定</div>
+        <div class="table-sub">編集して「保存」を押してください</div>
+      </div>
+
+      <table class="table sys-table">
+        <thead>
+          <tr>
+            <th>通貨</th>
+            <th>方向</th>
+            <th>ロット</th>
+            <th>保有分数</th>
+            <th>PIPS</th>
+            <th>ステータス</th>
+          </tr>
+        </thead>
+        <tbody id="sys-body">
+          <tr><td colspan="6" style="text-align:center;">グループを選択してください</td></tr>
+        </tbody>
+      </table>
+
+      <button class="btn-primary btn-sm" id="btn-save" style="margin-top:12px;">保存</button>
+      <span id="sys-msg" class="muted" style="margin-left:12px;"></span>
+
+      <!-- ▼ トレードループ実行ボタン -->
+      <button id="runLoopBtn" class="btn btn-secondary btn-sm" style="margin-left:12px;">
+        🔄 トレードループ実行（手動）
+      </button>
+
+    </section>
+
+  </div>

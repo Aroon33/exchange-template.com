@@ -1,0 +1,67 @@
+  <div class="admin-main-inner">
+
+    <h1 class="page-title">ダッシュボード</h1>
+
+    <!-- フィルター -->
+    <div class="filter-box">
+      <div>
+        <label>期間（From）</label><br>
+        <input type="date" id="from-date" />
+      </div>
+      <div>
+        <label>期間（To）</label><br>
+        <input type="date" id="to-date" />
+      </div>
+      <button class="filter-btn" onclick="loadDashboard()">更新</button>
+    </div>
+
+    <!-- ダッシュボードカード -->
+    <div class="dash-grid">
+
+      <div class="dash-card">
+        <div class="dash-title">総ユーザー数</div>
+        <div class="dash-value" id="d-total-users">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">総口座残高</div>
+        <div class="dash-value" id="d-total-balance">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">口座開設（期間）</div>
+        <div class="dash-value" id="d-new-users">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">入金合計（期間）</div>
+        <div class="dash-value" id="d-deposit-sum">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">出金合計（期間）</div>
+        <div class="dash-value" id="d-withdraw-sum">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">入金申請 Pending</div>
+        <div class="dash-value" id="d-deposit-pending">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">出金申請 Pending</div>
+        <div class="dash-value" id="d-withdraw-pending">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">KYC 未処理</div>
+        <div class="dash-value" id="d-kyc-pending">-</div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-title">問い合わせ 未処理</div>
+        <div class="dash-value" id="d-ticket-pending">-</div>
+      </div>
+
+    </div>
+  </div>

@@ -1,0 +1,198 @@
+
+<!-- ===== PC Filter ===== -->
+<div class="filter-bar pc-only">
+  <div class="filter-tabs">
+    <button class="active">7日</button>
+    <button>30日</button>
+    <button>90日</button>
+    <button>180日</button>
+  </div>
+  <input class="filter-search"
+         placeholder="UserID / ユーザー名 / グループ名 / グループID">
+</div>
+
+<div class="admin-page-wrapper">
+  <div class="admin-container">
+
+  <!-- ===== Ticket List (PC) ===== -->
+  <div class="ticket-list pc-only">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>更新</th>
+          <th>件名</th>
+          <th>表示</th>
+        </tr>
+      </thead>
+      <tbody id="ticket-table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- ===== Ticket List (SP) ===== -->
+  <div class="ticket-list-mobile sp-only" id="ticket-list-mobile"></div>
+
+  <!-- ===== Chat ===== -->
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+      <span id="chat-title">チャット</span>
+      <button class="sp-only" onclick="closeChatMobile()">戻る</button>
+    </div>
+    <div class="chat-window" id="chat-window"></div>
+    <div class="chat-input-area" id="chat-input-area">
+      <textarea id="chat-input" placeholder="メッセージ入力"></textarea>
+      <button id="btn-send">送信</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = "https://api.exchange-template.com";
+let allTickets = [];
+let currentTicketId = null;
+
+/* =========================
+   Utility
+========================= */
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+function fmtDate(s) {
+  return new Date(s).toLocaleString("ja-JP",{hour12:false});
+}
+
+/* =========================
+   API
+========================= */
+async function apiGet(path) {
+  const res = await fetch(CONFIG.API_BASE_URL + path,{credentials:"include"});
+  if (!res.ok) throw new Error();
+  return res.json();
+}
+async function apiPost(path,body) {
+  const res = await fetch(CONFIG.API_BASE_URL + path,{
+    method:"POST",
+    credentials:"include",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error();
+}
+
+/* =========================
+   Tickets
+========================= */
+async function loadTickets() {
+  allTickets = await apiGet("/tickets/admin/all");
+  renderTicketsPC(allTickets);
+  renderTicketsSP(allTickets);
+}
+
+function renderTicketsPC(list) {
+  const tbody = document.getElementById("ticket-table-body");
+  tbody.innerHTML = "";
+  list.forEach(t=>{
+    tbody.innerHTML += `
+      <tr>
+        <td>${t.id}</td>
+        <td>${fmtDate(t.updatedAt)}</td>
+        <td>${t.title}</td>
+        <td><button onclick="openChat(${t.id})">表示</button></td>
+      </tr>
+    `;
+  });
+}
+
+function renderTicketsSP(list) {
+  const el = document.getElementById("ticket-list-mobile");
+  el.innerHTML = "";
+
+  list.forEach(t => {
+    el.innerHTML += `
+      <div class="ticket-card"
+           onclick="openChat(${t.id})">
+
+        <div class="ticket-card-header">
+          ${t.userName ?? "User"} / ${t.status}
+        </div>
+
+        <div class="ticket-card-meta">
+          ${fmtDate(t.updatedAt)}
+        </div>
+
+        <div class="ticket-card-title">
+          ${t.title}
+        </div>
+
+      </div>
+    `;
+  });
+}
+
+
+/* =========================
+   Chat
+========================= */
+async function openChat(ticketId) {
+  currentTicketId = ticketId;
+  const panel = document.getElementById("chat-panel");
+  panel.classList.add("active");
+
+  const msgs = await apiGet(`/tickets/${ticketId}/messages`);
+  const ticket = allTickets.find(t=>t.id===ticketId);
+
+  document.getElementById("chat-title").textContent =
+    `#${ticketId} ${ticket.title}`;
+
+  const win = document.getElementById("chat-window");
+  win.innerHTML = "";
+
+  msgs.forEach(m=>{
+    win.innerHTML += `
+      <div class="chat-message ${m.sender==="ADMIN"?"admin":"user"}">
+        <div class="chat-message-meta">
+          ${m.sender} / ${fmtDate(m.createdAt)}
+        </div>
+        <div class="chat-message-body">${m.message}</div>
+      </div>
+    `;
+  });
+
+  win.scrollTop = win.scrollHeight;
+
+  document.getElementById("chat-input-area").style.display =
+    ticket.status==="CLOSED" ? "none" : "flex";
+}
+
+function closeChatMobile() {
+  document.getElementById("chat-panel").classList.remove("active");
+}
+
+/* =========================
+   Send
+========================= */
+document.getElementById("btn-send").addEventListener("click", async()=>{
+  const input = document.getElementById("chat-input");
+  const msg = input.value.trim();
+  if (!msg || !currentTicketId) return;
+
+  await apiPost(`/tickets/admin/${currentTicketId}/reply`,{message:msg});
+  input.value = "";
+  openChat(currentTicketId);
+});
+
+/* Init */
+loadTickets();
+</script>
+
+
+<script src="/admin/assets/js/admin-utils.js"></script>
+<script src="/admin/assets/js/admin-auth.js"></script>
+<script src="/admin/assets/js/header-admin.js"></script>
+

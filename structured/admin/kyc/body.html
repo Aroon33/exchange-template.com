@@ -1,0 +1,40 @@
+  <div class="admin-main-inner">
+
+      <div class="page-title">KYC申請一覧</div>
+
+      <!-- フィルター -->
+      <div style="margin:12px 0;">
+        <select id="status-filter" class="btn-sm">
+          <option value="ALL">すべて</option>
+          <option value="0">未提出 / NONE</option>
+          <option value="1">提出済み</option>
+          <option value="2">審査中</option>
+          <option value="3">承認（一次）</option>
+          <option value="4">否認</option>
+          <option value="5">完了</option>
+        </select>
+        <button class="btn-sm" id="reload-btn">再読み込み</button>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card">
+        <table class="table" style="width:100%; font-size:13px;">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>申請日時</th>
+              <th>名前</th>
+              <th>表面画像</th>
+              <th>裏面画像</th>
+              <th>更新日時</th>
+              <th>ステータス</th>
+              <th>変更</th>
+            </tr>
+          </thead>
+          <tbody id="kyc-table-body">
+            <tr><td colspan="8" style="text-align:center;color:#777;">読み込み中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>

@@ -1,0 +1,28 @@
+import { CONFIG } from "../config.js";
+
+
+async function logoutUser() {
+  try {
+    // ★ サーバー側セッションを破棄（最重要）
+    await fetch(CONFIG.API_BASE_URL + "/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    document.getElementById("logout-status").textContent =
+      "ログアウトしました。ログイン画面へ移動します。";
+
+  } catch (e) {
+    console.warn("logout api error", e);
+    document.getElementById("logout-status").textContent =
+      "ログアウトしました。ログイン画面へ移動します。";
+  } finally {
+    // ★ 必ずログイン画面へ
+    setTimeout(() => {
+      location.href = "login.html";
+    }, 1200);
+  }
+}
+
+// ページ表示と同時に実行
+logoutUser();

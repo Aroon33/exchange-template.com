@@ -1,0 +1,97 @@
+document.addEventListener("DOMContentLoaded", () => {
+
+  /* =========================
+     Header
+  ========================= */
+  const header = document.createElement("header");
+  header.className = "admin-header";
+  header.innerHTML = `
+    <div class="admin-header-left">
+      <div class="admin-logo-badge">AX</div>
+      <div class="admin-logo-text">Admin</div>
+    </div>
+    <div class="admin-header-right">
+      <button class="sidebar-toggle" aria-label="menu">☰</button>
+    </div>
+  `;
+  document.body.prepend(header);
+
+  /* =========================
+     Sidebar（※ 入れ子なし）
+  ========================= */
+  const sidebar = document.createElement("aside");
+  sidebar.className = "sidebar";
+  sidebar.innerHTML = `
+    <div class="sidebar-title">メニュー</div>
+    <ul class="nav-list">
+    <li class="nav-item"><a href="index.html" class="nav-link">🏠 ダッシュボード</a></li>
+    <li class="nav-item"><a href="tickets.html" class="nav-link">💬 問い合わせ管理</a></li>
+    <li class="nav-item"><a href="users.html" class="nav-link">👥 ユーザー一覧</a></li>
+    <li class="nav-item"><a href="trades.html" class="nav-link">📊 取引状況</a></li>
+    <li class="nav-item"><a href="kyc.html" class="nav-link">📋 KYC状況</a></li>
+    <li class="nav-item"><a href="deposit.html" class="nav-link">➕ 入金申請</a></li>
+    <li class="nav-item"><a href="withdraw.html" class="nav-link">➖ 出金申請</a></li>
+    <li class="nav-item"><a href="group.html" class="nav-link">🧩 グループ管理</a></li>
+    <li class="nav-item"><a href="settings.html" class="nav-link">⚙️ システム設定</a></li>
+    <li class="nav-item"><a href="system-positions.html" class="nav-link">📈 システムポジション</a></li>
+    <li class="nav-item"><a href="system-history.html" class="nav-link">📜 システム履歴</a></li>
+    <li class="nav-item"><a href="deposit-bank-accounts.html" class="nav-link">📜 銀行管理</a></li>
+    <li class="nav-item"><a href="deposit-bank-account-edit.html" class="nav-link">📜 口座登録</a></li>
+    <li class="nav-item"><a href="deposit-crypto-address-edit.html" class="nav-link">📜 アドレス登録</a></li>
+    </ul>
+  `;
+  document.body.prepend(sidebar);
+
+  /* =========================
+     Overlay
+  ========================= */
+  const overlay = document.createElement("div");
+  overlay.className = "sidebar-overlay";
+  document.body.appendChild(overlay);
+
+  /* =========================
+     初期状態：必ず閉じる
+  ========================= */
+  sidebar.classList.remove("open");
+  overlay.classList.remove("show");
+  document.body.classList.remove("sidebar-open");
+
+  /* =========================
+     開閉制御
+  ========================= */
+  const toggleBtn = header.querySelector(".sidebar-toggle");
+
+  toggleBtn.addEventListener("click", () => {
+    sidebar.classList.toggle("open");
+    overlay.classList.toggle("show");
+    document.body.classList.toggle("sidebar-open");
+  });
+
+  function closeSidebar() {
+    sidebar.classList.remove("open");
+    overlay.classList.remove("show");
+    document.body.classList.remove("sidebar-open");
+  }
+
+  overlay.addEventListener("click", closeSidebar);
+
+  sidebar.addEventListener("click", e => {
+    if (e.target.closest(".nav-link") && window.innerWidth <= 768) {
+      closeSidebar();
+    }
+  });
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeSidebar();
+  });
+
+  /* =========================
+     Active link
+  ========================= */
+  const current = location.pathname.split("/").pop();
+  sidebar.querySelectorAll(".nav-link").forEach(a => {
+    if (a.getAttribute("href") === current) {
+      a.classList.add("active");
+    }
+  });
+});

@@ -1,0 +1,50 @@
+
+<section class="section-card">
+  <h2 class="section-title">お問い合わせを送信</h2>
+
+  <div class="form-row">
+    <label>件名</label>
+    <input type="text" id="new-title">
+  </div>
+
+  <div class="form-row">
+    <label>内容</label>
+    <textarea id="new-body"></textarea>
+  </div>
+
+  <button id="btn-create-thread">問い合わせを送信</button>
+
+  <hr>
+
+  <h3 class="section-title" style="font-size:15px;">
+    あなたの問い合わせ一覧 <span id="thread-count"></span>
+  </h3>
+
+  <div id="thread-list" class="thread-list"></div>
+</section>
+
+<section class="section-card">
+  <div class="chat-header">
+    <div>
+      <div id="chat-title" class="chat-thread-title">
+        問い合わせを選択してください
+      </div>
+      <div id="chat-sub" style="font-size:12px;color:#777;">
+        左からスレッドを選択
+      </div>
+    </div>
+  </div>
+
+  <div id="chat-window" class="chat-window">
+    <div style="text-align:center;color:#888;padding:16px;">
+      スレッドを選択するとメッセージが表示されます。
+    </div>
+  </div>
+
+  <!-- 初期は非表示 -->
+  <div id="chat-input-area" style="display:none;">
+    <textarea id="chat-input"></textarea>
+    <button id="btn-send-msg">送信</button>
+  </div>
+</section>
+

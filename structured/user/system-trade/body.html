@@ -1,0 +1,85 @@
+<section class="section-card">
+
+  <!-- Title -->
+  <h1 class="section-title">システム取引（自動売買）</h1>
+  <p class="section-desc">
+    グループの自動売買システムの状況とあなたの保有ポジションを確認できます。<br>
+    <strong>停止したい場合は「システム停止依頼」を押してください。</strong>
+  </p>
+
+  <!-- Message -->
+  <p id="sys-message" class="muted" style="margin-bottom:14px;"></p>
+
+  <!-- Info Cards -->
+  <div class="info-grid">
+    <div class="info-box">
+      <div class="info-label">グループID</div>
+      <div class="info-value" id="sys-group-id">-</div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">合計含み損益</div>
+      <div class="info-value" id="sys-total-pnl">0.0000</div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">システムステータス</div>
+      <div class="info-value">
+        <span id="sys-status-pill" class="status-pill">-</span>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">合計口座残高</div>
+      <div class="info-value" id="sys-balance-total">0</div>
+    </div>
+  </div>
+
+  <!-- Stop -->
+  <button id="sys-stop-btn" class="btn btn-outline">
+    ⛔ システム停止を依頼する
+  </button>
+
+  <!-- Positions -->
+  <h2 class="section-title" style="margin-top:24px;">現在の保有ポジション</h2>
+
+  <!-- ===== Period Tabs ===== -->
+  <div class="history-filter">
+    <button class="filter-btn active" data-days="1">1日</button>
+    <button class="filter-btn" data-days="3">3日</button>
+    <button class="filter-btn" data-days="7">7日</button>
+    <button class="filter-btn" data-days="30">30日</button>
+  </div>
+
+  <!-- ===== PC TABLE ===== -->
+  <div class="table-wrapper table-pc">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>日時</th>
+          <th>銘柄</th>
+          <th>数量</th>
+          <th>建値</th>
+          <th>現在値</th>
+          <th>損益</th>
+        </tr>
+      </thead>
+      <tbody id="sys-positions-body"></tbody>
+    </table>
+  </div>
+
+  <!-- ===== MOBILE TABLE ===== -->
+  <div class="table-wrapper table-sp">
+    <table class="table">
+      <thead class="thead-sp">
+        <tr>
+          <th>取引</th>
+        </tr>
+      </thead>
+      <tbody id="trade-history-body">
+        <!-- JS描画 -->
+      </tbody>
+    </table>
+  </div>
+
+</section>

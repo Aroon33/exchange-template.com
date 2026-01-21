@@ -1,0 +1,39 @@
+  <div class="admin-main-inner">
+
+    <div class="page-title">出金申請一覧</div>
+
+    <!-- ▼ フィルター -->
+    <div style="margin:12px 0;">
+      <select id="status-filter" class="btn-sm">
+        <option value="ALL">すべて</option>
+        <option value="PENDING">申請中</option>
+        <option value="COMPLETED">完了</option>
+        <option value="CANCELED">キャンセル</option>
+      </select>
+      <button class="btn-sm" id="reload-btn">再読み込み</button>
+    </div>
+
+    <!-- ▼ TABLE -->
+    <div class="card">
+      <table class="table" style="width:100%; font-size:13px;">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>申請日時</th>
+            <th>名前</th>
+            <th>種別</th>
+            <th>通貨</th>
+            <th>申請金額</th>
+            <th>入金額</th>
+            <th>更新日時</th>
+            <th>ステータス</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="withdraw-table-body">
+          <tr><td colspan="9" style="text-align:center;color:#777;">読み込み中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>

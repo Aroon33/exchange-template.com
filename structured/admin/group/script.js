@@ -1,0 +1,246 @@
+import { CONFIG } from "../config.js";
+
+
+/* ===== DOM取得（最初・1回だけ）===== */
+const groupBody = document.getElementById("group-body");
+const groupCount = document.getElementById("group-count");
+const userBody = document.getElementById("user-body");
+const filterGroup = document.getElementById("filter-group");
+const moveGroupSelect = document.getElementById("move-group-select");
+const bulkBtn = document.getElementById("btn-bulk-move");
+const checkAll = document.getElementById("check-all");
+
+const selectedUsers = new Set();
+
+let groups = [];
+let users = [];
+
+/* ===== API ===== */
+async function apiGet(path) {
+  const res = await fetch(CONFIG.API_BASE_URL + path, { credentials:"include" });
+  if (!res.ok) throw new Error();
+  return res.json();
+}
+async function apiPost(path, body) {
+  const res = await fetch(CONFIG.API_BASE_URL + path, {
+    method:"POST",
+    credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error();
+}
+
+/* =============================
+   グループ一覧
+============================= */
+async function loadGroups() {
+  groups = await apiGet("/admin/groups");
+
+  groupBody.innerHTML = "";
+  groupCount.textContent = groups.length + "件";
+
+  filterGroup.innerHTML = `<option value="">すべて</option>`;
+  moveGroupSelect.innerHTML = `<option value="">移行先グループ</option>`;
+
+  groups.forEach(g => {
+
+    /* グループ一覧テーブル */
+    groupBody.innerHTML += `
+<tr>
+  <td>${g.id}</td>
+  <td>${g.name}</td>
+  <td>${g.userCount}</td>
+  <td>${g.positionsCount ?? 0}</td>
+
+  <td class="${(g.totalProfit ?? 0) >= 0 ? "profit-plus" : "profit-minus"}">
+    ${(g.totalProfit ?? 0).toLocaleString()}
+  </td>
+
+  <td>${(g.totalBalance ?? 0).toLocaleString()} JPY</td>
+
+  <td>
+    <button class="btn-xs" onclick="toggleInvite(${g.id})">表示</button>
+    <div id="invite-${g.id}" style="display:none;">
+      <input readonly value="${g.inviteLink}">
+    </div>
+  </td>
+
+  <td>
+    <button class="btn-xs btn-xs-primary"
+            onclick="selectGroup(${g.id})">
+      選択
+    </button>
+  </td>
+</tr>
+`;
+
+
+    /* 表示用フィルタ */
+    filterGroup.innerHTML +=
+      `<option value="${g.id}">${g.name}</option>`;
+
+    /* 移行先グループ */
+    moveGroupSelect.innerHTML +=
+      `<option value="${g.id}">${g.name}</option>`;
+  });
+}
+
+/* 招待リンク表示切替 */
+function toggleInvite(id) {
+  const el = document.getElementById("invite-" + id);
+  el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+/* =============================
+   ユーザー一覧
+============================= */
+async function loadUsers(groupId) {
+  users = await apiGet("/admin/users");
+
+  const list = groupId
+    ? users.filter(u => Number(u.groupId) === Number(groupId))
+    : users;
+
+  renderUsers(list);
+}
+
+function renderUsers(list) {
+  userBody.innerHTML = "";
+  selectedUsers.clear();
+  bulkBtn.disabled = true;
+  checkAll.checked = false;
+
+  if (!list.length) {
+    userBody.innerHTML =
+      `<tr><td colspan="5" style="text-align:center;">ユーザーなし</td></tr>`;
+    return;
+  }
+
+  list.forEach(u => {
+    userBody.innerHTML += `
+<tr>
+  <td>
+    <input type="checkbox"
+           onchange="toggleUser(${u.id}, this.checked)">
+  </td>
+
+  <td>${u.id}</td>
+  <td>${u.name}</td>
+
+  <td>KYC${u.kycLevel ?? 0}</td>
+
+  <td>${u.positionsCount ?? 0}</td>
+
+  <td class="${(u.totalProfit ?? 0) >= 0 ? "profit-plus" : "profit-minus"}">
+    ${(u.totalProfit ?? 0).toLocaleString()}
+  </td>
+
+  <td>${(u.balanceTotal ?? 0).toLocaleString()} JPY</td>
+
+  <td>${u.email ?? "-"}</td>
+
+  <td>
+    <button class="btn-xs btn-xs-primary"
+            onclick="location.href='/admin/users/${u.id}.html'">
+      詳細
+    </button>
+  </td>
+</tr>
+`;
+  });
+}
+
+
+function toggleUser(id, checked) {
+  if (checked) selectedUsers.add(id);
+  else selectedUsers.delete(id);
+  bulkBtn.disabled = selectedUsers.size === 0;
+}
+
+checkAll.addEventListener("change", e => {
+  document.querySelectorAll("#user-body input[type=checkbox]")
+    .forEach(cb => {
+      cb.checked = e.target.checked;
+      toggleUser(
+        Number(cb.closest("tr").children[1].textContent),
+        cb.checked
+      );
+    });
+});
+
+/* =============================
+   一括移動
+============================= */
+bulkBtn.onclick = async () => {
+  const target = moveGroupSelect.value;
+
+  if (!target || !selectedUsers.size) {
+    alert("移行先グループとユーザーを選択してください");
+    return;
+  }
+
+  if (!confirm("選択したユーザーをグループへ移動しますか？")) {
+    return;
+  }
+
+  try {
+    // ▼ 既存APIをユーザーごとに呼ぶ
+    for (const userId of selectedUsers) {
+      await apiPost(`/admin/users/${userId}/group`, {
+        groupId: Number(target)
+      });
+    }
+
+    selectedUsers.clear();
+    bulkBtn.disabled = true;
+
+    loadUsers(filterGroup.value);
+    loadGroups();
+
+    alert("グループ移動が完了しました");
+
+  } catch (e) {
+    console.error(e);
+    alert("グループ移動中にエラーが発生しました");
+  }
+};
+
+
+/* =============================
+   統計
+============================= */
+async function loadStats(groupId) {
+  if (!groupId) return;
+
+  const list = users.filter(u => Number(u.groupId) === Number(groupId));
+  document.getElementById("stat-user-count").textContent = list.length;
+
+  const balance = list.reduce((s,u)=>s+(u.balanceTotal||0),0);
+  document.getElementById("stat-total-balance").textContent =
+    balance.toLocaleString() + " JPY";
+
+  const pos = await apiGet(`/admin/system/positions/${groupId}`);
+  document.getElementById("stat-positions-count").textContent =
+    (pos.parent?.length ?? 0) + (pos.children?.length ?? 0);
+}
+
+/* =============================
+   グループ選択
+============================= */
+function selectGroup(id) {
+  filterGroup.value = id;
+  loadUsers(id);
+  loadStats(id);
+}
+
+filterGroup.addEventListener("change", e => {
+  loadUsers(e.target.value);
+  loadStats(e.target.value);
+});
+
+/* =============================
+   初期化
+============================= */
+loadGroups();
+loadUsers();

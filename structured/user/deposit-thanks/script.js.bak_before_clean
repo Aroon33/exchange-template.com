@@ -1,0 +1,30 @@
+import { CONFIG } from "../config.js";
+
+// [DEPRECATED] was: const API_BASE_URL = "https://api.exchange-template.com";
+
+/* -----------------------------
+   入金先情報取得
+----------------------------- */
+fetch(CONFIG.API_BASE_URL + "/deposit/config", { credentials: "include" })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("bank-name").textContent   = data.bank.name;
+    document.getElementById("bank-branch").textContent= data.bank.branch;
+    document.getElementById("bank-type").textContent  = data.bank.type;
+    document.getElementById("bank-number").textContent= data.bank.number;
+    document.getElementById("bank-holder").textContent= data.bank.holder;
+
+    document.getElementById("deposit-note").textContent= data.note;
+  })
+  .catch(() => {
+    alert("入金先情報の取得に失敗しました");
+  });
+
+/* -----------------------------
+   コピー
+----------------------------- */
+function copyText(id){
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text);
+  alert("コピーしました");
+}

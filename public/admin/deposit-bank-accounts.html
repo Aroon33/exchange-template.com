@@ -5,21 +5,11 @@
   <title>CryptoX Admin - 銀行管理</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/admin.css">
+ <!-- CSS -->
+  <link rel="stylesheet" href="/admin/assets/css/style.css" />
+  <link rel="stylesheet" href="/admin/assets/css/admin.css" />
 
-  <style>
-    .group-table th, .group-table td {
-      padding: 8px 6px;
-      font-size: 13px;
-    }
-    .copy-btn {
-      cursor: pointer;
-      color: #1652f0;
-      font-size: 11px;
-      margin-left: 4px;
-    }
-  </style>
+ 
 </head>
 
 <body>
@@ -32,9 +22,10 @@
     <div class="page-title">銀行管理</div>
 
     <div style="margin:10px 0;">
-      <button class="btn-xs btn-primary" onclick="openCreate()">
-        ＋ 銀行口座登録
-      </button>
+      <button class="btn-xs btn-primary" onclick="openCreateBank()">
+  ＋ 銀行口座登録
+</button>
+
 
       <select id="status-filter" class="btn-sm">
         <option value="ALL">すべて</option>
@@ -59,8 +50,8 @@
             <th>支店名</th>
             <th>口座番号</th>
             <th>口座名義</th>
-            <th>ステータス</th>
-            <th>操作</th>
+            <th>ステータス</th>未使用　使用中　解約済　
+            <th>操作</th>　ステータス移行を行う
           </tr>
         </thead>
         <tbody id="bank-account-table">
@@ -74,21 +65,26 @@
     </div>
 
     <!-- ===== クリプト入金アドレス ===== -->
-    <div class="page-title" style="margin-top:32px;">
-      クリプト入金アドレス管理
-    </div>
+    <div class="page-title"
+     style="margin-top:32px; display:flex; align-items:center; justify-content:space-between;">
+  <span>クリプト入金アドレス管理</span>
+  <button class="btn-xs btn-primary" onclick="openCreateCrypto()">
+    ＋ クリプトアドレス登録
+  </button>
+</div>
+
 
     <div class="card" style="margin-top:16px;">
       <table class="table" style="width:100%; font-size:13px;">
         <thead>
           <tr>
             <th>登録日</th>
+            <th>ID</th>
             <th>通貨</th>
             <th>アドレス</th>
             <th>MEMO</th>
-            <th>ユーザーID</th>
-            <th>使用状態</th>
-            <th>操作</th>
+            <th>ステータス</th>　未使用　共有中　使用済　解約済
+            <th>操作</th>　ステータス移行を行う　
           </tr>
         </thead>
         <tbody id="crypto-address-table">
@@ -112,6 +108,16 @@ function formatDate(iso) {
   if (!iso) return "-";
   return new Date(iso).toLocaleString("ja-JP", { hour12:false });
 }
+
+function openCreateBank() {
+  location.href = "deposit-bank-account-edit.html";
+}
+
+
+function openCreateCrypto() {
+  location.href = "deposit-crypto-address-edit.html";
+}
+
 
 async function apiGet(path) {
   const res = await fetch(API_BASE + path, { credentials:"include" });
@@ -199,6 +205,13 @@ function renderActions(r) {
   return "";
 }
 
+
+
+function editBank(id) {
+  location.href = "deposit-bank-account-edit.html?id=" + id;
+}
+
+
 /* ---------- crypto ---------- */
 async function loadCryptoAddresses() {
   const list = await apiGet("/admin/deposit/crypto-addresses");
@@ -224,13 +237,14 @@ function renderCryptoTable(list) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${formatDate(r.createdAt)}</td>
+      <td>${r.userId ?? "-"}</td>
       <td>${r.currency}</td>
       <td>
         ${r.address}
         <span class="copy-btn" onclick="copyText('${r.address}')">コピー</span>
       </td>
       <td>${r.memoTag ?? "-"}</td>
-      <td>${r.userId ?? "-"}</td>
+      
       <td style="color:${r.used ? 'red' : 'green'};">
         ${r.used ? "使用済" : "未使用"}
       </td>
@@ -292,8 +306,7 @@ loadBankAccounts();
 loadCryptoAddresses();
 </script>
 
-<script src="/admin/assets/js/admin-auth.js"></script>
-<script src="/admin/assets/js/header-admin.js"></script>
+<script type="module" src="/admin/assets/js/admin-header.js"></script>
 
 </body>
 </html>

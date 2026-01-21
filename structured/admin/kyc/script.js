@@ -1,0 +1,153 @@
+import { CONFIG } from "../config.js";
+
+  const API_BASE = "https://api.exchange-template.com";
+  let allKyc = [];
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2000);
+  }
+
+  function formatDate(s) {
+    if (!s) return "-";
+    return new Date(s).toLocaleString("ja-JP", { hour12:false });
+  }
+
+  async function apiGet(path) {
+    const res = await fetch(CONFIG.API_BASE_URL + path, { credentials:"include" });
+    const txt = await res.text();
+    if (!res.ok) throw new Error(txt);
+    return JSON.parse(txt);
+  }
+
+  async function apiPost(path, body) {
+    const res = await fetch(CONFIG.API_BASE_URL + path, {
+      method:"POST",
+      credentials:"include",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(body)
+    });
+    const txt = await res.text();
+    if (!res.ok) throw new Error(txt);
+    return JSON.parse(txt);
+  }
+
+  async function changeStatus(id) {
+    const level = Number(prompt("新しいステータス（0〜5）を入力："));
+    if (isNaN(level) || level < 0 || level > 5) {
+      showToast("無効なステータスです");
+      return;
+    }
+
+    try {
+      await apiPost("/kyc/admin/set-status", { id, level });
+      showToast("更新しました");
+      loadKyc();
+    } catch(e) {
+      showToast("更新失敗");
+    }
+  }
+
+  function renderTable(list) {
+    const tbody = document.getElementById("kyc-table-body");
+    tbody.innerHTML = "";
+
+    if (!list.length) {
+      tbody.innerHTML =
+        `<tr><td colspan="8" style="text-align:center;color:#777;">なし</td></tr>`;
+      return;
+    }
+
+    list.forEach(k => {
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${k.id}</td>
+        <td>${formatDate(k.createdAt)}</td>
+        <td>${k.name ?? "-"}</td>
+        <td>
+          ${k.frontUrl ? `<a href="${k.frontUrl}" target="_blank">表示</a>` : "-"}
+        </td>
+        <td>
+          ${k.backUrl ? `<a href="${k.backUrl}" target="_blank">表示</a>` : "-"}
+        </td>
+        <td>${formatDate(k.updatedAt)}</td>
+        <td>${k.statusText}</td>
+        <td>
+          <button class="btn-xs btn-xs-primary" onclick="changeStatus(${k.id})">
+            更新
+          </button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function applyFilter() {
+    const f = document.getElementById("status-filter").value;
+    if (f === "ALL") {
+      renderTable(allKyc);
+    } else {
+      renderTable(allKyc.filter(k => String(k.level) === f));
+    }
+  }
+
+  async function loadKyc() {
+    try {
+      allKyc = await apiGet("/kyc/admin/list");
+      applyFilter();
+    } catch (e) {
+      showToast("取得失敗");
+    }
+  }
+
+  async function updateHeaderUserState() {
+  const loginBtn = document.querySelector(".header-actions a[href='login.html']");
+  const signupBtn = document.querySelector(".header-actions a[href='signup.html']");
+
+  if (!loginBtn || !signupBtn) return;
+
+  try {
+    const res = await fetch(API_BASE_URL + "/auth/me", { credentials: "include" });
+    if (!res.ok) return; // 未ログインなら何もしない
+
+    const data = await res.json();
+    const user = data.user || data;
+
+    // 既存ボタンをクリア
+    const headerActions = document.querySelector(".header-actions");
+    headerActions.innerHTML = "";
+
+    // マイページボタン
+    const mp = document.createElement("a");
+    mp.href = "mypage.html";
+    mp.className = "btn btn-outline btn-sm";
+    mp.textContent = user.name + " さん";
+    headerActions.appendChild(mp);
+
+    // ログアウトボタン
+    const lo = document.createElement("a");
+    lo.href = "#";
+    lo.className = "btn btn-primary btn-sm";
+    lo.textContent = "ログアウト";
+    lo.addEventListener("click", async () => {
+      await fetch(CONFIG.API_BASE_URL + "/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+      location.href = "login.html";
+    });
+    headerActions.appendChild(lo);
+
+  } catch (e) {
+    console.warn("Not logged in");
+  }
+}
+
+  document.getElementById("status-filter").addEventListener("change", applyFilter);
+  document.getElementById("reload-btn").addEventListener("click", loadKyc);
+
+  loadKyc();

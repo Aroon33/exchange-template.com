@@ -1,0 +1,435 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>CryptoX Admin - グループ管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href=" /admin/assets/css/style.css" />
+  <link rel="stylesheet" href="/admin/assets/css/admin.css" />
+
+
+  <style>
+    .group-table th, .group-table td {
+      padding: 8px 6px;
+      font-size: 13px;
+    }
+    .copy-btn {
+      cursor: pointer;
+      color: #1652f0;
+      font-size: 11px;
+      margin-left: 4px;
+    }
+
+    /* モーダル */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.48);
+      justify-content:center;
+      align-items:center;
+      z-index:999;
+    }
+    .modal {
+      background:#fff;
+      padding:20px;
+      border-radius:10px;
+      width:400px;
+    }
+    .modal-row { 
+      margin-bottom:10px; 
+    }
+    .modal-row label { 
+      font-size:12px; 
+    }
+    .modal-row input {
+      width:100%; padding:7px 8px;
+      border:1px solid #ccc;
+      border-radius:6px;
+    }
+    .modal-actions { 
+      text-align:right;
+      margin-top:12px; 
+    }
+  </style>
+</head>
+
+<body>
+
+
+<main class="admin-main">
+  <div class="admin-main-inner">
+
+    <!-- =========================
+         ページタイトル
+    ========================= -->
+    <div class="page-title">グループ管理</div>
+
+    <!-- =========================
+         グループ新規作成
+    ========================= -->
+    <section class="card" style="margin-bottom:20px;">
+      <h2 class="card-title-small">グループ新規作成</h2>
+
+      <div class="form-row">
+        <label>グループ名</label>
+        <input type="text" id="new-group-name" placeholder="例：vip-team" />
+      </div>
+
+      <button class="btn-xs btn-xs-primary" id="btn-create">作成</button>
+      <p id="msg-create" class="muted" style="margin-top:6px;"></p>
+    </section>
+
+    <!-- =========================
+         グループ一覧（集計付き）
+    ========================= -->
+    <section class="table-card">
+      <div class="table-header-row">
+        <div>
+          <div class="table-title">グループ一覧</div>
+          <div class="table-sub" id="group-count">0件</div>
+        </div>
+      </div>
+
+      <table class="table group-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>グループ</th>
+            <th>人数</th>
+            <th>ポジション</th>
+            <th>合計残高</th>
+            <th>招待</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="group-body">
+          <tr>
+            <td colspan="7" style="text-align:center;">
+              読み込み中...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- =========================
+         ユーザー一覧 + 一括移動
+    ========================= -->
+    <section class="table-card" style="margin-top:25px;">
+      <div class="table-header-row"
+           style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div class="table-title">ユーザー一覧</div>
+          <div class="table-sub">グループ単位で表示</div>
+        </div>
+
+        <div style="display:flex;gap:8px;">
+          <select id="filter-group" class="btn-sm">
+            <option value="">すべてのグループ</option>
+          </select>
+
+          <button class="btn-xs btn-xs-primary"
+                  id="btn-bulk-move"
+                  disabled>
+            選択ユーザーを移動
+          </button>
+        </div>
+      </div>
+
+      <table class="table group-table">
+        <thead>
+          <tr>
+            <th>
+              <input type="checkbox" id="check-all">
+            </th>
+            <th>ID</th>
+            <th>名前</th>
+            <th>残高 (JPY)</th>
+            <th>ポジション数</th>
+          </tr>
+        </thead>
+        <tbody id="user-body">
+          <tr>
+            <td colspan="5" style="text-align:center;">
+              グループを選択してください
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- =========================
+         グループ統計（カード表示）
+    ========================= -->
+    <section class="card" style="margin-top:25px;">
+      <h2 class="card-title-small">グループ統計</h2>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <div class="stat-card">
+          <div class="stat-label">ユーザー数</div>
+          <div class="stat-value" id="stat-user-count">-</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">ポジション数</div>
+          <div class="stat-value" id="stat-positions-count">-</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">合計残高</div>
+          <div class="stat-value" id="stat-total-balance">-</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">含み損益</div>
+          <div class="stat-value" id="stat-total-pnl">-</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- =========================
+     グループ編集モーダル
+========================= -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">グループ編集</div>
+
+    <div class="modal-row">
+      <label>グループ名</label>
+      <input id="m-name" />
+    </div>
+
+    <div class="modal-row">
+      <label>コード（英数字のみ）</label>
+      <input id="m-code" />
+    </div>
+
+    <div class="modal-actions">
+      <button id="m-cancel">閉じる</button>
+      <button class="btn-xs btn-xs-primary" id="m-save">保存</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+<script>
+const API = "https://api.exchange-template.com";
+
+const groupTbody = document.getElementById("group-body");
+const groupCountEl = document.getElementById("group-count");
+
+const userTbody = document.getElementById("user-body");
+const bulkBtn = document.getElementById("btn-bulk-move");
+const checkAll = document.getElementById("check-all");
+
+const selectedUsers = new Set();
+
+let groupsCache = [];
+let usersCache = [];
+
+/* =============================
+   API UTIL
+============================= */
+async function apiGet(p){
+  const r = await fetch(API + p, { credentials:"include" });
+  const t = await r.text();
+  if(!r.ok) throw new Error(t);
+  return JSON.parse(t);
+}
+async function apiPost(p, body){
+  const r = await fetch(API + p, {
+    method:"POST",
+    credentials:"include",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body),
+  });
+  const t = await r.text();
+  if(!r.ok) throw new Error(t);
+  return JSON.parse(t);
+}
+
+/* =============================
+   グループ一覧
+============================= */
+async function loadGroups(){
+  groupsCache = await apiGet("/admin/groups");
+  groupTbody.innerHTML = "";
+
+  groupsCache.forEach(g=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${g.id}</td>
+      <td>${g.name}</td>
+      <td>${g.userCount}</td>
+      <td>${g.positionsCount ?? "-"}</td>
+      <td>${(g.totalBalance ?? 0).toLocaleString()} JPY</td>
+      <td>
+        <button class="btn-xs"
+                onclick="toggleInvite(${g.id})">
+          表示
+        </button>
+        <div id="invite-${g.id}" style="display:none;margin-top:4px;">
+          <input readonly value="${g.inviteLink}" style="width:90%">
+          <button class="btn-xs"
+                  onclick="copyText('${g.inviteLink}')">
+            コピー
+          </button>
+        </div>
+      </td>
+      <td>
+        <button class="btn-xs btn-xs-primary"
+                onclick="selectGroup(${g.id})">
+          選択
+        </button>
+      </td>
+    `;
+    groupTbody.appendChild(tr);
+  });
+
+  groupCountEl.textContent = groupsCache.length + "件";
+}
+
+/* 招待リンク表示切替 */
+function toggleInvite(id){
+  const el = document.getElementById("invite-" + id);
+  el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+/* =============================
+   ユーザー一覧（フィルタ＋一括）
+============================= */
+async function loadUsers(groupId){
+  usersCache = await apiGet("/admin/users");
+  const list = groupId
+    ? usersCache.filter(u => Number(u.groupId) === Number(groupId))
+    : usersCache;
+
+  renderUsers(list);
+}
+
+function renderUsers(list){
+  userTbody.innerHTML = "";
+  selectedUsers.clear();
+  bulkBtn.disabled = true;
+  checkAll.checked = false;
+
+  if(!list.length){
+    userTbody.innerHTML =
+      `<tr><td colspan="5" style="text-align:center;">ユーザーなし</td></tr>`;
+    return;
+  }
+
+  list.forEach(u=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <input type="checkbox"
+               class="user-check"
+               data-id="${u.id}"
+               onchange="toggleUser(${u.id}, this.checked)">
+      </td>
+      <td>${u.id}</td>
+      <td>${u.name}</td>
+      <td>${(u.balanceTotal ?? 0).toLocaleString()} JPY</td>
+      <td>${u.positionsCount ?? 0}</td>
+    `;
+    userTbody.appendChild(tr);
+  });
+}
+
+/* チェック制御 */
+function toggleUser(id, checked){
+  if(checked) selectedUsers.add(id);
+  else selectedUsers.delete(id);
+  bulkBtn.disabled = selectedUsers.size === 0;
+}
+
+checkAll.addEventListener("change", e=>{
+  document.querySelectorAll(".user-check").forEach(cb=>{
+    cb.checked = e.target.checked;
+    toggleUser(Number(cb.dataset.id), cb.checked);
+  });
+});
+
+/* =============================
+   一括移動
+============================= */
+const moveGroupSelect = document.getElementById("move-group-select");
+
+bulkBtn.onclick = async () => {
+  const target = moveGroupSelect.value;
+  if (!target || !selectedUsers.size) {
+    alert("移行先グループとユーザーを選択してください");
+    return;
+  }
+
+  await apiPost("/admin/groups/move-users", {
+    groupId: Number(target),
+    userIds: Array.from(selectedUsers),
+  });
+
+  selectedUsers.clear();
+  bulkBtn.disabled = true;
+
+  // 表示グループは維持
+  loadUsers(filterGroup.value);
+  loadGroups();
+};
+
+
+/* =============================
+   統計
+============================= */
+async function loadGroupStats(groupId){
+  if(!groupId) return;
+
+  const users = usersCache.filter(u=>Number(u.groupId)===Number(groupId));
+  const totalBalance = users.reduce((s,u)=>s+(u.balanceTotal||0),0);
+
+  const pos = await apiGet(`/admin/system/positions/${groupId}`);
+  const posCount = (pos.parent?.length ?? 0)+(pos.children?.length ?? 0);
+
+  document.getElementById("stat-user-count").textContent = users.length;
+  document.getElementById("stat-total-balance").textContent =
+    totalBalance.toLocaleString()+" JPY";
+  document.getElementById("stat-positions-count").textContent = posCount;
+}
+
+/* =============================
+   ユーティリティ
+============================= */
+function copyText(t){
+  navigator.clipboard.writeText(t);
+  alert("コピーしました");
+}
+
+function selectGroup(id){
+  document.getElementById("stats-group-select").value = id;
+  document.getElementById("filter-group").value = id;
+  loadUsers(id);
+  loadGroupStats(id);
+}
+
+/* =============================
+   初期化
+============================= */
+loadGroups();
+loadUsers();
+
+document.getElementById("filter-group").addEventListener("change", e=>{
+  loadUsers(e.target.value);
+});
+
+document.getElementById("stats-group-select").addEventListener("change", e=>{
+  loadGroupStats(e.target.value);
+});
+</script>

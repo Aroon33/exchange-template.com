@@ -1,0 +1,64 @@
+    <div class="admin-main-inner">
+
+      <div class="page-title">ユーザー一覧</div>
+
+      <!-- フィルター -->
+      <section class="filters-card">
+        <div class="filters-grid">
+          
+          <div class="field">
+            <label>グループID</label>
+            <select id="f-group">
+              <option value="">すべて</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>開設日 From</label>
+            <input type="date" id="f-from" />
+          </div>
+
+          <div class="field">
+            <label>開設日 To</label>
+            <input type="date" id="f-to" />
+          </div>
+
+          <div class="field">
+            <label>キーワード（名前/メール）</label>
+            <input type="text" id="f-text" placeholder="例：山田 / test@example.com" />
+          </div>
+
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn-xs" id="btn-clear">クリア</button>
+          <button class="btn-xs btn-xs-primary" id="btn-search">検索</button>
+        </div>
+      </section>
+
+      <!-- ユーザー一覧テーブル -->
+      <section class="table-card">
+        <div class="table-header-row">
+          <div class="table-title">ユーザー一覧</div>
+          <div class="table-meta" id="table-meta">0件</div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>名前</th>
+              <th>メール</th>
+              <th>グループ</th>
+              <th>開設日</th>
+              <th>残高</th>
+              <th>詳細</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </section>
+
+    </div>

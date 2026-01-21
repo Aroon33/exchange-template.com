@@ -40,29 +40,24 @@ function fmtNum(n) {
 function getFilteredTrades() {
   const now = Date.now();
   const limit = now - currentDays * 24 * 60 * 60 * 1000;
-
-  return trades.filter(t => {
-    if (!t.closedAt) return false;
-    return new Date(t.closedAt).getTime() >= limit;
-  });
+  return trades.filter(t => t.closedAt && new Date(t.closedAt).getTime() >= limit);
 }
 
 /* =========================
    タブ操作
 ========================= */
 filterButtons.forEach(btn => {
-  btn.onclick = () => {
+  btn.addEventListener("click", () => {
     filterButtons.forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-
     currentDays = Number(btn.dataset.days);
-    displayCount = 20; // 切替時にリセット
+    displayCount = LOAD_COUNT;
     renderTrades();
-  };
+  });
 });
 
 /* =========================
-   モーダル制御（スマホ）
+   モーダル制御
 ========================= */
 function openModal(trade) {
   document.getElementById("m-symbol").textContent = trade.symbol;
@@ -72,15 +67,11 @@ function openModal(trade) {
   document.getElementById("m-close").textContent = fmtNum(trade.closePrice);
   document.getElementById("m-profit").textContent = fmtNum(trade.profit);
   document.getElementById("m-date").textContent = fmtDate(trade.closedAt);
-
   modal.classList.add("show");
 }
 
 modal.addEventListener("click", e => {
-  if (
-    e.target.classList.contains("modal-overlay") ||
-    e.target.classList.contains("modal-close")
-  ) {
+  if (e.target === modal || e.target.classList.contains("modal-close")) {
     modal.classList.remove("show");
   }
 });
@@ -95,45 +86,39 @@ function renderTrades() {
   const colCount = isMobile() ? 1 : 8;
 
   if (!filtered.length) {
-    elTradeBody.innerHTML =
-      `<tr><td colspan="${colCount}" style="text-align:center;color:#888;">取引履歴はありません</td></tr>`;
+    elTradeBody.innerHTML = `
+      <tr>
+        <td colspan="${colCount}" style="text-align:center;padding:20px;color:#888;">
+          取引履歴はありません
+        </td>
+      </tr>`;
     btnLoadMore.style.display = "none";
     return;
   }
 
-  const limit = isMobile() ? 20 : displayCount;
+  const limit = isMobile() ? LOAD_COUNT : displayCount;
   const slice = filtered.slice(0, limit);
 
   slice.forEach(t => {
     const cls = Number(t.profit) >= 0 ? "profit" : "loss";
 
-    /* ===== スマホ（1セル・日付付き・タップで詳細）===== */
     if (isMobile()) {
-  elTradeBody.insertAdjacentHTML("beforeend", `
-    <tr class="trade-row-sp">
-      <td>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div style="font-weight:600;">
-            ${t.symbol} ${t.side}
-          </div>
-          <div style="color:#bbb;font-size:18px;">›</div>
-        </div>
-
-        <div class="${cls}" style="margin-top:2px;">
-          損益 ${fmtNum(t.profit)}
-        </div>
-
-        <div style="font-size:11px;color:#888;margin-top:2px;">
-          ${fmtDate(t.closedAt)}
-        </div>
-      </td>
-    </tr>
-  `);
-
-  elTradeBody.lastElementChild.onclick = () => openModal(t);
-
-
-    /* ===== PC（フルテーブル）===== */
+      elTradeBody.insertAdjacentHTML("beforeend", `
+        <tr class="trade-row-sp" data-trade='${JSON.stringify(t)}'>
+          <td>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <strong>${t.symbol} ${t.side}</strong>
+              <span style="color:#bbb;font-size:18px;">›</span>
+            </div>
+            <div class="${cls}" style="margin-top:4px;">
+              損益 ${fmtNum(t.profit)}
+            </div>
+            <div style="font-size:11px;color:#888;margin-top:2px;">
+              ${fmtDate(t.closedAt)}
+            </div>
+          </td>
+        </tr>
+      `);
     } else {
       elTradeBody.insertAdjacentHTML("beforeend", `
         <tr>
@@ -150,20 +135,27 @@ function renderTrades() {
     }
   });
 
-  /* ===== 続きを見る（PCのみ）===== */
   btnLoadMore.style.display =
-    isMobile() || displayCount >= filtered.length
-      ? "none"
-      : "inline-block";
+    isMobile() || displayCount >= filtered.length ? "none" : "inline-block";
 }
+
+/* =========================
+   イベント委譲（スマホ行タップ）
+========================= */
+elTradeBody.addEventListener("click", e => {
+  if (!isMobile()) return;
+  const row = e.target.closest("tr[data-trade]");
+  if (!row) return;
+  openModal(JSON.parse(row.dataset.trade));
+});
 
 /* =========================
    続きを見る（PC）
 ========================= */
-btnLoadMore.onclick = () => {
+btnLoadMore.addEventListener("click", () => {
   displayCount += LOAD_COUNT;
   renderTrades();
-};
+});
 
 /* =========================
    初期化
@@ -181,7 +173,4 @@ btnLoadMore.onclick = () => {
   }
 })();
 
-/* =========================
-   画面サイズ変更対応
-========================= */
 window.addEventListener("resize", renderTrades);

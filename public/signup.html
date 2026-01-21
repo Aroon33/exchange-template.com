@@ -4,39 +4,32 @@
   <meta charset="UTF-8" />
   <title>CryptoX Exchange - 口座開設</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Base CSS -->
   <link rel="stylesheet" href="assets/css/style.css">
+
   <style>
-    /* 全体レイアウト */
     main {
       display: flex;
       justify-content: center;
       padding: 20px;
     }
-
     .signup-card {
       background: #ffffff;
       padding: 24px;
       width: 100%;
-      max-width: 480px;
+      max-width: 520px;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
-
     .signup-title {
       font-size: 22px;
       font-weight: bold;
       margin-bottom: 6px;
     }
-
     .signup-desc {
       font-size: 13px;
       color: #64748b;
       margin-bottom: 16px;
     }
-
-    /* フォーム行 */
     .form-row {
       margin-bottom: 14px;
     }
@@ -52,17 +45,8 @@
       border: 1px solid #d1d5db;
       border-radius: 8px;
       font-size: 14px;
-      transition: 0.2s;
       background: #f8fafc;
     }
-    input:focus, select:focus {
-      border-color: #2563eb;
-      box-shadow: 0 0 0 2px rgba(37,99,235,0.25);
-      background: white;
-      outline: none;
-    }
-
-    /* ボタン */
     .btn-signup {
       width: 100%;
       background: #2563eb;
@@ -74,137 +58,110 @@
       font-weight: bold;
       cursor: pointer;
       margin-top: 10px;
-      transition: 0.2s;
     }
-    .btn-signup:hover {
-      background: #1e4fcf;
-    }
-
-    /* 注意文 */
-    #signup-message {
-      margin-top: 10px;
-      font-size: 13px;
-    }
-
-    .tos {
-      margin: 14px 0;
-    }
-    .tos label {
-      display: flex;
-      gap: 8px;
-      font-size: 13px;
-      align-items: center;
-    }
-
-    /* Tips (KYC説明) → 小さく簡潔化 */
-    .tips {
-      margin-top: 18px;
-      padding: 12px;
-      background: #f1f5f9;
-      border-radius: 8px;
-      font-size: 12px;
-      color: #475569;
-    }
-    .tips ul {
-      padding-left: 20px;
-      margin: 6px 0 0;
-    }
-
-    /* スマホ最適化 */
-    @media(max-width: 480px) {
-      .signup-card { padding: 18px; }
-      .signup-title { font-size: 20px; }
+    .section-divider {
+      margin: 20px 0 10px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #334155;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 4px;
     }
   </style>
-
-  
 </head>
+
 <body>
 
-  <!-- 共通ヘッダー -->
 <div id="header"></div>
 
-
 <main>
-  <section class="signup-card">
+<section class="signup-card">
 
-    <h1 class="signup-title">口座開設</h1>
-    <p class="signup-desc">
-      数分で口座開設が完了します。
-      必要事項を入力し「申し込む」を押してください。
-    </p>
+<h1 class="signup-title">口座開設</h1>
+<p class="signup-desc">以下の情報を入力してください。</p>
 
-    <!-- 姓名 -->
-    <div class="form-row">
-      <label>お名前（姓）</label>
-      <input id="signup-lastname" type="text" placeholder="山田">
-    </div>
+<!-- =========================
+     アカウント情報
+========================= -->
+<div class="section-divider">アカウント情報</div>
 
-    <div class="form-row">
-      <label>お名前（名）</label>
-      <input id="signup-firstname" type="text" placeholder="太郎">
-    </div>
+<div class="form-row">
+  <label>お名前（姓）</label>
+  <input id="signup-lastname" type="text">
+</div>
 
-    <!-- メール / パスワード -->
-    <div class="form-row">
-      <label>メールアドレス</label>
-      <input id="signup-email" type="email" placeholder="you@example.com">
-    </div>
+<div class="form-row">
+  <label>お名前（名）</label>
+  <input id="signup-firstname" type="text">
+</div>
 
-    <div class="form-row">
-      <label>パスワード</label>
-      <input id="signup-password" type="password" placeholder="半角英数8文字以上">
-    </div>
+<div class="form-row">
+  <label>メールアドレス</label>
+  <input id="signup-email" type="email">
+</div>
 
-    <!-- 国 / 招待コード -->
-    <div class="form-row">
-      <label>居住国</label>
-      <select id="signup-country">
-        <option>日本</option>
-        <option>アメリカ合衆国</option>
-        <option>シンガポール</option>
-        <option>香港</option>
-      </select>
-    </div>
+<div class="form-row">
+  <label>パスワード</label>
+  <input id="signup-password" type="password">
+</div>
 
-    <div class="form-row">
-      <label>招待コード（任意）</label>
-      <input id="signup-refcode" type="text" placeholder="紹介コードがあれば入力">
-    </div>
+<!-- =========================
+     プロフィール情報（UserProfile）
+========================= -->
+<div class="section-divider">プロフィール情報</div>
 
-    <!-- 利用規約 -->
-    <div class="tos">
-      <label>
-        <input id="signup-tos" type="checkbox">
-        <span><a href="#">利用規約</a> に同意します</span>
-      </label>
-    </div>
+<div class="form-row">
+  <label>生年月日</label>
+  <input id="profile-dob" type="date">
+</div>
 
-    <!-- ボタン -->
-    <button id="signup-button" class="btn-signup">口座開設を申し込む</button>
+<div class="form-row">
+  <label>性別</label>
+  <select id="profile-gender">
+    <option value="">選択してください</option>
+    <option value="male">男性</option>
+    <option value="female">女性</option>
+    <option value="other">その他</option>
+  </select>
+</div>
 
-    <!-- メッセージ -->
-    <p id="signup-message"></p>
+<div class="form-row">
+  <label>郵便番号</label>
+  <input id="profile-postal">
+</div>
 
-    <!-- Tips（簡略版） -->
-    <div class="tips">
-      本人確認については、口座開設後に専用ページより簡単に行えます。
-      <ul>
-        <li>本人確認書類のアップロード</li>
-        <li>現住所確認書類</li>
-        <li>セルフィー認証</li>
-      </ul>
-    </div>
+<div class="form-row">
+  <label>都道府県・市区町村</label>
+  <input id="profile-city">
+</div>
 
-  </section>
+<div class="form-row">
+  <label>住所</label>
+  <input id="profile-address">
+</div>
+
+<div class="form-row">
+  <label>国</label>
+  <input id="profile-country" value="日本">
+</div>
+
+<div class="form-row">
+  <label>電話番号</label>
+  <input id="profile-phone">
+</div>
+
+<!-- ========================= -->
+<button id="signup-button" class="btn-signup">
+  口座開設を申し込む
+</button>
+
+<p id="signup-message"></p>
+
+</section>
 </main>
 
-
-
-
-<script type="module" src="/assets/js/header-user.js"></script>
+<script type="module" src="/assets/js/header-loader.js"></script>
 <script type="module" src="/assets/js/auth/signup.js"></script>
-
 
 </body>
 </html>
